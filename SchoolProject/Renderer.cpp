@@ -3,7 +3,7 @@
 
 
 //--------------------------------------------------------------------------------------
-Renderer::Renderer(D3D11Core* pDXCore,Window* pWindow,  Camera * pCamera)
+Renderer::Renderer(D3D11Core* pDXCore,Window* pWindow, Camera* pCamera)
 	: pWindow(pWindow)
 	, pDXCore(pDXCore)
 	, pCamera(pCamera)
@@ -360,18 +360,6 @@ bool Renderer::createInputLayoutLP(const std::string& vShaderByteCode)
 	return !FAILED(hr);
 }
 
-
-
-
-
-
-
-
-//--------------------------------------------------------------------------------------
-void SetCamera(Camera* pCamera)
-{
-	this->pCamera = pCamera;
-}
 
 
 

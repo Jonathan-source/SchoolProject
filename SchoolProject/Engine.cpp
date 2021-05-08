@@ -19,14 +19,14 @@ Engine::Engine(HINSTANCE& hInstance, HINSTANCE& hPrevIntance, LPWSTR& lpmCmdLine
 	// Initialize DX11Core.
 	this->d3d11Core = new D3D11Core(this->window);
 
-	//Initialize Keyboard & Mouse listeners
+	// Initialize Keyboard & Mouse listeners
 	this->keyboardListener = std::make_shared<KeyboardListener>();
 	this->mouseListener = std::make_shared<MouseListener>((float)screenHeight, (float)screenWidth);
 
-	//Initialize Camera
+	// Initialize Camera
 	this->camera = std::make_shared<Camera>(this->keyboardListener);
 
-	//Initialize Renderer
+	// Initialize Renderer
 	this->renderer = new Renderer(d3d11Core, this->window, this->camera.get());
 	
 	// Initialize ResourceManager.

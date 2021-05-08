@@ -14,7 +14,7 @@
 class Renderer
 {
 public:
-	Renderer(D3D11Core* pDXCore, Window* pWindow);
+	Renderer(D3D11Core* pDXCore, Window* pWindow, Camera* pCamera);
 	Renderer(const Renderer& other) = delete;
 	Renderer(Renderer&& other) = delete;
 	Renderer& operator=(const Renderer& other) = delete;
@@ -26,7 +26,6 @@ public:
 	void EndFrame();
 	void Present();
 
-	void SetCamera(Camera* pCamera);
 private:
 	D3D11Core*	pDXCore;
 	Window*		pWindow;
@@ -58,7 +57,6 @@ private:
 	// Methods for initializing RenderSystem.
 	//
 	void InitializeDeferred();
-
 	bool createFullScreenQuad();
 	bool createRenderTargetTextures(D3D11_TEXTURE2D_DESC& textureDesc);
 	bool createRenderTargetView(D3D11_TEXTURE2D_DESC& textureDesc);
