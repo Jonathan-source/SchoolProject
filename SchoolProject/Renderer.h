@@ -13,7 +13,7 @@
 class Renderer
 {
 public:
-	Renderer(D3D11Core* pDXCore, Window* pWindow, Camera * pCamera);
+	Renderer(D3D11Core* pDXCore, Window* pWindow);
 	Renderer(const Renderer& other) = delete;
 	Renderer(Renderer&& other) = delete;
 	Renderer& operator=(const Renderer& other) = delete;
@@ -25,6 +25,7 @@ public:
 	void EndFrame();
 	void Present();
 
+	void SetCamera(Camera* pCamera);
 private:
 	D3D11Core*	pDXCore;
 	Window*		pWindow;

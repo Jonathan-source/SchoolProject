@@ -367,6 +367,18 @@ bool Renderer::createInputLayoutLP(const std::string& vShaderByteCode)
 
 
 
+//--------------------------------------------------------------------------------------
+void SetCamera(Camera* pCamera)
+{
+	this->pCamera = pCamera;
+}
+
+
+
+
+
+
+
 
 //--------------------------------------------------------------------------------------
 void Renderer::setPerFrameBuffer()
