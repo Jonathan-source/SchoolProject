@@ -2,6 +2,7 @@
 #include "pch.h"
 #include "D3D11Core.h"
 #include "GlobalBuffers.h"
+#include "Camera.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "ConstantBuffer.h"
@@ -30,6 +31,7 @@ private:
 	Window*		pWindow;
 	Camera*		pCamera;
 
+	PerFrame perFrameData;
 	std::unique_ptr<ConstantBuffer> perFrameBuffer;
 	void setPerFrameBuffer();
 	

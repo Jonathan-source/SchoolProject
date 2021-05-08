@@ -9,6 +9,7 @@ Engine::Engine(HINSTANCE& hInstance, HINSTANCE& hPrevIntance, LPWSTR& lpmCmdLine
 	, nCmdShow(nCmdShow)
 	, screenWidth(GetSystemMetrics(SM_CXSCREEN))
 	, screenHeight(GetSystemMetrics(SM_CYSCREEN))
+	, deltaTime(0.0)
 {
 	// Initialize Window.
 	this->window = new Window(hInstance, nCmdShow);
@@ -18,6 +19,15 @@ Engine::Engine(HINSTANCE& hInstance, HINSTANCE& hPrevIntance, LPWSTR& lpmCmdLine
 	// Initialize DX11Core.
 	this->d3d11Core = new D3D11Core(this->window);
 
+	//Initialize Keyboard & Mouse listeners
+	this->keyboardListener = std::make_shared<KeyboardListener>();
+	this->mouseListener = std::make_shared<MouseListener>((float)screenHeight, (float)screenWidth);
+
+	//Initialize Camera
+	this->camera = std::make_shared<Camera>(this->keyboardListener);
+
+	//Initialize Renderer
+	this->renderer = new Renderer(d3d11Core, this->window, this->camera.get());
 	
 	// Initialize ResourceManager.
 	this->resourceManager = new ResourceManager(this->d3d11Core);
@@ -54,38 +64,35 @@ void Engine::Update()
 			this->timer.stop();
 			this->deltaTime = this->timer.getElapsedTime();
 			this->timer.start();
+
+
+#ifdef _DEBUG
+			//Start ImGui frame
+			ImGui_ImplDX11_NewFrame();
+			ImGui_ImplWin32_NewFrame();
+			ImGui::NewFrame();
+#endif // DEBUG
+
+			// Submit.
+			// a vector with objects.
+
+			// Draw.
+			renderer->BeginFrame();
+			renderer->EndFrame();
+
+#ifdef _DEBUG
+			// Draw imgui window
+			drawImGUI();
+			// Assemble togheter draw data
+			ImGui::Render();
+			// Render draw data
+			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+#endif // DEBUG
+
+			this->d3d11Core->swapChain->Present(0, 0);
 		}
 
-#ifdef _DEBUG
-		//Start ImGui frame
-		ImGui_ImplDX11_NewFrame();
-		ImGui_ImplWin32_NewFrame();
-		ImGui::NewFrame();
-#endif // DEBUG
-
-		// Clear.
-		//rs->ClearFrame();
-
-		// Submit.
-		// a vector with objects.
-		
-		// Draw.
-		//rs->RenderFrame();
-
-
-
-#ifdef _DEBUG
-		// Draw imgui window
-		drawImGUI();
-		// Assemble togheter draw data
-		ImGui::Render();
-		// Render draw data
-		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-#endif // DEBUG
 	}
-
-	this->d3d11Core->swapChain->Present(0, 0);
-
 
 }
 
@@ -101,10 +108,10 @@ void Engine::drawImGUI()
 	ImGui::Begin("Statistics");
 	std::string frameRate = "FPS: " + std::to_string((int)(1 / deltaTime));
 	std::string screenRes = "Screen Resolution: " + std::to_string(window->getWidth()) + "x" + std::to_string(window->getHeight());
-	std::string cameraPos = "Camera Position: x:";
+	//std::string cameraPos = "Camera Position: x:" + std::to_string();
 	ImGui::Text(screenRes.c_str());
 	ImGui::Text(frameRate.c_str());
-	ImGui::Text(cameraPos.c_str());
+	//ImGui::Text(cameraPos.c_str());
 	ImGui::End();
 	ImGui::ShowDemoWindow();
 }
@@ -124,6 +131,7 @@ Engine::~Engine()
 	delete this->window;
 	delete this->d3d11Core;
 	delete this->resourceManager;
+	delete this->renderer;
 }
 
 
