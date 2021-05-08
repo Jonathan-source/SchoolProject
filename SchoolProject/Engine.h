@@ -6,6 +6,7 @@
 #include "D3D11Core.h"
 #include "ResourceManager.h"
 #include "Timer.h"
+#include "Renderer.h"
 
 class Engine
 {
@@ -34,6 +35,12 @@ private:
 
 	// DirectXCore
 	D3D11Core * d3d11Core;
+
+	Renderer* renderer;
+	std::shared_ptr<Camera> camera;
+	
+	std::shared_ptr<KeyboardListener> keyboardListener;
+	std::shared_ptr<MouseListener> mouseListener;
 
 	// ResourceManager
 	ResourceManager * resourceManager;

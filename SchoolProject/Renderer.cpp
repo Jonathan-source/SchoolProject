@@ -3,7 +3,7 @@
 
 
 //--------------------------------------------------------------------------------------
-Renderer::Renderer(Window* pWindow, D3D11Core* pDXCore, Camera * pCamera)
+Renderer::Renderer(D3D11Core* pDXCore,Window* pWindow,  Camera * pCamera)
 	: pWindow(pWindow)
 	, pDXCore(pDXCore)
 	, pCamera(pCamera)
@@ -29,9 +29,9 @@ Renderer::Renderer(Window* pWindow, D3D11Core* pDXCore, Camera * pCamera)
 void Renderer::BeginFrame()
 {
 	// Update per frame subresources.
-	DirectX::XMStoreFloat4(&this->perFrameData.CameraPosition, this->pCamera->getCameraPosition());
-	DirectX::XMStoreFloat4x4(&this->perFrameData.ViewMatrix, this->pCamera->getCameraView());
-	DirectX::XMStoreFloat4x4(&this->perFrameData.ProjectionMatrix, this->pCamera->getCameraProjection());
+	DirectX::XMStoreFloat4(&this->perFrameData.CameraPosition, this->pCamera->getPosition());
+	DirectX::XMStoreFloat4x4(&this->perFrameData.ViewMatrix, this->pCamera->getView());
+	DirectX::XMStoreFloat4x4(&this->perFrameData.ProjectionMatrix, this->pCamera->getProjectionMatrix());
 	this->pDXCore->deviceContext->UpdateSubresource(this->perFrameBuffer->Get(), 0, nullptr, &this->perFrameData, 0, 0);
 
 	this->ClearFrame();
@@ -385,9 +385,9 @@ void Renderer::setPerFrameBuffer()
 {
 	if (this->pCamera != nullptr)
 	{
-		DirectX::XMStoreFloat4(&this->perFrameData.CameraPosition, camera->getCameraPosition());
-		DirectX::XMStoreFloat4x4(&this->perFrameData.ViewMatrix, camera->getCameraView());
-		DirectX::XMStoreFloat4x4(&this->perFrameData.ProjectionMatrix, camera->getCameraProjection());
+		DirectX::XMStoreFloat4(&this->perFrameData.CameraPosition, pCamera->getPosition());
+		DirectX::XMStoreFloat4x4(&this->perFrameData.ViewMatrix, pCamera->getView());
+		DirectX::XMStoreFloat4x4(&this->perFrameData.ProjectionMatrix, pCamera->getProjectionMatrix());
 		this->pDXCore->deviceContext->UpdateSubresource(this->perFrameBuffer->Get(), 0, nullptr, &this->perFrameData, 0, 0);
 	}
 }

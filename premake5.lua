@@ -13,18 +13,23 @@ workspace "SchoolProject"
         targetdir "bin/%{cfg.buildcfg}"
         objdir "objects/%{cfg.buildcfg}"
 
+        includedirs{"DirectXTK/include/"}
+
         links{
             "d3d11",
         }
 	vpaths{["Shaders"] = "**.hlsl", ["Headers"] = "**.h", ["Sources"] = {"**.c", "**.cpp"}, ["Buffers"] = {"**Buffer"}, ["PreCompiledHeaders"] = "**pch", ["Main"] = "**main.cpp", ["ECS"] = {"**Component", "**System","**Factory","**ECS"}, ["Core"] = {"**Render","**Core"},["imGUI"] = {"**imgui","**imstb","**imconfig"}}
         filter "configurations:Debug"
+            libdirs{"DirectXTK/bin/x64/Debug_lib/"}
+            links{"DirectXTK"}
 
             defines{"_DEBUG", "_UNICODE", "UNICODE"}
             symbols "On"
         filter "configurations:Release"
+            libdirs{"DirectXTK/bin/x64/Release_lib/"}
+            links{"DirectXTK"}
             defines{"NDEBUG", "_UNICODE", "UNICODE"}
             optimize "On"
-
 
     filter "*"
         local ws = "$(ProjectDir)%%(Filename).cso"
