@@ -3,6 +3,7 @@
 
 // Windows
 #include <windows.h>
+#include <windowsx.h>
 
 // Standard
 #include <string>
@@ -26,6 +27,9 @@
 #include <DirectXMath.h>
 #include <DirectXColors.h>
 #include <wrl/client.h>
+#include <SimpleMath.h>
+
+namespace sm = DirectX::SimpleMath;
 using Microsoft::WRL::ComPtr;
 
 // ImGUI
