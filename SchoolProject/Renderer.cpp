@@ -3,15 +3,17 @@
 
 
 //--------------------------------------------------------------------------------------
-Renderer::Renderer(Window* pWindow, D3D11Core* pDXCore)
+Renderer::Renderer(Window* pWindow, D3D11Core* pDXCore, Camera * pCamera)
 	: pWindow(pWindow)
 	, pDXCore(pDXCore)
+	, pCamera(pCamera)
 	, perFrameBuffer(std::make_unique<ConstantBuffer>(pDXCore->device.Get(), sizeof(PerFrame)))
 {
 	// Initialize Deferred Rendering.
 	this->InitializeDeferred();
 
 	// Initialize Light-stuff.
+	this->InitializeLights();
 	if (!this->createStructuredBufferLights())
 		std::cout << "ERROR::RenderSystem::createStructuredBufferLights()::Could not create StructuredBuffer!" << std::endl;
 }
@@ -285,6 +287,17 @@ bool Renderer::createShaderResourceViews(D3D11_TEXTURE2D_DESC& textureDesc)
 
 
 
+//--------------------------------------------------------------------------------------
+void Renderer::InitializeLights()
+{
+	//	Create lights here:
+	Light light;
+	this->sceneLights.emplace_back(light);
+}
+
+
+
+
 
 
 
@@ -292,7 +305,7 @@ bool Renderer::createShaderResourceViews(D3D11_TEXTURE2D_DESC& textureDesc)
 bool Renderer::createStructuredBufferLights()
 {
 	D3D11_BUFFER_DESC desc;
-	ZeroMemory(&desc, sizeof(desc));
+	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
 
 	desc.ByteWidth = sizeof(Light) * static_cast<UINT>(this->sceneLights.size());
 	desc.StructureByteStride = sizeof(Light);
@@ -310,13 +323,12 @@ bool Renderer::createStructuredBufferLights()
 	if (FAILED(hr))
 		return false;
 
+	D3D11_SHADER_RESOURCE_VIEW_DESC resourceViewDesc;
+	ZeroMemory(&resourceViewDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
 
-	D3D11_SHADER_RESOURCE_VIEW_DESC rd;
-	ZeroMemory(&rd, sizeof(rd));
-
-	rd.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
-	rd.BufferEx.NumElements = static_cast<UINT>(this->sceneLights.size());
-	hr = this->pDXCore->device->CreateShaderResourceView(lightBuffer.Get(), &rd, lightBufferSRV.GetAddressOf());
+	resourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
+	resourceViewDesc.BufferEx.NumElements = static_cast<UINT>(this->sceneLights.size());
+	hr = this->pDXCore->device->CreateShaderResourceView(lightBuffer.Get(), &resourceViewDesc, lightBufferSRV.GetAddressOf());
 
 	return !FAILED(hr);
 }
@@ -357,14 +369,15 @@ bool Renderer::createInputLayoutLP(const std::string& vShaderByteCode)
 
 
 //--------------------------------------------------------------------------------------
-void Renderer::setCamera(Camera* camera)
+void Renderer::setPerFrameBuffer()
 {
-	this->pCamera = camera;
-	DirectX::XMStoreFloat4(&this->perFrameData.CameraPosition, camera->getCameraPosition());
-	DirectX::XMStoreFloat4x4(&this->perFrameData.ViewMatrix, camera->getCameraView());
-	DirectX::XMStoreFloat4x4(&this->perFrameData.ProjectionMatrix, camera->getCameraProjection());
-
-	this->pDXCore->deviceContext->UpdateSubresource(this->perFrameBuffer->Get(), 0, nullptr, &this->perFrameData, 0, 0);
+	if (this->pCamera != nullptr)
+	{
+		DirectX::XMStoreFloat4(&this->perFrameData.CameraPosition, camera->getCameraPosition());
+		DirectX::XMStoreFloat4x4(&this->perFrameData.ViewMatrix, camera->getCameraView());
+		DirectX::XMStoreFloat4x4(&this->perFrameData.ProjectionMatrix, camera->getCameraProjection());
+		this->pDXCore->deviceContext->UpdateSubresource(this->perFrameBuffer->Get(), 0, nullptr, &this->perFrameData, 0, 0);
+	}
 }
 
 

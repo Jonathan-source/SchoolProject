@@ -4,6 +4,7 @@
 #include "GlobalBuffers.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
+#include "ConstantBuffer.h"
 
 
 //--------------------------------------------------------------------------------------
@@ -12,7 +13,7 @@
 class Renderer
 {
 public:
-	Renderer(D3D11Core* pDXCore, Window* pWindow);
+	Renderer(D3D11Core* pDXCore, Window* pWindow, Camera * pCamera);
 	Renderer(const Renderer& other) = delete;
 	Renderer(Renderer&& other) = delete;
 	Renderer& operator=(const Renderer& other) = delete;
@@ -23,12 +24,14 @@ public:
 	void BeginFrame();
 	void EndFrame();
 	void Present();
-	
+
 private:
 	D3D11Core*	pDXCore;
 	Window*		pWindow;
-	//Camera*	pCamera;
+	Camera*		pCamera;
 
+	std::unique_ptr<ConstantBuffer> perFrameBuffer;
+	void setPerFrameBuffer();
 	
 	enum GBUFFER { POSITION, NORMAL, DIFFUSE, BUFFER_COUNT };
 	std::array<TextureRenderTarget, BUFFER_COUNT> graphicsBuffer;
@@ -57,6 +60,8 @@ private:
 	bool createRenderTargetTextures(D3D11_TEXTURE2D_DESC& textureDesc);
 	bool createRenderTargetView(D3D11_TEXTURE2D_DESC& textureDesc);
 	bool createShaderResourceViews(D3D11_TEXTURE2D_DESC& textureDesc);
+
+	void InitializeLights();
 	bool createStructuredBufferLights();
 	
 	bool createInputLayoutGP(const std::string& vShaderByteCode);
@@ -72,8 +77,6 @@ private:
 
 	bool initializeShaders();
 	bool loadShaderData(const std::string& filename, std::string& shaderByteCode);
-
-	
 
 
 	// Different Passes.
