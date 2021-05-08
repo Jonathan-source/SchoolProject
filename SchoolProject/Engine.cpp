@@ -147,11 +147,7 @@ bool Engine::handleMessage()
 	{
 		TranslateMessage(&this->msg);
 		DispatchMessage(&this->msg);
-	
-		// Lock cursor inside window
-		GetWindowRect(this->window->getHwnd(), &this->rect);
-		ClipCursor(&this->rect);
-	
+		
 		// Time to quit ?
 		if (msg.message == WM_QUIT)
 			return false;

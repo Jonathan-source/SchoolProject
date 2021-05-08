@@ -2,6 +2,8 @@
 #include "pch.h"
 #include "D3D11Core.h"
 #include "GlobalBuffers.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
 
 
 //--------------------------------------------------------------------------------------
@@ -27,33 +29,36 @@ private:
 	Window*		pWindow;
 	//Camera*	pCamera;
 
+	
 	enum GBUFFER { POSITION, NORMAL, DIFFUSE, BUFFER_COUNT };
 	std::array<TextureRenderTarget, BUFFER_COUNT> graphicsBuffer;
 
-	Quad screenQuad[4];
-	ComPtr<ID3D11Buffer>				vertexBufferQuad;
-	ComPtr<ID3D11Buffer>				indexBufferQuad;
-	
+	struct FullScreenQuad
+	{
+		std::array<Quad, 4> vertexData;
+		ComPtr<ID3D11Buffer> vb;
+		ComPtr<ID3D11Buffer> ib;
+	} fullScreenQuad;
+
+	std::vector<Light>					sceneLights;
 	ComPtr<ID3D11Buffer>				lightBuffer;
 	ComPtr<ID3D11ShaderResourceView>	lightBufferSRV;
 
 	ComPtr<ID3D11InputLayout>			inputLayoutGP;	// InputLayout for Geometry Pass.
 	ComPtr<ID3D11InputLayout>			inputLayoutLP;	// InputLayout for Lightning Pass.
 
-	std::vector<Light>					sceneLights;
 
-	
 	//
 	// Methods for initializing RenderSystem.
 	//
 	void InitializeDeferred();
 
-	void createFullScreenQuad();
-	bool createVertexBufferQuad();
+	bool createFullScreenQuad();
 	bool createRenderTargetTextures(D3D11_TEXTURE2D_DESC& textureDesc);
 	bool createRenderTargetView(D3D11_TEXTURE2D_DESC& textureDesc);
 	bool createShaderResourceViews(D3D11_TEXTURE2D_DESC& textureDesc);
 	bool createStructuredBufferLights();
+	
 	bool createInputLayoutGP(const std::string& vShaderByteCode);
 	bool createInputLayoutLP(const std::string& vShaderByteCode);
 

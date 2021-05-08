@@ -96,12 +96,11 @@ void Renderer::ClearFrame()
 //--------------------------------------------------------------------------------------
 void Renderer::InitializeDeferred()
 {
-	D3D11_TEXTURE2D_DESC textureDesc;
-
 	// Initialize the full screen quad.
 	this->createFullScreenQuad();
 
 	// Create the render target textures.
+	D3D11_TEXTURE2D_DESC textureDesc;
 	if (!this->createRenderTargetTextures(textureDesc))
 	{
 		std::cout << "ERROR::RenderSystem::initializeDeferred()::createRenderTargetTextures()::Could not create render target textures." << std::endl;
@@ -119,12 +118,6 @@ void Renderer::InitializeDeferred()
 		std::cout << "ERROR::RenderSystem::initializeDeferred()::createShaderResourceViews()::Could not create the shader resource views." << std::endl;
 	}
 
-	// Create vertex buffer quad.
-	if (!this->createVertexBufferQuad())
-	{
-		std::cout << "ERROR::RenderSystem::initializeDeferred()::createVertexBufferQuad()::Could not create the Vertex or Index buffers." << std::endl;
-	}
-
 	// Initialize shaders and input layouts.
 	if (!this->initializeShaders())
 	{
@@ -139,36 +132,21 @@ void Renderer::InitializeDeferred()
 
 
 //--------------------------------------------------------------------------------------
-void Renderer::createFullScreenQuad()
+bool Renderer::createFullScreenQuad()
 {
-	this->screenQuad[0] = { { -1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 1.0f } };
-	this->screenQuad[1] = { { -1.0f,  1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 0.0f } };
-	this->screenQuad[2] = { {  1.0f,  1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 1.0f, 0.0f } };
-	this->screenQuad[3] = { {  1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 1.0f, 1.0f } };
-}
+	// Create VertexData.
+	this->fullScreenQuad.vertexData[0] = { { -1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 1.0f } };
+	this->fullScreenQuad.vertexData[1] = { { -1.0f,  1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 0.0f } };
+	this->fullScreenQuad.vertexData[2] = { {  1.0f,  1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 1.0f, 0.0f } };
+	this->fullScreenQuad.vertexData[3] = { {  1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 1.0f, 1.0f } };
+	// Create IndexData.
+	UINT indices[] = { 0, 1, 2,	0, 2, 3	};
 
-
-
-
-
-
-
-//--------------------------------------------------------------------------------------
-bool Renderer::createVertexBufferQuad()
-{
-
-
-	
-	UINT indices[] =
-	{
-		0, 1, 2,
-		0, 2, 3
-	};
 
 	// Load Vertex Data
 	D3D11_BUFFER_DESC bufferDesc;
 	ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
-	bufferDesc.ByteWidth = sizeof(screenQuad);
+	bufferDesc.ByteWidth = sizeof(this->fullScreenQuad.vertexData);
 	bufferDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
 	bufferDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_VERTEX_BUFFER;
 	bufferDesc.CPUAccessFlags = 0;
@@ -177,11 +155,11 @@ bool Renderer::createVertexBufferQuad()
 
 	D3D11_SUBRESOURCE_DATA data;
 	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
-	data.pSysMem = screenQuad;
+	data.pSysMem = this->fullScreenQuad.vertexData.data();
 	data.SysMemPitch = 0;
 	data.SysMemSlicePitch = 0;
 
-	HRESULT hr = this->pDXCore->device->CreateBuffer(&bufferDesc, &data, this->vertexBufferQuad.GetAddressOf());
+	HRESULT hr = this->pDXCore->device->CreateBuffer(&bufferDesc, &data, this->fullScreenQuad.vb.GetAddressOf());
 	if (FAILED(hr))
 		return false;
 
@@ -200,7 +178,7 @@ bool Renderer::createVertexBufferQuad()
 	indexBufferData.SysMemPitch = 0;
 	indexBufferData.SysMemSlicePitch = 0;
 
-	hr = this->pDXCore->device->CreateBuffer(&indexBufferDesc, &indexBufferData, this->indexBufferQuad.GetAddressOf());
+	hr = this->pDXCore->device->CreateBuffer(&indexBufferDesc, &indexBufferData, this->fullScreenQuad.ib.GetAddressOf());
 
 	return !FAILED(hr);
 }
@@ -212,7 +190,7 @@ bool Renderer::createVertexBufferQuad()
 
 
 //--------------------------------------------------------------------------------------
-bool Renderer::createRenderTargetTextures(D3D11_TEXTURE2D_DESC& textureDesc)
+bool Renderer::createRenderTargetTextures(D3D11_TEXTURE2D_DESC &textureDesc)
 {
 	ZeroMemory(&textureDesc, sizeof(D3D11_TEXTURE2D_DESC));
 
@@ -382,9 +360,9 @@ bool Renderer::createInputLayoutLP(const std::string& vShaderByteCode)
 void Renderer::setCamera(Camera* camera)
 {
 	this->pCamera = camera;
-	dx::XMStoreFloat4(&this->perFrameData.CameraPosition, camera->getCameraPosition());
-	dx::XMStoreFloat4x4(&this->perFrameData.ViewMatrix, camera->getCameraView());
-	dx::XMStoreFloat4x4(&this->perFrameData.ProjectionMatrix, camera->getCameraProjection());
+	DirectX::XMStoreFloat4(&this->perFrameData.CameraPosition, camera->getCameraPosition());
+	DirectX::XMStoreFloat4x4(&this->perFrameData.ViewMatrix, camera->getCameraView());
+	DirectX::XMStoreFloat4x4(&this->perFrameData.ProjectionMatrix, camera->getCameraProjection());
 
 	this->pDXCore->deviceContext->UpdateSubresource(this->perFrameBuffer->Get(), 0, nullptr, &this->perFrameData, 0, 0);
 }
@@ -424,14 +402,12 @@ bool Renderer::initializeShaders()
 	std::string deferred_lightning_vs;
 	std::string deferred_geometry_ps;
 	std::string deferred_lightning_ps;
-	std::string gaussianfilter_cs;
 
 	// Load Shaders Data.
 	this->loadShaderData("deferred_geometry_vs", deferred_geometry_vs);
 	this->loadShaderData("deferred_lightning_vs", deferred_lightning_vs);
 	this->loadShaderData("deferred_geometry_ps", deferred_geometry_ps);
 	this->loadShaderData("deferred_lightning_ps", deferred_lightning_ps);
-	this->loadShaderData("gaussianfilter_cs", gaussianfilter_cs);
 	
 	// Create deferred_geometry_vs.
 	if (FAILED(this->pDXCore->device->CreateVertexShader(deferred_geometry_vs.c_str(), deferred_geometry_vs.length(),
@@ -464,9 +440,20 @@ bool Renderer::initializeShaders()
 		std::cout << "ERROR::initializeShader::Could not create deferred_lightning_ps" << std::endl;
 		return false;
 	}
+
+	// Create layout for GeometryPass.
+	if(!this->createInputLayoutGP(deferred_geometry_vs))
+	{
+		std::cout << "ERROR::createInputLayoutGP::Could not create layout for GeometryPass" << std::endl;
+		return false;
+	}
 	
-	this->createInputLayoutGP(deferred_geometry_vs);
-	this->createInputLayoutLP(deferred_lightning_vs);
+	// Create layout for LightningPass.
+	if (!this->createInputLayoutLP(deferred_lightning_vs))
+	{
+		std::cout << "ERROR::createInputLayoutLP::Could not create layout for LightningPass" << std::endl;
+		return false;
+	}
 
 	return true;
 }
@@ -561,8 +548,8 @@ void Renderer::LightningPass()
 
 	this->pDXCore->deviceContext->IASetInputLayout(this->inputLayoutLP.Get());
 	this->pDXCore->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	this->pDXCore->deviceContext->IASetVertexBuffers(0, 1, this->vertexBufferQuad.GetAddressOf(), &stride, &offset);
-	this->pDXCore->deviceContext->IASetIndexBuffer(indexBufferQuad.Get(), DXGI_FORMAT_R32_UINT, 0);
+	this->pDXCore->deviceContext->IASetVertexBuffers(0, 1, this->fullScreenQuad.vb.GetAddressOf(), &stride, &offset);
+	this->pDXCore->deviceContext->IASetIndexBuffer(this->fullScreenQuad.ib.Get(), DXGI_FORMAT_R32_UINT, 0);
 
 	this->pDXCore->deviceContext->PSSetSamplers(0, 1, this->pDXCore->pointSamplerState.GetAddressOf());
 	this->pDXCore->deviceContext->PSSetShaderResources(0, 3, renderShaderResourceView->GetAddressOf());
