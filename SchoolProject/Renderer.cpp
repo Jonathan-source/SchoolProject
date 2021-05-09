@@ -547,6 +547,11 @@ void Renderer::LightningPass()
 
 	static UINT stride = sizeof(Quad);
 	static UINT offset = 0;
+
+	this->pDXCore->deviceContext->IASetInputLayout(this->inputLayoutLP.Get());
+	this->pDXCore->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	this->pDXCore->deviceContext->IASetVertexBuffers(0, 1, this->fullScreenQuad.vb.GetAddressOf(), &stride, &offset);
+	this->pDXCore->deviceContext->IASetIndexBuffer(this->fullScreenQuad.ib.Get(), DXGI_FORMAT_R32_UINT, 0);
 	
 	this->pDXCore->deviceContext->OMSetRenderTargets(1, this->pDXCore->renderTargetView.GetAddressOf(), nullptr);
 	this->pDXCore->deviceContext->RSSetState(this->pDXCore->rasterizerState.Get());
@@ -558,21 +563,15 @@ void Renderer::LightningPass()
 		this->graphicsBuffer[GBUFFER::NORMAL].shaderResourceView,
 		this->graphicsBuffer[GBUFFER::DIFFUSE].shaderResourceView,
 	};
-
-	this->pDXCore->deviceContext->IASetInputLayout(this->inputLayoutLP.Get());
-	this->pDXCore->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	this->pDXCore->deviceContext->IASetVertexBuffers(0, 1, this->fullScreenQuad.vb.GetAddressOf(), &stride, &offset);
-	this->pDXCore->deviceContext->IASetIndexBuffer(this->fullScreenQuad.ib.Get(), DXGI_FORMAT_R32_UINT, 0);
-
-	this->pDXCore->deviceContext->PSSetSamplers(0, 1, this->pDXCore->pointSamplerState.GetAddressOf());
-	this->pDXCore->deviceContext->PSSetShaderResources(0, 3, renderShaderResourceView->GetAddressOf());
-	this->pDXCore->deviceContext->PSSetShaderResources(3, 1, this->lightBufferSRV.GetAddressOf());
+	this->pDXCore->deviceContext->PSSetShaderResources(0, 3, renderShaderResourceView->GetAddressOf());	// GBuffer
+	this->pDXCore->deviceContext->PSSetShaderResources(3, 1, this->lightBufferSRV.GetAddressOf());		// StructuredBuffer
 	this->pDXCore->deviceContext->PSSetConstantBuffers(1, 1, this->perFrameBuffer->GetAddressOf());
-
+	this->pDXCore->deviceContext->PSSetSamplers(0, 1, this->pDXCore->pointSamplerState.GetAddressOf());
+	
 	this->pDXCore->deviceContext->PSSetShader(this->shaders.deferred_lightning_ps.Get(), nullptr, 0);
 	this->pDXCore->deviceContext->VSSetShader(this->shaders.deferred_lightning_vs.Get(), nullptr, 0);
 	
-	// Render triangles.
+	// Render (FullScreenQuad).
 	this->pDXCore->deviceContext->DrawIndexed(6, 0, 0);
 	
 	ID3D11ShaderResourceView* nullSRV = nullptr;
@@ -580,7 +579,6 @@ void Renderer::LightningPass()
 	this->pDXCore->deviceContext->PSSetShaderResources(1, 1, &nullSRV);
 	this->pDXCore->deviceContext->PSSetShaderResources(2, 1, &nullSRV);
 	this->pDXCore->deviceContext->PSSetShaderResources(3, 1, &nullSRV);
-	this->pDXCore->deviceContext->PSSetShaderResources(4, 1, &nullSRV);
 }
 
 

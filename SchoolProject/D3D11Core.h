@@ -47,18 +47,23 @@ private:
 public:
 
 	ComPtr<ID3D11Device>				device;
+	ComPtr<ID3D11DeviceContext>			deviceContext;
 	ComPtr<IDXGISwapChain>				swapChain;
 	DXGI_FORMAT							swapChainFormat;
-	ComPtr<ID3D11DeviceContext>			deviceContext;
+	
 	ComPtr<ID3D11RenderTargetView>		renderTargetView;
 	ComPtr<ID3D11Texture2D>				depthStencilTexture;
 	ComPtr<ID3D11DepthStencilView>		depthStencilView;
 	ComPtr<ID3D11DepthStencilState>		depthStencilState;
+	
 	ComPtr<ID3D11RasterizerState>		rasterizerState;
 	ComPtr<ID3D11RasterizerState>		rasterStateNoCulling;
 	ComPtr<ID3D11RasterizerState>		rasterStateWireframe;
+	
 	ComPtr<ID3D11SamplerState>			linearSamplerState;
 	ComPtr<ID3D11SamplerState>			pointSamplerState;
+	
 	ComPtr<ID3D11UnorderedAccessView>	backBufferUAV;
+	
 	D3D11_VIEWPORT						viewport;	
 };
