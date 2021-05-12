@@ -10,7 +10,7 @@
 
 
 //--------------------------------------------------------------------------------------
-//
+// 
 //--------------------------------------------------------------------------------------
 struct Mesh
 {
@@ -18,9 +18,6 @@ struct Mesh
 	IndexBuffer ib;
 };
 
-
-
-typedef uint32_t ResourceID;
 
 class ResourceManager
 {
@@ -34,22 +31,15 @@ public:
 
 	void Initialize();
 
-	void AddResource();
-
-	std::shared_ptr<ConstantBuffer>		getConstantBuffer(ResourceID id);
-	std::shared_ptr<Mesh>				getMesh(ResourceID id);
-	std::shared_ptr<ID3D11Texture2D>	getTexture(ResourceID id);
+	std::shared_ptr<ConstantBuffer>		getConstantBuffer(std::string id);
+	std::shared_ptr<Mesh>				getMesh(std::string id);
+	std::shared_ptr<ID3D11Texture2D>	getTexture(std::string id);
 private:
 	D3D11Core* pD3D11Core;
 
-	ResourceID nextID;
-
-	std::unordered_map<std::string, ResourceID>							resourceIDs;
-	std::unordered_map<ResourceID, std::shared_ptr<Mesh>>				meshes;
-	std::unordered_map<ResourceID, std::shared_ptr<ID3D11Texture2D>>	textures;
-	std::unordered_map<ResourceID, std::shared_ptr<ConstantBuffer>>		constantBuffers;
-
-
+	std::unordered_map<std::string, std::shared_ptr<Mesh>>				meshes;
+	std::unordered_map<std::string, std::shared_ptr<ID3D11Texture2D>>	textures;
+	std::unordered_map<std::string, std::shared_ptr<ConstantBuffer>>	constantBuffers;
 
 	struct MeshData
 	{

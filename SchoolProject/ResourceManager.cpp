@@ -1,12 +1,30 @@
 #include "ResourceManager.h"
 
+//--------------------------------------------------------------------------------------
 ResourceManager::ResourceManager(D3D11Core* pD3D11Core)
 	: pD3D11Core(pD3D11Core)
-	, nextID(0)
 {
-	// Initialize() ?
+	this->Initialize();
 }
 
+
+
+
+
+//--------------------------------------------------------------------------------------
+void ResourceManager::Initialize()
+{
+	// Load all resources here :
+
+
+	
+}
+
+
+
+
+
+//--------------------------------------------------------------------------------------
 void ResourceManager::LoadMeshFromBinary(MeshData &meshData, const std::string& filename)
 {	
 	unsigned int nrOfVertices, nrOfNormals, nrOfTexCoords, nrOfTangents, nrOfIndices;
@@ -36,12 +54,19 @@ void ResourceManager::LoadMeshFromBinary(MeshData &meshData, const std::string& 
 		std::cout << "ERROR::ResourceManager::LoadMeshFromBinary()::Could not open file.\n";
 }
 
+
+
+
+
+
+//--------------------------------------------------------------------------------------
+// Load Mesh from Binary file and store in map with key: filename - 3.
 void ResourceManager::AddMeshFromFile(const std::string& filename)
 {
 	// Create and initialize new Mesh.
-	Mesh mesh;
-	mesh.vb.setDevice(this->pD3D11Core->device.Get());
-	mesh.ib.setDevice(this->pD3D11Core->device.Get());
+	std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
+	mesh->vb.setDevice(this->pD3D11Core->device.Get());
+	mesh->ib.setDevice(this->pD3D11Core->device.Get());
 
 	// Load Mesh data.
 	MeshData meshData;
@@ -58,9 +83,10 @@ void ResourceManager::AddMeshFromFile(const std::string& filename)
 		iData.emplace_back(meshData.indices[i].x);
 	
 	// Create VertexBuffer & IndexBuffer.
-	mesh.vb.createVertexBuffer(vData.data(), vData.size());
-	mesh.ib.createIndexBuffer(iData.data(), iData.size());
+	mesh->vb.createVertexBuffer(vData.data(), vData.size());
+	mesh->ib.createIndexBuffer(iData.data(), iData.size());
 
 	// Add Mesh to map.
-
+	std::string name = filename.substr(0, filename.length() - 3);	
+	this->meshes.insert(std::make_pair(name, std::move(mesh)));
 }

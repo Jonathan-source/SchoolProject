@@ -2,6 +2,7 @@
 
 #include "Engine.h"
 
+//--------------------------------------------------------------------------------------
 Engine::Engine(HINSTANCE& hInstance, HINSTANCE& hPrevIntance, LPWSTR& lpmCmdLine, int& nCmdShow)
 	: hInstance(hInstance)
 	, hPrevIntance(hPrevIntance)

@@ -6,7 +6,7 @@ class MouseListener
 {
 public:
 
-	//Constructors
+	// Constructors
 	MouseListener() = default;
 	MouseListener(float screenHeight, float screenWidth);
 	MouseListener(const MouseListener& other) = delete;
@@ -14,14 +14,14 @@ public:
 	MouseListener& operator=(const MouseListener& other) = delete;
 	MouseListener& operator=(MouseListener&& other) = delete;
 
-	//Deconstructor
+	// Deconstructor
 	virtual ~MouseListener() = default;
 
-	//Updates
+	// Updates
 	void updateRay(DirectX::XMMATRIX projection, sm::Matrix view);
 	void updateMouse(MSG wMsg, HWND hwnd);
 
-	//Getters
+	// Getters
 	Ray getRay() const;
 	bool getLMouseButtonDown() const;
 	bool getRMouseButtonDown() const;
@@ -30,7 +30,7 @@ public:
 
 private:
 
-	//Setters
+	// Setters
 	void setLMouseButtonDown(bool condition);
 	void setRMouseButtonDown(bool condition);
 	void setMousePos(LPARAM lParam);
