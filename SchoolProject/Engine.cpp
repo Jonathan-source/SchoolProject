@@ -24,7 +24,7 @@ Engine::Engine(HINSTANCE& hInstance, HINSTANCE& hPrevIntance, LPWSTR& lpmCmdLine
 	this->mouseListener = std::make_shared<MouseListener>((float)screenHeight, (float)screenWidth);
 
 	//Initialize Camera
-	this->camera = std::make_shared<Camera>(this->keyboardListener);
+	this->camera = std::make_shared<Camera>(this->keyboardListener, screenHeight, screenWidth);
 
 	//Initialize Renderer
 	this->renderer = new Renderer(d3d11Core, this->window, this->camera.get());
