@@ -1,17 +1,17 @@
 #pragma once
 #include "pch.h"
 
-#include <cstdint>
+#pragma warning(push, 0)
+#include "stb_image.h"
+#pragma warning(pop)
+
 #include "D3D11Core.h"
-#include "ConstantBuffer.h"
-#include "VertexBuffer.h"
-#include "IndexBuffer.h"
 #include "GlobalBuffers.h"
+#include "VertexBuffer.h"
+#include "ConstantBuffer.h"
+#include "IndexBuffer.h"
 
 
-//--------------------------------------------------------------------------------------
-// 
-//--------------------------------------------------------------------------------------
 struct Mesh
 {
 	VertexBuffer vb;
@@ -29,27 +29,75 @@ public:
 	ResourceManager& operator=(ResourceManager&& other) = delete;
 	virtual ~ResourceManager() = default;
 
-	void Initialize();
+	// Load-to-map methods.
+	void LoadMeshes(const std::vector<std::string>& meshes);
+	void LoadTextures(const std::vector<std::string>& textures);
 
-	std::shared_ptr<ConstantBuffer>		getConstantBuffer(std::string id);
-	std::shared_ptr<Mesh>				getMesh(std::string id);
-	std::shared_ptr<ID3D11Texture2D>	getTexture(std::string id);
+	// Getters.
+	ComPtr<ID3D11PixelShader>			GetPixelShader(const std::string& filename) const;
+	ComPtr<ID3D11VertexShader>			GetVertexShader(const std::string& filename) const;
+	ComPtr<ID3D11ComputeShader>			GetComputeShader(const std::string& filename) const;
+	ComPtr<ID3D11GeometryShader>		GetGeometryShader(const std::string& filename) const;
+	ComPtr<ID3D11ShaderResourceView>	GetTexture(const std::string& filename) const;
+	const std::shared_ptr<Mesh>			GetMesh(const std::string& filename) const;
+	const IndexBuffer*					GetIndexBuffer(const std::string& filename) const;
+	const VertexBuffer*					GetVertexBuffer(const std::string& filename) const;
+
+	ComPtr<ID3D11InputLayout> inputLayoutGP;	// InputLayout for Geometry Pass.
+	ComPtr<ID3D11InputLayout> inputLayoutLP;	// InputLayout for Lightning Pass.
 private:
 	D3D11Core* pD3D11Core;
 
-	std::unordered_map<std::string, std::shared_ptr<Mesh>>				meshes;
-	std::unordered_map<std::string, std::shared_ptr<ID3D11Texture2D>>	textures;
-	std::unordered_map<std::string, std::shared_ptr<ConstantBuffer>>	constantBuffers;
 
+	//
+	// Data storage.
+	//
 	struct MeshData
 	{
 		std::vector<DirectX::XMFLOAT3> vertices;
 		std::vector<DirectX::XMFLOAT3> normals;
 		std::vector<DirectX::XMFLOAT2> texCoords;
 		std::vector<DirectX::XMFLOAT3> tangents;
-		std::vector<DirectX::XMUINT3> indices;
+		std::vector<DirectX::XMUINT3>  indices;
 	};
-	void LoadMeshFromBinary(MeshData &meshData, const std::string &filename);
-	void AddMeshFromFile(const std::string &filename);
-};
 
+	template<typename T>
+	struct Shader
+	{
+		std::string shaderName;
+		std::string shaderData;
+		ComPtr<T> ID3D11Shader;
+
+		Shader(std::string shaderName)
+			: shaderName(shaderName) {}
+	}; 
+
+	std::unordered_map<std::string, std::shared_ptr<Mesh>>				meshMap;
+	std::unordered_map<std::string, std::shared_ptr<VertexBuffer>>		vBuffers;
+	std::unordered_map<std::string, std::shared_ptr<IndexBuffer>>		iBuffers;
+	std::unordered_map<std::string, ComPtr<ID3D11ShaderResourceView>>	textures;
+
+	std::unordered_map<std::string, Shader<ID3D11VertexShader>>			vShaders;
+	std::unordered_map<std::string, Shader<ID3D11PixelShader>>			pShaders;
+	std::unordered_map<std::string, Shader<ID3D11GeometryShader>>		gShaders;
+	std::unordered_map<std::string, Shader<ID3D11ComputeShader>>		cShaders;
+
+	bool CreateInputLayoutGP(const std::string& vShaderByteCode);
+	bool CreateInputLayoutLP(const std::string& vShaderByteCode);
+
+	void InitializeShaders();
+	bool LoadShaderData(const std::string& filename, std::string& shaderByteCode);
+
+
+	//----------------------------------------------------------------------------------
+	// Load texture from file.
+	//----------------------------------------------------------------------------------
+	ComPtr<ID3D11ShaderResourceView> LoadTextureFromFile(const char* filename);
+
+	//----------------------------------------------------------------------------------
+	// Load mesh from obj file.
+	//----------------------------------------------------------------------------------
+	void LoadObjFromFile(const std::string& filename, MeshData& meshData);
+	void ComputeTangentsNormalsBitangents(MeshData &meshData);
+	void CreateMeshFromMeshData(Mesh *mesh, MeshData& meshData);
+};

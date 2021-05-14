@@ -46,8 +46,9 @@ void Object::SetTexture()
 
 
 //--------------------------------------------------------------------------------------
-void Object::SetMesh()
+void Object::SetMesh(Mesh * pMesh)
 {
+	this->mesh = pMesh;
 }
 
 
@@ -241,11 +242,19 @@ const DirectX::XMFLOAT4X4& Object::GetMatrix()
 //--------------------------------------------------------------------------------------
 void Object::Draw(ID3D11DeviceContext* pDeviceContext)
 {
-	//pDeviceContext->IASetVertexBuffers();
-	//pDeviceContext->IASetIndexBuffer();
-	pDeviceContext->PSSetConstantBuffers(1, 1, this->perObjectConstantBuffer->GetAddressOf());
-	this->UpdateConstantBuffer(pDeviceContext);
-	//pDeviceContext->DrawIndexed();
+	if (this->mesh != nullptr)
+	{
+		static UINT stride = sizeof(SimpleVertex);
+		static UINT offset = 0;
+
+		pDeviceContext->IASetVertexBuffers(0, 1, this->mesh->vb.GetAddressOf(), &stride, &offset);
+		pDeviceContext->IASetIndexBuffer(this->mesh->ib.Get(), DXGI_FORMAT_R32_UINT, 0);
+
+		this->UpdateConstantBuffer(pDeviceContext);
+		pDeviceContext->PSSetConstantBuffers(1, 1, this->perObjectConstantBuffer->GetAddressOf());
+
+		pDeviceContext->DrawIndexed(this->mesh->ib.getIndexCount(), 0, 0);
+	}
 }
 
 

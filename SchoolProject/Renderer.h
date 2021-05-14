@@ -6,6 +6,7 @@
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "ConstantBuffer.h"
+#include "ResourceManager.h"
 
 
 //--------------------------------------------------------------------------------------
@@ -14,7 +15,7 @@
 class Renderer
 {
 public:
-	Renderer(D3D11Core* pDXCore, Window* pWindow, Camera* pCamera);
+	Renderer(D3D11Core* pDXCore, Window* pWindow, Camera* pCamera, ResourceManager* pResourceManager);
 	Renderer(const Renderer& other) = delete;
 	Renderer(Renderer&& other) = delete;
 	Renderer& operator=(const Renderer& other) = delete;
@@ -27,9 +28,10 @@ public:
 	void Present();
 
 private:
-	D3D11Core*	pDXCore;
-	Window*		pWindow;
-	Camera*		pCamera;
+	D3D11Core*			pDXCore;
+	Window*				pWindow;
+	Camera*				pCamera;
+	ResourceManager*	pResourceManager;
 
 	PerFrame perFrameData;
 	std::unique_ptr<ConstantBuffer> perFrameBuffer;
@@ -49,8 +51,6 @@ private:
 	ComPtr<ID3D11Buffer>				lightBuffer;
 	ComPtr<ID3D11ShaderResourceView>	lightBufferSRV;
 
-	ComPtr<ID3D11InputLayout>			inputLayoutGP;	// InputLayout for Geometry Pass.
-	ComPtr<ID3D11InputLayout>			inputLayoutLP;	// InputLayout for Lightning Pass.
 
 
 	//
@@ -65,21 +65,6 @@ private:
 	void InitializeLights();
 	bool createStructuredBufferLights();
 	
-	bool createInputLayoutGP(const std::string& vShaderByteCode);
-	bool createInputLayoutLP(const std::string& vShaderByteCode);
-
-	struct Shaders
-	{
-		ComPtr<ID3D11VertexShader>	deferred_geometry_vs;
-		ComPtr<ID3D11PixelShader>	deferred_geometry_ps;
-		ComPtr<ID3D11VertexShader>	deferred_lightning_vs;
-		ComPtr<ID3D11PixelShader>	deferred_lightning_ps;
-	} shaders;
-
-	bool initializeShaders();
-	bool loadShaderData(const std::string& filename, std::string& shaderByteCode);
-
-
 	// Different Passes.
 	void GeometryPass();
 	void LightningPass();

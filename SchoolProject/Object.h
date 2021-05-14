@@ -12,7 +12,7 @@ public:
 
 	void SetPostProcessingEffect();
 	void SetTexture();
-	void SetMesh();
+	void SetMesh(Mesh* pMesh);
 	void SetMaterial();
 	void SetNormalTexture();
 	void SetSpecularTexture();

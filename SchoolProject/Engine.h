@@ -8,6 +8,8 @@
 #include "Timer.h"
 #include "Renderer.h"
 
+#include "Object.h"
+
 class Engine
 {
 public:
@@ -55,6 +57,9 @@ private:
 
 	// Engine specific functions
 	//void initializeImGui();
+
+	//test
+	Object * obj;
 
 
 	bool handleMessage();

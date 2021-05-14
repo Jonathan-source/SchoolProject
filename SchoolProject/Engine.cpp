@@ -14,7 +14,7 @@ Engine::Engine(HINSTANCE& hInstance, HINSTANCE& hPrevIntance, LPWSTR& lpmCmdLine
 {
 	// Initialize Window.
 	this->window = new Window(hInstance, nCmdShow);
-	if (!this->window->create(this->screenWidth / 2.f, this->screenHeight / 2.f, this->TITLE))
+	if (!this->window->create(static_cast<LONG>(this->screenWidth / 2.f), static_cast<LONG>(this->screenHeight / 2.f), this->TITLE))
 		std::cout << "ERROR::Engine::initializeWindow()::Could not initialize Window." << std::endl;
 
 	// Initialize DX11Core.
@@ -27,11 +27,20 @@ Engine::Engine(HINSTANCE& hInstance, HINSTANCE& hPrevIntance, LPWSTR& lpmCmdLine
 	// Initialize Camera
 	this->camera = std::make_shared<Camera>(this->keyboardListener);
 
-	// Initialize Renderer
-	this->renderer = new Renderer(d3d11Core, this->window, this->camera.get());
-	
 	// Initialize ResourceManager.
 	this->resourceManager = new ResourceManager(this->d3d11Core);
+	
+	// Initialize Renderer
+	this->renderer = new Renderer(d3d11Core, this->window, this->camera.get(), this->resourceManager);
+
+
+
+	this->obj = new Object(this->d3d11Core->device.Get());
+	obj->SetMesh(this->resourceManager->GetMesh("Cube.obj").get());
+
+
+
+
 
 	// Setup ImGUI
 	IMGUI_CHECKVERSION();
@@ -79,6 +88,10 @@ void Engine::Update()
 
 			// Draw.
 			renderer->BeginFrame();
+
+			// For each object:
+			this->obj->Draw(this->d3d11Core->deviceContext.Get());
+
 			renderer->EndFrame();
 
 #ifdef _DEBUG
@@ -133,6 +146,7 @@ Engine::~Engine()
 	delete this->d3d11Core;
 	delete this->resourceManager;
 	delete this->renderer;
+	delete this->obj;
 }
 
 

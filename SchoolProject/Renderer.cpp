@@ -3,10 +3,11 @@
 
 
 //--------------------------------------------------------------------------------------
-Renderer::Renderer(D3D11Core* pDXCore,Window* pWindow, Camera* pCamera)
+Renderer::Renderer(D3D11Core* pDXCore,Window* pWindow, Camera* pCamera, ResourceManager* pResourceManager)
 	: pWindow(pWindow)
 	, pDXCore(pDXCore)
 	, pCamera(pCamera)
+	, pResourceManager(pResourceManager)
 	, perFrameBuffer(std::make_unique<ConstantBuffer>(pDXCore->device.Get(), sizeof(PerFrame)))
 {
 	// Initialize Deferred Rendering.
@@ -30,11 +31,7 @@ void Renderer::BeginFrame()
 {
 	this->ClearFrame();
 
-	// Update per frame subresources.
-	DirectX::XMStoreFloat4(&this->perFrameData.CameraPosition, this->pCamera->getPosition());
-	DirectX::XMStoreFloat4x4(&this->perFrameData.ViewMatrix, this->pCamera->getView());
-	DirectX::XMStoreFloat4x4(&this->perFrameData.ProjectionMatrix, this->pCamera->getProjectionMatrix());
-	this->pDXCore->deviceContext->UpdateSubresource(this->perFrameBuffer->Get(), 0, nullptr, &this->perFrameData, 0, 0);
+	this->setPerFrameBuffer();
 
 	this->GeometryPass();
 }
@@ -102,25 +99,19 @@ void Renderer::InitializeDeferred()
 	D3D11_TEXTURE2D_DESC textureDesc;
 	if (!this->createRenderTargetTextures(textureDesc))
 	{
-		std::cout << "ERROR::RenderSystem::initializeDeferred()::createRenderTargetTextures()::Could not create render target textures." << std::endl;
+		std::cout << "ERROR::RenderSystem::InitializeDeferred()::createRenderTargetTextures()::Could not create render target textures." << std::endl;
 	}
 
 	// Create the render target views.
 	if (!this->createRenderTargetView(textureDesc))
 	{
-		std::cout << "ERROR::RenderSystem::initializeDeferred()::createRenderTargetView()::Could not create the render target views." << std::endl;
+		std::cout << "ERROR::RenderSystem::InitializeDeferred()::createRenderTargetView()::Could not create the render target views." << std::endl;
 	}
 
 	// Create the shader resource views.
 	if (!this->createShaderResourceViews(textureDesc))
 	{
-		std::cout << "ERROR::RenderSystem::initializeDeferred()::createShaderResourceViews()::Could not create the shader resource views." << std::endl;
-	}
-
-	// Initialize shaders and input layouts.
-	if (!this->initializeShaders())
-	{
-		std::cout << "ERROR::RenderSystem::initializeDeferred()::initializeShaders()::Could not initialize shaders." << std::endl;
+		std::cout << "ERROR::RenderSystem::InitializeDeferred()::createShaderResourceViews()::Could not create the shader resource views." << std::endl;
 	}
 }
 
@@ -336,32 +327,6 @@ bool Renderer::createStructuredBufferLights()
 
 
 
-
-
-
-//--------------------------------------------------------------------------------------
-bool Renderer::createInputLayoutLP(const std::string& vShaderByteCode)
-{
-	D3D11_INPUT_ELEMENT_DESC inputDesc[] =
-	{
-		{"POSITION",	0, DXGI_FORMAT_R32G32B32_FLOAT,		0,                   0,					D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"NORMAL",		0, DXGI_FORMAT_R32G32B32_FLOAT,		0,		D3D11_APPEND_ALIGNED_ELEMENT,	D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"TEXCOORD",	0, DXGI_FORMAT_R32G32_FLOAT,		0,		D3D11_APPEND_ALIGNED_ELEMENT,	D3D11_INPUT_PER_VERTEX_DATA, 0}
-	};
-
-	HRESULT hr = this->pDXCore->device->CreateInputLayout(inputDesc, ARRAYSIZE(inputDesc), vShaderByteCode.c_str(), vShaderByteCode.length(), this->inputLayoutLP.GetAddressOf());
-
-	return !FAILED(hr);
-}
-
-
-
-
-
-
-
-
-
 //--------------------------------------------------------------------------------------
 void Renderer::setPerFrameBuffer()
 {
@@ -377,119 +342,6 @@ void Renderer::setPerFrameBuffer()
 
 
 
-
-
-
-
-//--------------------------------------------------------------------------------------
-bool Renderer::createInputLayoutGP(const std::string& vShaderByteCode)
-{
-	D3D11_INPUT_ELEMENT_DESC inputDesc[] =
-	{
-		{"POSITION",	0, DXGI_FORMAT_R32G32B32_FLOAT,    0,				0,					D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"NORMAL",		0, DXGI_FORMAT_R32G32B32_FLOAT,    0,	D3D11_APPEND_ALIGNED_ELEMENT,	D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"TEXCOORD",	0, DXGI_FORMAT_R32G32_FLOAT,       0,	D3D11_APPEND_ALIGNED_ELEMENT,	D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"TANGENT",		0, DXGI_FORMAT_R32G32B32_FLOAT,    0,	D3D11_APPEND_ALIGNED_ELEMENT,	D3D11_INPUT_PER_VERTEX_DATA, 0}
-	};
-
-	HRESULT hr = this->pDXCore->device->CreateInputLayout(inputDesc, ARRAYSIZE(inputDesc), vShaderByteCode.c_str(), vShaderByteCode.length(), &this->inputLayoutGP);
-
-	return !FAILED(hr);	
-}
-
-
-
-
-
-
-//--------------------------------------------------------------------------------------
-bool Renderer::initializeShaders()
-{
-	std::string deferred_geometry_vs;
-	std::string deferred_lightning_vs;
-	std::string deferred_geometry_ps;
-	std::string deferred_lightning_ps;
-
-	// Load Shaders Data.
-	this->loadShaderData("deferred_geometry_vs", deferred_geometry_vs);
-	this->loadShaderData("deferred_lightning_vs", deferred_lightning_vs);
-	this->loadShaderData("deferred_geometry_ps", deferred_geometry_ps);
-	this->loadShaderData("deferred_lightning_ps", deferred_lightning_ps);
-	
-	// Create deferred_geometry_vs.
-	if (FAILED(this->pDXCore->device->CreateVertexShader(deferred_geometry_vs.c_str(), deferred_geometry_vs.length(),
-														nullptr, this->shaders.deferred_geometry_vs.GetAddressOf())))
-	{
-		std::cout << "ERROR::initializeShader::Could not create deferred_geometry_vs" << std::endl;
-		return false;
-	}
-
-	// Create deferred_lightning_vs.
-	if (FAILED(this->pDXCore->device->CreateVertexShader(deferred_lightning_vs.c_str(), deferred_lightning_vs.length(),
-		nullptr, this->shaders.deferred_lightning_vs.GetAddressOf())))
-	{
-		std::cout << "ERROR::initializeShader::Could not create deferred_lightning_vs" << std::endl;
-		return false;
-	}
-
-	// Create deferred_geometry_ps.
-	if (FAILED(this->pDXCore->device->CreatePixelShader(deferred_geometry_ps.c_str(), deferred_geometry_ps.length(),
-		nullptr, this->shaders.deferred_geometry_ps.GetAddressOf())))
-	{
-		std::cout << "ERROR::initializeShader::Could not create deferred_geometry_ps" << std::endl;
-		return false;
-	}
-
-	// Create deferred_lightning_ps.
-	if (FAILED(this->pDXCore->device->CreatePixelShader(deferred_lightning_ps.c_str(), deferred_lightning_ps.length(),
-		nullptr, this->shaders.deferred_lightning_ps.GetAddressOf())))
-	{
-		std::cout << "ERROR::initializeShader::Could not create deferred_lightning_ps" << std::endl;
-		return false;
-	}
-
-	// Create layout for GeometryPass.
-	if(!this->createInputLayoutGP(deferred_geometry_vs))
-	{
-		std::cout << "ERROR::createInputLayoutGP::Could not create layout for GeometryPass" << std::endl;
-		return false;
-	}
-	
-	// Create layout for LightningPass.
-	if (!this->createInputLayoutLP(deferred_lightning_vs))
-	{
-		std::cout << "ERROR::createInputLayoutLP::Could not create layout for LightningPass" << std::endl;
-		return false;
-	}
-
-	return true;
-}
-
-
-
-
-
-
-//--------------------------------------------------------------------------------------
-bool Renderer::loadShaderData(const std::string& filename, std::string& shaderByteCode)
-{
-	std::ifstream reader;
-	std::string shaderData;
-	reader.open(filename + ".cso", std::ios::binary | std::ios::ate);
-	if (!reader.is_open())
-	{
-		std::cout << "ERROR::loadShaderData()::Could not open " + filename + ".cso" << std::endl;
-		return false;
-	}
-	reader.seekg(0, std::ios::end);
-	shaderData.reserve(static_cast<unsigned int>(reader.tellg()));
-	reader.seekg(0, std::ios::beg);
-	shaderData.assign((std::istreambuf_iterator<char>(reader)), std::istreambuf_iterator<char>());
-	shaderByteCode = shaderData;
-	reader.close();
-
-	return true;
-}
 
 
 
@@ -510,14 +362,13 @@ void Renderer::GeometryPass()
 
 	
 	// Set the vertex input layout & rasterizerstate.
-	this->pDXCore->deviceContext->IASetInputLayout(this->inputLayoutGP.Get());
+	this->pDXCore->deviceContext->IASetInputLayout(this->pResourceManager->inputLayoutGP.Get());
 	this->pDXCore->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	
-
 	// Set the vertex and pixel shaders, and finally sampler state to use in the pixel shader.
-	this->pDXCore->deviceContext->VSSetShader(this->shaders.deferred_geometry_vs.Get(), nullptr, 0);
-	this->pDXCore->deviceContext->PSSetShader(this->shaders.deferred_geometry_ps.Get(), nullptr, 0);
+	this->pDXCore->deviceContext->VSSetShader(this->pResourceManager->GetVertexShader("deferred_geometry_vs").Get(), nullptr, 0);
+	this->pDXCore->deviceContext->PSSetShader(this->pResourceManager->GetPixelShader("deferred_geometry_ps").Get(), nullptr, 0);
 	this->pDXCore->deviceContext->PSSetSamplers(0, 1, this->pDXCore->linearSamplerState.GetAddressOf());	
 }
 
@@ -537,7 +388,7 @@ void Renderer::LightningPass()
 	static UINT stride = sizeof(Quad);
 	static UINT offset = 0;
 
-	this->pDXCore->deviceContext->IASetInputLayout(this->inputLayoutLP.Get());
+	this->pDXCore->deviceContext->IASetInputLayout(this->pResourceManager->inputLayoutLP.Get());
 	this->pDXCore->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	this->pDXCore->deviceContext->IASetVertexBuffers(0, 1, this->fullScreenQuad.vb.GetAddressOf(), &stride, &offset);
 	this->pDXCore->deviceContext->IASetIndexBuffer(this->fullScreenQuad.ib.Get(), DXGI_FORMAT_R32_UINT, 0);
@@ -557,8 +408,8 @@ void Renderer::LightningPass()
 	this->pDXCore->deviceContext->PSSetConstantBuffers(1, 1, this->perFrameBuffer->GetAddressOf());
 	this->pDXCore->deviceContext->PSSetSamplers(0, 1, this->pDXCore->pointSamplerState.GetAddressOf());
 	
-	this->pDXCore->deviceContext->PSSetShader(this->shaders.deferred_lightning_ps.Get(), nullptr, 0);
-	this->pDXCore->deviceContext->VSSetShader(this->shaders.deferred_lightning_vs.Get(), nullptr, 0);
+	this->pDXCore->deviceContext->VSSetShader(this->pResourceManager->GetVertexShader("deferred_lightning_vs").Get(), nullptr, 0);
+	this->pDXCore->deviceContext->PSSetShader(this->pResourceManager->GetPixelShader("deferred_lightning_ps").Get(), nullptr, 0);
 	
 	// Render (FullScreenQuad).
 	this->pDXCore->deviceContext->DrawIndexed(6, 0, 0);

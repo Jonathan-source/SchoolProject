@@ -95,25 +95,25 @@ struct Quad
 //--------------------------------------------------------------------------------------
 struct SimpleVertex
 {
-	DirectX::XMFLOAT3 pos;			// 12 bytes
-	DirectX::XMFLOAT3 norm;			// 12 bytes
-	DirectX::XMFLOAT2 texCoord;		// 8 bytes
-	DirectX::XMFLOAT3 tangent;		// 12 bytes
+	DirectX::XMFLOAT3 position;			// 12 bytes
+	DirectX::XMFLOAT3 normal;			// 12 bytes
+	DirectX::XMFLOAT2 texCoord;			// 8 bytes
+	DirectX::XMFLOAT3 tangent;			// 12 bytes
 								// Total: 44 bytes.
 
 	SimpleVertex()
-		: pos({0.0f, 0.0f, 0.0f})
-		, norm({0.0f, 0.0f, 0.0f})
-		, tangent({ 0.0f, 0.0f, 0.0f })
+		: position({0.0f, 0.0f, 0.0f})
+		, normal({0.0f, 0.0f, 0.0f})
 		, texCoord({ 0.0f, 0.0f })
+		, tangent({ 0.0f, 0.0f, 0.0f })
 	{
 	}
 
-	SimpleVertex(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT3& normal, const DirectX::XMFLOAT2& texCoords, const DirectX::XMFLOAT3& t)
+	SimpleVertex(const DirectX::XMFLOAT3& position, const DirectX::XMFLOAT3& normal, const DirectX::XMFLOAT2& texCoords, const DirectX::XMFLOAT3& tangent)
 	{
-		pos = position;
-		norm = normal;
-		texCoord = texCoords;
-		tangent = t;
+		this->position = position;
+		this->normal = normal;
+		this->texCoord = texCoords;
+		this->tangent = tangent;
 	}
 };

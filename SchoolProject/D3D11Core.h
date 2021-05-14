@@ -3,19 +3,6 @@
 
 #include "Window.h"
 
-
-class RasterStates
-{
-
-	
-};
-class SamplerStates
-{
-
-	
-};
-
-
 class D3D11Core
 {
 public:
