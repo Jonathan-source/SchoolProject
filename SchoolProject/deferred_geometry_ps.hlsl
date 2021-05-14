@@ -1,6 +1,6 @@
 Texture2D DiffuseTexture        : TEXTURE : register(t0);
 Texture2D NormalTexture         : TEXTURE : register(t1);
-Texture2D EmissiveTexture       : TEXTURE: register(t2);
+Texture2D EmissiveTexture       : TEXTURE : register(t2);
 
 SamplerState LinearSampler      : SAMPLER : register(s0);
 
@@ -19,8 +19,6 @@ struct PixelShaderInput
 };                                          // Total: 88 bytes.
 
 
-
-
 //--------------------------------------------------------------------------------------
 // Used to store the final result of the lighting pass.
 //--------------------------------------------------------------------------------------
@@ -29,15 +27,9 @@ struct PixelShaderOutput
     float4 position     : SV_Target0;   
     float4 normal       : SV_Target1;
     float4 diffuse      : SV_Target2;
-    float4 emissive     : SV_Target3;
 };
 
 
-cbuffer SpriteAnimation : register(b3)
-{
-    float2 uvOffset;
-    float2 uvScale;
-};
 //--------------------------------------------------------------------------------------
 // Normal mapping.
 //--------------------------------------------------------------------------------------
@@ -77,10 +69,10 @@ PixelShaderOutput main(PixelShaderInput input)
     input.normalWS = normalize(input.normalWS);
     
     // Sample from DiffuseTexture map.
-    output.diffuse =  DiffuseTexture.Sample(LinearSampler, input.texCoord * uvScale + uvOffset);
+    output.diffuse =  DiffuseTexture.Sample(LinearSampler, input.texCoord);
 
     // Sample from EmissiveTexture map.
-    output.emissive = EmissiveTexture.Sample(LinearSampler, input.texCoord);
+    // output.emissive = EmissiveTexture.Sample(LinearSampler, input.texCoord);
 	
     // Sample from NormalTexture map.	
     output.normal = input.normalWS; 

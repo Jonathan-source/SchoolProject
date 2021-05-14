@@ -3,10 +3,10 @@
 //--------------------------------------------------------------------------------------
 Camera::Camera(std::shared_ptr<KeyboardListener> _keyboardListener, float screenHeight, float screenWidth)
 	: keyboardListener(_keyboardListener)
-	, position(DirectX::XMVectorSet(50.0f, 25.0f, 3.0f, 0.0f))
+	, position(DirectX::XMVectorSet(0.0f, 0.0f, -5.0f, 0.0f))
 	, focusPoint(DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f))
 	, forward(DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f))
-	, cameraTarget(DirectX::XMVectorSet(0.0f,0.0f,0.0f,0.0f))
+	, cameraTarget(DirectX::XMVectorSet(0.0f, 0.0f, 0.0f,0.0f))
 	, cameraFront(DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f))
 	, firstPass(true)
 	, yaw(90.0f)

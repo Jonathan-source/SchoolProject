@@ -66,7 +66,7 @@ PixelOutputType main(PixelInputType input)
     float3 surfaceNormal            = GNormalTexture.Sample(PointSampler, input.texCoord.xy).xyz;
     const float3 surfacePosition    = GPositionTexture.Sample(PointSampler, input.texCoord.xy).xyz; 
 
-	
+
     // The vertex's normal vector is being interpolated across the primitive
     // which can make it un-normalized. So normalize the vertex's normal vector.
     surfaceNormal = normalize(surfaceNormal);

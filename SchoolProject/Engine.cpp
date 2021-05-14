@@ -103,7 +103,7 @@ void Engine::Update()
 			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 #endif // DEBUG
 
-			this->d3d11Core->swapChain->Present(0, 0);
+			renderer->Present();
 		}
 
 	}
