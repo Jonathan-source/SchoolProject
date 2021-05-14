@@ -42,7 +42,7 @@ void MouseListener::setMousePos(LPARAM lParam)
 
 
 //--------------------------------------------------------------------------------------
-const sm::Vector2& MouseListener::getMousePos() const
+const sm::Vector2 MouseListener::getMousePos() const
 {
 	return sm::Vector2(posX,posY);
 }

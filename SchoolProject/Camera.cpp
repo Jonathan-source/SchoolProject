@@ -86,8 +86,8 @@ void Camera::move(float _deltaTime)
 void Camera::mouseInput(float _deltaTime, double xpos, double ypos)
 {
 
-	float xoffset = xpos - lastX;
-	float yoffset = lastY - ypos;
+	float xoffset = (float)xpos - lastX;
+	float yoffset = lastY - (float)ypos;
 
 	float sensitivity = 0.5f;
 	xoffset *= (-sensitivity * _deltaTime);

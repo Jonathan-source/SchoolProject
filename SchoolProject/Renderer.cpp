@@ -366,6 +366,8 @@ void Renderer::GeometryPass()
 	this->pDXCore->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	
+	this->pDXCore->deviceContext->VSSetConstantBuffers(1, 1, this->perFrameBuffer->GetAddressOf());
+
 	// Set the vertex and pixel shaders, and finally sampler state to use in the pixel shader.
 	this->pDXCore->deviceContext->VSSetShader(this->pResourceManager->GetVertexShader("deferred_geometry_vs").Get(), nullptr, 0);
 	this->pDXCore->deviceContext->PSSetShader(this->pResourceManager->GetPixelShader("deferred_geometry_ps").Get(), nullptr, 0);

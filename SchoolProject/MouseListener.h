@@ -25,7 +25,7 @@ public:
 	Ray getRay() const;
 	bool getLMouseButtonDown() const;
 	bool getRMouseButtonDown() const;
-	const sm::Vector2& getMousePos() const;
+	const sm::Vector2 getMousePos() const;
 	const sm::Vector3 getMouseScreenSpacePos();
 
 private:

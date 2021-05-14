@@ -251,7 +251,9 @@ void Object::Draw(ID3D11DeviceContext* pDeviceContext)
 		pDeviceContext->IASetIndexBuffer(this->mesh->ib.Get(), DXGI_FORMAT_R32_UINT, 0);
 
 		this->UpdateConstantBuffer(pDeviceContext);
-		pDeviceContext->PSSetConstantBuffers(1, 1, this->perObjectConstantBuffer->GetAddressOf());
+
+		
+		pDeviceContext->VSSetConstantBuffers(0, 1, this->perObjectConstantBuffer->GetAddressOf());
 
 		pDeviceContext->DrawIndexed(this->mesh->ib.getIndexCount(), 0, 0);
 	}
