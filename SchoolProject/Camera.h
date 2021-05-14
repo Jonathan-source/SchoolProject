@@ -4,8 +4,6 @@
 #include "KeyboardListener.h"
 #include "MouseListener.h"
 
-const float S_WIDTH = 1920.0f;
-const float S_HEIGHT = 1080.0f;
 class Camera
 {
 public:

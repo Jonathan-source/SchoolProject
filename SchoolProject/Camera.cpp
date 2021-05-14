@@ -27,7 +27,7 @@ Camera::Camera(std::shared_ptr<KeyboardListener> _keyboardListener, float screen
 
 	this->cameraUp = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);//DirectX::XMVector3Cross(cameraDirection, cameraRight);
 
-	this->projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PI * 0.45f, (float)S_WIDTH / (float)S_HEIGHT, 0.001f, 1000.0f);
+	this->projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PI * 0.45f, (float)screenWidth / (float)screenHeight, 0.001f, 1000.0f);
 	
 	std::cout << "\n[Camera Controller]: ON\n" << " [W,A,S,D] - Moves camera forward, left, back, right [XZ-axis]\n"
 		<< " [Q,E] - Moves camera up and down [Y-axis]\n" << " [LMOUSEBUTTON] - Rotates camera" << std::endl;

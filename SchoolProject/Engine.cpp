@@ -14,7 +14,7 @@ Engine::Engine(HINSTANCE& hInstance, HINSTANCE& hPrevIntance, LPWSTR& lpmCmdLine
 {
 	// Initialize Window.
 	this->window = new Window(hInstance, nCmdShow);
-	if (!this->window->create(this->screenWidth / 2.f, this->screenHeight / 2.f, this->TITLE))
+	if (!this->window->create(this->screenWidth/1.2f, this->screenHeight/1.2f, this->TITLE))
 		std::cout << "ERROR::Engine::initializeWindow()::Could not initialize Window." << std::endl;
 
 	// Initialize DX11Core.
