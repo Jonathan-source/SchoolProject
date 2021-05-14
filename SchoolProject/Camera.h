@@ -4,12 +4,10 @@
 #include "KeyboardListener.h"
 #include "MouseListener.h"
 
-const float S_WIDTH = 1920.0f;
-const float S_HEIGHT = 1080.0f;
 class Camera
 {
 public:
-	Camera(std::shared_ptr<KeyboardListener> _keyboardListener);
+	Camera(std::shared_ptr<KeyboardListener> _keyboardListener, float screenHeight, float screenWidth);
 	Camera(const Camera& other) = delete;
 	Camera(Camera&& other) = delete;							
 	Camera& operator=(const Camera& other) = delete;			
@@ -62,6 +60,9 @@ private:
 	float pitch;
 	float lastX;
 	float lastY;
+
+	float screenWidth;
+	float screenHeight;
 
 	float speed;
 	

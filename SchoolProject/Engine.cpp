@@ -24,8 +24,8 @@ Engine::Engine(HINSTANCE& hInstance, HINSTANCE& hPrevIntance, LPWSTR& lpmCmdLine
 	this->keyboardListener = std::make_shared<KeyboardListener>();
 	this->mouseListener = std::make_shared<MouseListener>((float)screenHeight, (float)screenWidth);
 
-	// Initialize Camera
-	this->camera = std::make_shared<Camera>(this->keyboardListener);
+	//Initialize Camera
+	this->camera = std::make_shared<Camera>(this->keyboardListener, screenHeight, screenWidth);
 
 	// Initialize ResourceManager.
 	this->resourceManager = new ResourceManager(this->d3d11Core);
