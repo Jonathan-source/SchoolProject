@@ -163,6 +163,11 @@ DirectX::XMVECTOR Camera::getFocusPoint() const
 	return focusPoint;
 }
 
+
+
+
+
+//--------------------------------------------------------------------------------------
 DirectX::XMMATRIX Camera::getProjectionMatrix() const
 {
 	return projectionMatrix;

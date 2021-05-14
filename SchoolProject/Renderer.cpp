@@ -3,7 +3,7 @@
 
 
 //--------------------------------------------------------------------------------------
-Renderer::Renderer(D3D11Core* pDXCore,Window* pWindow,  Camera * pCamera)
+Renderer::Renderer(D3D11Core* pDXCore,Window* pWindow, Camera* pCamera)
 	: pWindow(pWindow)
 	, pDXCore(pDXCore)
 	, pCamera(pCamera)
@@ -28,13 +28,14 @@ Renderer::Renderer(D3D11Core* pDXCore,Window* pWindow,  Camera * pCamera)
 //--------------------------------------------------------------------------------------
 void Renderer::BeginFrame()
 {
+	this->ClearFrame();
+
 	// Update per frame subresources.
 	DirectX::XMStoreFloat4(&this->perFrameData.CameraPosition, this->pCamera->getPosition());
 	DirectX::XMStoreFloat4x4(&this->perFrameData.ViewMatrix, this->pCamera->getView());
 	DirectX::XMStoreFloat4x4(&this->perFrameData.ProjectionMatrix, this->pCamera->getProjectionMatrix());
 	this->pDXCore->deviceContext->UpdateSubresource(this->perFrameBuffer->Get(), 0, nullptr, &this->perFrameData, 0, 0);
 
-	this->ClearFrame();
 	this->GeometryPass();
 }
 
@@ -75,17 +76,13 @@ void Renderer::Present()
 //--------------------------------------------------------------------------------------
 void Renderer::ClearFrame()
 {
-	//
-	// Clear the rendertargets & depthStencilView.
-	//
 	static const float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	static const float backgroundColor[] = { 0.1f, 0.1f, 0.1f, 0.0f };
 
 	this->pDXCore->deviceContext->ClearRenderTargetView(this->graphicsBuffer[GBUFFER::POSITION].renderTargetView.Get(), clearColor);
 	this->pDXCore->deviceContext->ClearRenderTargetView(this->graphicsBuffer[GBUFFER::NORMAL].renderTargetView.Get(), clearColor);
 	this->pDXCore->deviceContext->ClearRenderTargetView(this->graphicsBuffer[GBUFFER::DIFFUSE].renderTargetView.Get(), backgroundColor);
-
-	// Clear renderTarget
+	
 	this->pDXCore->deviceContext->ClearRenderTargetView(this->pDXCore->renderTargetView.Get(), backgroundColor);
 	this->pDXCore->deviceContext->ClearDepthStencilView(this->pDXCore->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
@@ -136,14 +133,11 @@ void Renderer::InitializeDeferred()
 //--------------------------------------------------------------------------------------
 bool Renderer::createFullScreenQuad()
 {
-	// Create VertexData.
 	this->fullScreenQuad.vertexData[0] = { { -1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 1.0f } };
 	this->fullScreenQuad.vertexData[1] = { { -1.0f,  1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 0.0f } };
 	this->fullScreenQuad.vertexData[2] = { {  1.0f,  1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 1.0f, 0.0f } };
 	this->fullScreenQuad.vertexData[3] = { {  1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f }, { 1.0f, 1.0f } };
-	// Create IndexData.
 	UINT indices[] = { 0, 1, 2,	0, 2, 3	};
-
 
 	// Load Vertex Data
 	D3D11_BUFFER_DESC bufferDesc;
@@ -505,9 +499,7 @@ bool Renderer::loadShaderData(const std::string& filename, std::string& shaderBy
 //--------------------------------------------------------------------------------------
 void Renderer::GeometryPass()
 {
-	//
 	// Set the rendertargets with depth testing.
-	//
 	ComPtr<ID3D11RenderTargetView> renderTargets[] =
 	{
 		this->graphicsBuffer[GBUFFER::POSITION].renderTargetView.Get(),
@@ -517,16 +509,13 @@ void Renderer::GeometryPass()
 	this->pDXCore->deviceContext->OMSetRenderTargets(GBUFFER::BUFFER_COUNT, renderTargets->GetAddressOf(), this->pDXCore->depthStencilView.Get());
 
 	
-	// 
 	// Set the vertex input layout & rasterizerstate.
-	//
 	this->pDXCore->deviceContext->IASetInputLayout(this->inputLayoutGP.Get());
 	this->pDXCore->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	
-	//
+
 	// Set the vertex and pixel shaders, and finally sampler state to use in the pixel shader.
-	//
 	this->pDXCore->deviceContext->VSSetShader(this->shaders.deferred_geometry_vs.Get(), nullptr, 0);
 	this->pDXCore->deviceContext->PSSetShader(this->shaders.deferred_geometry_ps.Get(), nullptr, 0);
 	this->pDXCore->deviceContext->PSSetSamplers(0, 1, this->pDXCore->linearSamplerState.GetAddressOf());	
@@ -547,6 +536,11 @@ void Renderer::LightningPass()
 
 	static UINT stride = sizeof(Quad);
 	static UINT offset = 0;
+
+	this->pDXCore->deviceContext->IASetInputLayout(this->inputLayoutLP.Get());
+	this->pDXCore->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	this->pDXCore->deviceContext->IASetVertexBuffers(0, 1, this->fullScreenQuad.vb.GetAddressOf(), &stride, &offset);
+	this->pDXCore->deviceContext->IASetIndexBuffer(this->fullScreenQuad.ib.Get(), DXGI_FORMAT_R32_UINT, 0);
 	
 	this->pDXCore->deviceContext->OMSetRenderTargets(1, this->pDXCore->renderTargetView.GetAddressOf(), nullptr);
 	this->pDXCore->deviceContext->RSSetState(this->pDXCore->rasterizerState.Get());
@@ -558,21 +552,15 @@ void Renderer::LightningPass()
 		this->graphicsBuffer[GBUFFER::NORMAL].shaderResourceView,
 		this->graphicsBuffer[GBUFFER::DIFFUSE].shaderResourceView,
 	};
-
-	this->pDXCore->deviceContext->IASetInputLayout(this->inputLayoutLP.Get());
-	this->pDXCore->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	this->pDXCore->deviceContext->IASetVertexBuffers(0, 1, this->fullScreenQuad.vb.GetAddressOf(), &stride, &offset);
-	this->pDXCore->deviceContext->IASetIndexBuffer(this->fullScreenQuad.ib.Get(), DXGI_FORMAT_R32_UINT, 0);
-
-	this->pDXCore->deviceContext->PSSetSamplers(0, 1, this->pDXCore->pointSamplerState.GetAddressOf());
-	this->pDXCore->deviceContext->PSSetShaderResources(0, 3, renderShaderResourceView->GetAddressOf());
-	this->pDXCore->deviceContext->PSSetShaderResources(3, 1, this->lightBufferSRV.GetAddressOf());
+	this->pDXCore->deviceContext->PSSetShaderResources(0, 3, renderShaderResourceView->GetAddressOf());	// GBuffer
+	this->pDXCore->deviceContext->PSSetShaderResources(3, 1, this->lightBufferSRV.GetAddressOf());		// StructuredBuffer
 	this->pDXCore->deviceContext->PSSetConstantBuffers(1, 1, this->perFrameBuffer->GetAddressOf());
-
+	this->pDXCore->deviceContext->PSSetSamplers(0, 1, this->pDXCore->pointSamplerState.GetAddressOf());
+	
 	this->pDXCore->deviceContext->PSSetShader(this->shaders.deferred_lightning_ps.Get(), nullptr, 0);
 	this->pDXCore->deviceContext->VSSetShader(this->shaders.deferred_lightning_vs.Get(), nullptr, 0);
 	
-	// Render triangles.
+	// Render (FullScreenQuad).
 	this->pDXCore->deviceContext->DrawIndexed(6, 0, 0);
 	
 	ID3D11ShaderResourceView* nullSRV = nullptr;
@@ -580,7 +568,6 @@ void Renderer::LightningPass()
 	this->pDXCore->deviceContext->PSSetShaderResources(1, 1, &nullSRV);
 	this->pDXCore->deviceContext->PSSetShaderResources(2, 1, &nullSRV);
 	this->pDXCore->deviceContext->PSSetShaderResources(3, 1, &nullSRV);
-	this->pDXCore->deviceContext->PSSetShaderResources(4, 1, &nullSRV);
 }
 
 

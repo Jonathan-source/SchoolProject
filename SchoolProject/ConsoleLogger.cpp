@@ -15,6 +15,11 @@ void ConsoleLogger::RedirectIOToConsole()
 	freopen_s(&fp, "CONOUT$", "w", stdout); printf("[ConsoleLogger]: ON\n"); 
 }
 
+
+
+
+
+//--------------------------------------------------------------------------------------
 void ConsoleLogger::LogInfo(const std::string& message, std::ostream& out) {
 	auto now = std::chrono::system_clock::now();
 	time_t time = std::chrono::system_clock::to_time_t(now);
@@ -24,6 +29,11 @@ void ConsoleLogger::LogInfo(const std::string& message, std::ostream& out) {
 	out << "[INFO]" << ctime << ": " << message << std::endl;
 }
 
+
+
+
+
+//--------------------------------------------------------------------------------------
 void ConsoleLogger::LogWarning(const std::string& message, std::ostream& out) {
 	auto now = std::chrono::system_clock::now();
 	time_t time = std::chrono::system_clock::to_time_t(now);
@@ -34,6 +44,11 @@ void ConsoleLogger::LogWarning(const std::string& message, std::ostream& out) {
 
 }
 
+
+
+
+
+//--------------------------------------------------------------------------------------
 void ConsoleLogger::LogError(const std::string& message, std::ostream& out) {
 	auto now = std::chrono::system_clock::now();
 	time_t time = std::chrono::system_clock::to_time_t(now);
