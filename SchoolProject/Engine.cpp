@@ -36,7 +36,7 @@ Engine::Engine(HINSTANCE& hInstance, HINSTANCE& hPrevIntance, LPWSTR& lpmCmdLine
 
 
 	this->obj = new Object(this->d3d11Core->device.Get());
-	obj->SetMesh(this->resourceManager->GetMesh("Cube.obj").get());
+	obj->SetMesh(this->resourceManager->GetMesh("Monkey.obj").get());
 
 
 

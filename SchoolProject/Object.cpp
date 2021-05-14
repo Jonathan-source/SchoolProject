@@ -4,6 +4,9 @@
 Object::Object(ID3D11Device* pDevice)
 	: mesh(nullptr)
 	, perObjectConstantBuffer(std::make_unique<ConstantBuffer>(pDevice, sizeof(PerFrame)))
+	, position(sm::Vector3{0.f,0.f,5.f})
+	, scale(sm::Vector3{ 1.f,1.f,1.f })
+	, rotation(sm::Vector3{ 0.f,0.f,0.f })
 {
 	DirectX::XMMATRIX matrix = DirectX::XMMatrixIdentity();
 	DirectX::XMStoreFloat4x4(&this->worldMatrix, matrix);

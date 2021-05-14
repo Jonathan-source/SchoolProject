@@ -69,7 +69,7 @@ PixelShaderOutput main(PixelShaderInput input)
     input.normalWS = normalize(input.normalWS);
     
     // Sample from DiffuseTexture map.
-    output.diffuse =  DiffuseTexture.Sample(LinearSampler, input.texCoord);
+    output.diffuse = float4(1.0f, 1.0f, 0.0f, 1.0f); //DiffuseTexture.Sample(LinearSampler, input.texCoord);
 
     // Sample from EmissiveTexture map.
     // output.emissive = EmissiveTexture.Sample(LinearSampler, input.texCoord);

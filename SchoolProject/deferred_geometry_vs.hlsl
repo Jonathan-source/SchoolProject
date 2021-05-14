@@ -81,6 +81,8 @@ VertexShaderOutput main(VertexShaderInput input)
     // Calculate the view-space and clip-space position.
     float4 positionVS   = mul(output.positionWS, ViewMatrix);
     output.positionCS   = mul(positionVS, ProjectionMatrix);
+    
+    
     output.texCoord     = input.texCoord;
     
     return output;

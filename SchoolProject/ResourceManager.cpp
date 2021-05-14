@@ -11,7 +11,7 @@ ResourceManager::ResourceManager(D3D11Core* pD3D11Core)
 	this->CreateInputLayoutGP(this->vShaders.find("deferred_geometry_vs")->second.shaderData);
 	this->CreateInputLayoutLP(this->vShaders.find("deferred_lightning_vs")->second.shaderData);
 
-	std::vector<std::string> meshes{ "Cube.obj" };
+	std::vector<std::string> meshes{ "Cube.obj", "Monkey.obj" };
 	this->LoadMeshes(meshes);
 }
 
