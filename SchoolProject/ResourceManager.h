@@ -12,11 +12,30 @@
 #include "IndexBuffer.h"
 
 
+// Final version.
 struct Mesh
 {
 	VertexBuffer vb;
 	IndexBuffer ib;
 };
+
+// Intermediate struct.
+struct SubMesh
+{
+	std::vector<SimpleVertex> vertexData;
+	std::vector<UINT> indexData;
+};
+
+// Raw data upon loading an OBJ file.
+struct MeshData
+{
+	std::vector<DirectX::XMFLOAT3> vertices;
+	std::vector<DirectX::XMFLOAT3> normals;
+	std::vector<DirectX::XMFLOAT2> texCoords;
+	std::vector<DirectX::XMFLOAT3> tangents;
+	std::vector<DirectX::XMUINT3>  faces;
+};
+
 
 
 class ResourceManager
@@ -48,18 +67,6 @@ public:
 private:
 	D3D11Core* pD3D11Core;
 
-
-	//
-	// Data storage.
-	//
-	struct MeshData
-	{
-		std::vector<DirectX::XMFLOAT3> vertices;
-		std::vector<DirectX::XMFLOAT3> normals;
-		std::vector<DirectX::XMFLOAT2> texCoords;
-		std::vector<DirectX::XMFLOAT3> tangents;
-		std::vector<DirectX::XMUINT3>  indices;
-	};
 
 	template<typename T>
 	struct Shader
@@ -97,7 +104,7 @@ private:
 	//----------------------------------------------------------------------------------
 	// Load mesh from obj file.
 	//----------------------------------------------------------------------------------
-	void LoadObjFromFile(const std::string& filename, MeshData& meshData);
-	void ComputeTangentsNormalsBitangents(MeshData &meshData);
-	void CreateMeshFromMeshData(Mesh *mesh, MeshData& meshData);
+	MeshData LoadObjFromFile(const std::string& filename);
+	void ComputeTangent(MeshData& meshData);
+	SubMesh CreateSubMesh(const MeshData& meshData);
 };

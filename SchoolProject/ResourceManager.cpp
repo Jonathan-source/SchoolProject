@@ -24,15 +24,16 @@ void ResourceManager::LoadMeshes(const std::vector<std::string>& meshes)
 {
 	for (const auto& filename : meshes)
 	{
-		// Load MeshData from file.
-		MeshData meshData;
-		this->LoadObjFromFile(filename, meshData);
-		
-		// Create Mesh from MeshData.
-		std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
-		this->CreateMeshFromMeshData(mesh.get(), meshData);
+		MeshData meshData = this->LoadObjFromFile(filename);
+		SubMesh subMesh = this->CreateSubMesh(meshData);
 
-		// Register Mesh, VertexBuffer & IndexBuffer.
+		std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
+		mesh->vb.setDevice(this->pD3D11Core->device.Get());
+		mesh->ib.setDevice(this->pD3D11Core->device.Get());
+
+		mesh->vb.createVertexBuffer(subMesh.vertexData.data(), subMesh.vertexData.size());
+		mesh->ib.createIndexBuffer(subMesh.indexData.data(), subMesh.indexData.size());
+
 		this->meshMap.insert(std::pair<std::string, std::shared_ptr<Mesh>>(filename, mesh));
 	}
 }
@@ -311,9 +312,15 @@ ComPtr<ID3D11ShaderResourceView> ResourceManager::LoadTextureFromFile(const char
 
 
 
+
+
 //--------------------------------------------------------------------------------------
-void ResourceManager::LoadObjFromFile(const std::string& filename, MeshData &meshData)
+MeshData ResourceManager::LoadObjFromFile(const std::string& filename)
 {
+	/*
+	* Note: the .obj file needs an extra 'enter' in the end of the file to read correctly.
+	*/
+
 	// Try to open the file.
 	std::ifstream inputFile(filename.c_str());
 	if (!inputFile.is_open())
@@ -322,11 +329,12 @@ void ResourceManager::LoadObjFromFile(const std::string& filename, MeshData &mes
 	}
 
 	// Initialize new MeshData.
+	MeshData meshData = {};
 	meshData.vertices.reserve(5000);
 	meshData.normals.reserve(5000);
 	meshData.texCoords.reserve(5000);
 	meshData.tangents.reserve(5000);
-	meshData.indices.reserve(5000);
+	meshData.faces.reserve(5000);
 
 
 	// Some useful variables.
@@ -376,10 +384,11 @@ void ResourceManager::LoadObjFromFile(const std::string& filename, MeshData &mes
 				std::getline(ref, vtStr, '/');
 				std::getline(ref, vnStr, '/');
 
+				// Begin counting from 0 and not 1, hence add -1.
 				int v = atoi(vStr.c_str()) - 1;
 				int vt = atoi(vtStr.c_str()) - 1;
 				int vn = atoi(vnStr.c_str()) - 1;
-				meshData.indices.emplace_back(DirectX::XMUINT3(v, vt, vn));
+				meshData.faces.emplace_back(DirectX::XMUINT3(v, vt, vn));
 			}
 		}
 	}
@@ -391,10 +400,11 @@ void ResourceManager::LoadObjFromFile(const std::string& filename, MeshData &mes
 	meshData.normals.shrink_to_fit();
 	meshData.texCoords.shrink_to_fit();
 	meshData.tangents.shrink_to_fit();
-	meshData.indices.shrink_to_fit();
+	meshData.faces.shrink_to_fit();
 
-	// Compute tangets, bitangents and normals.
-	this->ComputeTangentsNormalsBitangents(meshData);
+	this->ComputeTangent(meshData);
+
+	return meshData;
 }
 
 
@@ -403,16 +413,19 @@ void ResourceManager::LoadObjFromFile(const std::string& filename, MeshData &mes
 
 
 
+
+
 //--------------------------------------------------------------------------------------
-void ResourceManager::ComputeTangentsNormalsBitangents(MeshData &meshData)
+void ResourceManager::ComputeTangent(MeshData& meshData)
 {
 	// Check if required data excists to perform calculations.
-	if (meshData.indices.size() * meshData.vertices.size() * meshData.texCoords.size() == 0)
+	if (meshData.faces.size() * meshData.vertices.size() * meshData.texCoords.size() == 0)
 		return;
-	
+
 	//---------------------------------------------
 	//					Mathemagics
 	//---------------------------------------------
+
 	//  edge1 = (texEdge1.x * tangent) + (texEdge1.y * bitangent)
 	//  edge2 = (texEdge2.x * tangent) + (texEdge2.y * bitangent)
 	//
@@ -440,148 +453,117 @@ void ResourceManager::ComputeTangentsNormalsBitangents(MeshData &meshData)
 	//	tangent = (1 / det A) * ( texEdge2.y * edge1 - texEdge1.y * edge2)
 	//	bitangent = (1 / det A) * (-texEdge2.x * edge1 + texEdge1.x * edge2)
 	//  normal = cross(tangent, bitangent)
-	
+
+
 	// Struct to help us store data for calculating tangents and normals.
-	struct Data
+	struct WeightedSum
 	{
 		DirectX::XMFLOAT3 tangentSum;
-		DirectX::XMFLOAT3 normalSum;
 		unsigned int facesUsing;
-	
-		Data(const DirectX::XMFLOAT3& tangentSum, const DirectX::XMFLOAT3& normalSum, unsigned int facesUsing)
+
+		WeightedSum(const DirectX::XMFLOAT3& tangentSum, unsigned int facesUsing)
 			: tangentSum(tangentSum)
-			, normalSum(normalSum)
 			, facesUsing(facesUsing)
 		{
 		}
 	};
-	
+
 	// Initialize Data.
-	std::vector<Data> data;
-	for (int i = 0; i < meshData.vertices.size(); i++)
+	std::vector<WeightedSum> ws;
+	for (size_t i = 0; i < meshData.vertices.size(); i++)
 	{
-		data.emplace_back(Data({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, 0));
+		ws.emplace_back(WeightedSum({ 0.0f, 0.0f, 0.0f }, 0));
 		meshData.tangents.emplace_back(DirectX::XMFLOAT3{ 0.0f, 0.0f, 0.0f });
 	}
-	
+
 	// Some useful variables.
-	DirectX::XMFLOAT3 vec0, vec1, vec2;
-	DirectX::XMFLOAT2 vecUV0, vecUV1, vecUV2;
+	DirectX::XMFLOAT3 v0, v1, v2;
+	DirectX::XMFLOAT2 vUV0, vUV1, vUV2;
 	DirectX::XMFLOAT2 deltaUV1, deltaUV2;
 	DirectX::XMFLOAT3 E1, E2;
-	DirectX::XMFLOAT3 normal, tangent;
-	
-		
-	//	Loop through all our Faces and calculate the tangent for each face of a triangle.
-	for (int i = 0; i < meshData.indices.size(); i += 3)
+	DirectX::XMFLOAT3 tangent;
+
+	//	Loop through all our faces and calculate the tangent for each face of a triangle.
+	for (size_t i = 0; i < meshData.faces.size(); i += 3)
 	{
 		// Get the indices for three vertices in the triangle.
-		uint32_t i0 = meshData.indices[i].x;				// Vertex 1
-		uint32_t i1 = meshData.indices[i + (size_t)1].x;	// Vertex 2
-		uint32_t i2 = meshData.indices[i + (size_t)2].x;	// Vertex 3
-	
-		vec0 = meshData.vertices[i0];
-		vec1 = meshData.vertices[i1];
-		vec2 = meshData.vertices[i2];
-	
-		// Compute the first edge of our triangle.
+		uint32_t i0 = meshData.faces[i].x;				// Vertex 1
+		uint32_t i1 = meshData.faces[i + (size_t)1].x;	// Vertex 2
+		uint32_t i2 = meshData.faces[i + (size_t)2].x;	// Vertex 3
+
+		v0 = meshData.vertices[i0];
+		v1 = meshData.vertices[i1];
+		v2 = meshData.vertices[i2];
+
 		E1 = {
-			vec1.x - vec0.x,
-			vec1.y - vec0.y,
-			vec1.z - vec0.z
+			v1.x - v0.x,
+			v1.y - v0.y,
+			v1.z - v0.z
 		};
-	
-		// Compute the second edge of our triangle.
+
 		E2 = {
-			vec2.x - vec0.x,
-			vec2.y - vec0.y,
-			vec2.z - vec0.z
+			v2.x - v0.x,
+			v2.y - v0.y,
+			v2.z - v0.z
 		};
-	
-		// Get the three vertices's textureCoords for the triangle.
-		uint32_t t0 = meshData.indices[i].y;				// texCoord 1
-		uint32_t t1 = meshData.indices[i + (size_t)1].y;	// texCoord 2
-		uint32_t t2 = meshData.indices[i + (size_t)2].y;	// texCoord 3
-	
-		vecUV0 = meshData.texCoords[t0];
-		vecUV1 = meshData.texCoords[t1];
-		vecUV2 = meshData.texCoords[t2];
-	
+
+		// Get the indices for the three vertices's textureCoords.
+		uint32_t t0 = meshData.faces[i].y;				// texCoord 1
+		uint32_t t1 = meshData.faces[i + (size_t)1].y;	// texCoord 2
+		uint32_t t2 = meshData.faces[i + (size_t)2].y;	// texCoord 3
+
+		vUV0 = meshData.texCoords[t0];
+		vUV1 = meshData.texCoords[t1];
+		vUV2 = meshData.texCoords[t2];
+
 		deltaUV1 = {
-			vecUV1.x - vecUV0.x,
-			vecUV1.y - vecUV0.y
+			vUV1.x - vUV0.x,
+			vUV1.y - vUV0.y
 		};
-	
+
 		deltaUV2 = {
-			vecUV2.x - vecUV0.x,
-			vecUV2.y - vecUV0.y
+			vUV2.x - vUV0.x,
+			vUV2.y - vUV0.y
 		};
-	
-		// Compute the normal.
-		DirectX::XMStoreFloat3(&normal, DirectX::XMVector3Cross({ E1.x, E1.y, E1.z }, { E2.x, E2.y, E2.z }));
-	
-		// Calculate the length of the normal.
-		float length = sqrt((normal.x * normal.x) + (normal.y * normal.y) + (normal.z * normal.z));
-	
-		// Normalize the normal.
-		normal.x = normal.x / length;
-		normal.y = normal.y / length;
-		normal.z = normal.z / length;
-	
+
 		// Calculate the denominator of the tangent/binormal equation.
 		float r = 1 / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
-	
+
 		// Calculate the cross products and multiply by the coefficient to get the tangent.
 		tangent = {
 			r * ((E1.x * deltaUV2.y) - (E2.x * deltaUV1.y)),
 			r * ((E1.y * deltaUV2.y) - (E2.y * deltaUV1.y)),
 			r * ((E1.z * deltaUV2.y) - (E2.z * deltaUV1.y))
 		};
-	
+
 		// Sum up face tangents/normals.
 		//------------------------------------------
-		data[i0].tangentSum.x += tangent.x;
-		data[i0].tangentSum.y += tangent.y;
-		data[i0].tangentSum.z += tangent.z;
-	
-		//data[i0].normalSum.x += normal.x;
-		//data[i0].normalSum.y += normal.y;
-		//data[i0].normalSum.z += normal.z;
-		data[i0].facesUsing++;
-		//------------------------------------------
-		data[i1].tangentSum.x += tangent.x;
-		data[i1].tangentSum.y += tangent.y;
-		data[i1].tangentSum.z += tangent.z;
-	
-		//data[i1].normalSum.x += normal.x;
-		//data[i1].normalSum.y += normal.y;
-		//data[i1].normalSum.z += normal.z;
-		data[i1].facesUsing++;
-		//------------------------------------------
-		data[i2].tangentSum.x += tangent.x;
-		data[i2].tangentSum.y += tangent.y;
-		data[i2].tangentSum.z += tangent.z;
-	
-		//data[i2].normalSum.x += normal.x;
-		//data[i2].normalSum.y += normal.y;
-		//data[i2].normalSum.z += normal.z;
-		data[i2].facesUsing++;
+		ws[i0].tangentSum.x += tangent.x;
+		ws[i0].tangentSum.y += tangent.y;
+		ws[i0].tangentSum.z += tangent.z;
+		ws[i0].facesUsing++;
+		//----------------------------------------
+		ws[i1].tangentSum.x += tangent.x;
+		ws[i1].tangentSum.y += tangent.y;
+		ws[i1].tangentSum.z += tangent.z;
+		ws[i1].facesUsing++;
+		//----------------------------------------
+		ws[i2].tangentSum.x += tangent.x;
+		ws[i2].tangentSum.y += tangent.y;
+		ws[i2].tangentSum.z += tangent.z;
+		ws[i2].facesUsing++;
 		//------------------------------------------
 	}
-	
 
 	// Get the actual tangent and normal by dividing the tangent-/normalSum by the number of faces sharing the vertex.
-	for (int i = 0; i < data.size(); i++)
+	for (size_t i = 0; i < ws.size(); i++)
 	{
-		meshData.tangents[i].x = data[i].tangentSum.x / data[i].facesUsing;
-		meshData.tangents[i].y = data[i].tangentSum.y / data[i].facesUsing;
-		meshData.tangents[i].z = data[i].tangentSum.z / data[i].facesUsing;
-	
-		//mesh.normals[i].x = data[i].normalSum.x / data[i].facesUsing;
-		//mesh.normals[i].y = data[i].normalSum.y / data[i].facesUsing;
-		//mesh.normals[i].z = data[i].normalSum.z / data[i].facesUsing;
-	}	
+		meshData.tangents[i].x = ws[i].tangentSum.x / ws[i].facesUsing;
+		meshData.tangents[i].y = ws[i].tangentSum.y / ws[i].facesUsing;
+		meshData.tangents[i].z = ws[i].tangentSum.z / ws[i].facesUsing;
+	}
 }
+
 
 
 
@@ -590,28 +572,24 @@ void ResourceManager::ComputeTangentsNormalsBitangents(MeshData &meshData)
 
 
 //--------------------------------------------------------------------------------------
-void ResourceManager::CreateMeshFromMeshData(Mesh* mesh, MeshData& meshData)
+SubMesh ResourceManager::CreateSubMesh(const MeshData& meshData)
 {
-	// Create a new mesh based on data.
-	std::vector<SimpleVertex> vData;
-	std::vector<UINT> iData;
+	SubMesh subMesh;
+	subMesh.indexData.resize(static_cast<UINT>(meshData.faces.size()));
+	subMesh.vertexData.resize(meshData.faces.size());
 
-	// Number of vertices will equal the number of faces/indices.
-	const auto nrOfVertices = meshData.indices.size();
-	for (size_t i = 0; i < nrOfVertices; i++)
+	for (size_t i = 0; i < meshData.faces.size(); i++)
 	{
-		auto pos = meshData.indices[i];   // pos & tangent on the same index.
-		vData.emplace_back(SimpleVertex(
-			meshData.vertices[pos.x],
-			meshData.normals[pos.z],
-			meshData.texCoords[pos.y],
-			meshData.tangents[pos.x]));
-		iData.emplace_back(UINT(meshData.indices[i].x));
+		uint32_t vIndex = meshData.faces[i].x;	// also used for tangent.
+		uint32_t vtIndex = meshData.faces[i].y;
+		uint32_t vnIndex = meshData.faces[i].z;
+
+		subMesh.vertexData[i] = SimpleVertex(meshData.vertices[vIndex], meshData.normals[vnIndex], meshData.texCoords[vtIndex], meshData.tangents[vIndex]);
+		subMesh.indexData[i] = i;
 	}
 
-	mesh->vb.setDevice(this->pD3D11Core->device.Get());
-	mesh->ib.setDevice(this->pD3D11Core->device.Get());
-		
-	mesh->vb.createVertexBuffer(vData.data(), vData.size());
-	mesh->ib.createIndexBuffer(iData.data(), iData.size());
+	return subMesh;
 }
+
+
+
