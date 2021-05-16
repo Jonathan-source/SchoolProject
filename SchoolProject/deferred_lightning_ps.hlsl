@@ -12,8 +12,6 @@ SamplerState PointSampler           : register(s0);
 #define POINT_LIGHT 0
 #define DIRECTIONAL_LIGHT 1
 #define SPOT_LIGHT 2
-#define NUMBER_OF_LIGHTS 1
-
 
 //--------------------------------------------------------------------------------------
 // 
@@ -24,6 +22,7 @@ cbuffer PerFrame : register(b1)
     row_major matrix ViewMatrix;
     float4 CameraPosition;
     float4 MousePosition;
+    uint NumLights;
 };
 
 
@@ -78,7 +77,7 @@ PixelOutputType main(PixelInputType input)
 	
 
     // FOR EACH LIGHT:
-    for (int i = 0; i < NUMBER_OF_LIGHTS; i++)
+    for (int i = 0; i < NumLights; i++)
     {
         // Get current light.
         const Light currentLight = SceneLights[i];

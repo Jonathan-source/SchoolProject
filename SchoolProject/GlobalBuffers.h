@@ -23,6 +23,7 @@ struct PerFrame
 	DirectX::XMFLOAT4X4 ViewMatrix;
 	DirectX::XMFLOAT4 CameraPosition;
 	DirectX::XMFLOAT4 MousePosition;
+	UINT NumLights;
 };
 
 

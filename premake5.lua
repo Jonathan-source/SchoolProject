@@ -5,7 +5,7 @@ workspace "SchoolProject"
 
     project "SchoolProject"
         location "SchoolProject"
-        files {"%{prj.location}/**.cpp", "%{prj.location}/**.h","%{prj.location}/**.hlsl"}
+        files {"%{prj.location}/**.cpp", "%{prj.location}/**.h","%{prj.location}/**.hlsl", "%{prj.location}/**.hlsli"}
         kind "WindowedApp"
         language "C++"
         cppdialect "C++14"

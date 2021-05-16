@@ -310,7 +310,7 @@ bool Renderer::createStructuredBufferLights()
 	D3D11_BUFFER_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
 
-	desc.ByteWidth = sizeof(Light) * static_cast<UINT>(this->sceneLights.size());
+	desc.ByteWidth = sizeof(Light) * this->MAX_NUM_LIGHTS;
 	desc.StructureByteStride = sizeof(Light);
 	desc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_FLAG::D3D11_BIND_SHADER_RESOURCE;
 	desc.MiscFlags = D3D11_RESOURCE_MISC_FLAG::D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
@@ -353,6 +353,8 @@ void Renderer::setPerFrameBuffer()
 		DirectX::XMStoreFloat4(&this->perFrameData.CameraPosition, pCamera->getPosition());
 		DirectX::XMStoreFloat4x4(&this->perFrameData.ViewMatrix, pCamera->getView());
 		DirectX::XMStoreFloat4x4(&this->perFrameData.ProjectionMatrix, pCamera->getProjectionMatrix());
+		this->perFrameData.NumLights = this->sceneLights.size();
+
 		this->pDXCore->deviceContext->UpdateSubresource(this->perFrameBuffer->Get(), 0, nullptr, &this->perFrameData, 0, 0);
 	}
 }
@@ -452,17 +454,16 @@ void Renderer::LightningPass()
 //Debug imGuI for manipulating lights
 void Renderer::imGUILightWin()
 {	
-	
-	//Light window
+	// Light window
 	ImGui::Begin("Lights");
 	static int currentItem = 0;
 	static float pos[3] = { sceneLights.at(currentItem).position.x,sceneLights.at(currentItem).position.y,sceneLights.at(currentItem).position.z};
 	static float color[3] = { 0.5f,0.5f,0.5f};
 
-
 	std::string lightText = "Lights";
 
 	const char* listsOfLights[2] = {"light(1)", "light(2)"};
+
 	//ImGui::ListBox("yes",)
 	ImGui::Text(R"(Light Entitys)");
 	ImGui::ListBox("", &currentItem, listsOfLights, 2);
@@ -486,7 +487,7 @@ void Renderer::imGUILightWin()
 	ImGui::ColorPicker3("Background color", backgroundColor);
 
 	
-	Light* newLight = new Light [sceneLights.size()];
+	Light * newLight = new Light [sceneLights.size()];
 	for (int i = 0; i < sceneLights.size(); i++)
 	{
 		newLight[i] = sceneLights.at(i);
