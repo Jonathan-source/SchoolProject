@@ -65,6 +65,7 @@ private:
 	bool createShaderResourceViews(D3D11_TEXTURE2D_DESC& textureDesc);
 
 	void InitializeLights();
+	void addLight();
 	bool createStructuredBufferLights();
 	
 	// Different Passes.

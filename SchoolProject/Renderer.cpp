@@ -330,10 +330,27 @@ bool Renderer::createStructuredBufferLights()
 	ZeroMemory(&resourceViewDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
 
 	resourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
-	resourceViewDesc.BufferEx.NumElements = static_cast<UINT>(this->sceneLights.size());
+	resourceViewDesc.BufferEx.NumElements = static_cast<UINT>(100);
 	hr = this->pDXCore->device->CreateShaderResourceView(lightBuffer.Get(), &resourceViewDesc, lightBufferSRV.GetAddressOf());
 
 	return !FAILED(hr);
+}
+
+void Renderer::addLight()
+{
+	//	Create lights here:
+	Light light2;
+	light2.position = { 0.0f, 2.0f, 5.0f, 1.0f };
+	light2.color = { 0.43f, 0.45f, 1.f, 1.0f };
+	light2.direction = { 0.0f, 0.0f, 1.0f, 0.0f };
+	light2.specularPower = 1.0f;
+	light2.shininess = 32.0f;
+	light2.intensity = 1.f;
+	light2.type = 0;
+	light2.range = 15.f;
+	light2.enabled = true;
+
+	this->sceneLights.emplace_back(light2);
 }
 
 
@@ -462,11 +479,24 @@ void Renderer::imGUILightWin()
 
 	std::string lightText = "Lights";
 
-	const char* listsOfLights[2] = {"light(1)", "light(2)"};
+	const char* listsOfLights[100] = {};
 
-	//ImGui::ListBox("yes",)
+	std::vector<char*> writables;
+	for (int i = 0; i < sceneLights.size(); i++)
+	{
+		std::string str = "Light " + std::to_string(i + 1);
+		char* writable = new char[str.size() + 1];
+		std::copy(str.begin(), str.end(), writable);
+		writable[str.size()] = '\0';
+
+		listsOfLights[i] = writable;
+
+		//Emplace it in a vector so it can be deleted after it has been drawn
+		writables.emplace_back(writable);
+	}
+
 	ImGui::Text(R"(Light Entitys)");
-	ImGui::ListBox("", &currentItem, listsOfLights, 2);
+	ImGui::ListBox("", &currentItem, listsOfLights, sceneLights.size());
 
 	ImGui::Text(lightText.c_str());
 	ImGui::InputFloat3("Light Position", pos);
@@ -486,6 +516,10 @@ void Renderer::imGUILightWin()
 	ImGui::Text("Background Color");
 	ImGui::ColorPicker3("Background color", backgroundColor);
 
+	if (ImGui::Button("Add Light", ImVec2(100.f, 25.f)))
+	{
+		addLight();
+	}
 	
 	Light * newLight = new Light [sceneLights.size()];
 	for (int i = 0; i < sceneLights.size(); i++)
@@ -496,6 +530,9 @@ void Renderer::imGUILightWin()
 	this->pDXCore->deviceContext->UpdateSubresource(lightBuffer.Get(), 0, nullptr, newLight, 0, 0);
 
 	delete[] newLight;
+
+	for (auto writ : writables)
+		delete writ;
 
 	ImGui::End();
 }
