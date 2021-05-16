@@ -8,13 +8,13 @@ Engine::Engine(HINSTANCE& hInstance, HINSTANCE& hPrevIntance, LPWSTR& lpmCmdLine
 	, hPrevIntance(hPrevIntance)
 	, lpmCmdLine(lpmCmdLine)
 	, nCmdShow(nCmdShow)
-	, screenWidth(GetSystemMetrics(SM_CXSCREEN))
-	, screenHeight(GetSystemMetrics(SM_CYSCREEN))
+	, screenWidth(1920)
+	, screenHeight(1080)
 	, deltaTime(0.0)
 {
 	// Initialize Window.
 	this->window = new Window(hInstance, nCmdShow);
-	if (!this->window->create(static_cast<LONG>(this->screenWidth / 2.f), static_cast<LONG>(this->screenHeight / 2.f), this->TITLE))
+	if (!this->window->create(static_cast<LONG>(this->screenWidth), static_cast<LONG>(this->screenHeight), this->TITLE))
 		std::cout << "ERROR::Engine::initializeWindow()::Could not initialize Window." << std::endl;
 
 	// Initialize DX11Core.
@@ -28,19 +28,13 @@ Engine::Engine(HINSTANCE& hInstance, HINSTANCE& hPrevIntance, LPWSTR& lpmCmdLine
 	this->camera = std::make_shared<Camera>(this->keyboardListener,this->mouseListener, screenHeight, screenWidth);
 
 	// Initialize ResourceManager.
-	this->resourceManager = new ResourceManager(this->d3d11Core);
-	
+	this->resourceManager = std::make_shared<ResourceManager>(this->d3d11Core);
+
+	this->scene = std::make_unique<Scene>(d3d11Core->device.Get(), resourceManager);
+
+
 	// Initialize Renderer
-	this->renderer = new Renderer(d3d11Core, this->window, this->camera.get(), this->resourceManager);
-
-
-
-	this->obj = new Object(this->d3d11Core->device.Get());
-	obj->SetMesh(this->resourceManager->GetMesh("test.obj").get());
-
-
-
-
+	this->renderer = new Renderer(d3d11Core, this->window, this->camera.get(), this->resourceManager.get());
 
 	// Setup ImGUI
 	IMGUI_CHECKVERSION();
@@ -89,13 +83,11 @@ void Engine::Update()
 			//Camera update
 			camera->update(deltaTime);
 
-
 			// Draw.
 			renderer->BeginFrame();
 
-			// For each object:
-			this->obj->Draw(this->d3d11Core->deviceContext.Get());
-
+			this->scene->draw(this->d3d11Core->deviceContext.Get());
+			
 			renderer->EndFrame();
 
 #ifdef _DEBUG
@@ -131,7 +123,6 @@ void Engine::drawImGUI()
 	ImGui::Text(frameRate.c_str());
 	ImGui::Text(cameraPos.c_str());
 	ImGui::End();
-	ImGui::ShowDemoWindow();
 }
 
 
@@ -148,9 +139,7 @@ Engine::~Engine()
 
 	delete this->window;
 	delete this->d3d11Core;
-	delete this->resourceManager;
 	delete this->renderer;
-	delete this->obj;
 }
 
 
