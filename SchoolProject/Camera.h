@@ -7,7 +7,7 @@
 class Camera
 {
 public:
-	Camera(std::shared_ptr<KeyboardListener> _keyboardListener, float screenHeight, float screenWidth);
+	Camera(std::shared_ptr<KeyboardListener> _keyboardListener, std::shared_ptr<MouseListener> _mouseListener, float screenHeight, float screenWidth);
 	Camera(const Camera& other) = delete;
 	Camera(Camera&& other) = delete;							
 	Camera& operator=(const Camera& other) = delete;			
@@ -17,7 +17,7 @@ public:
 	// Call this function once per frame and after you've changed any state.  This
 	// regenerates all matrices.  Calling it more or less than once per frame will break
 	// temporal effects and cause unpredictable results.
-	void Update();
+	void update(float _deltaTime,double xpos, double ypos);
 
 	// Public functions for controlling where the camera is and its orientation.
 	// Move camera
@@ -31,7 +31,7 @@ public:
 	void setTarget(DirectX::XMFLOAT3 new_target);
 	// Returns transposed camera's View matrix	
 	DirectX::XMMATRIX getView() const;
-	DirectX::XMVECTOR getPosition() const;
+	sm::Vector3 getPosition() const;
 	DirectX::XMVECTOR getCameraFront() const;
 	DirectX::XMVECTOR getCameraUp() const;
 	DirectX::XMVECTOR getFocusPoint() const;
@@ -40,19 +40,23 @@ public:
 
 private:
 	std::shared_ptr<KeyboardListener> keyboardListener;
-	DirectX::XMVECTOR position;
+	std::shared_ptr<MouseListener> mouseListener;
+	sm::Vector3 position;
 	DirectX::XMVECTOR cameraDirection;
 	DirectX::XMVECTOR cameraTarget;
 	DirectX::XMVECTOR focusPoint;
 
 	//Direction vectors
 	DirectX::XMVECTOR forward;
+	sm::Vector3 defaultForward;
+	sm::Vector3 defaultRight;
 	DirectX::XMVECTOR cameraUp;
 	DirectX::XMVECTOR cameraRight;
 	DirectX::XMVECTOR cameraFront;
 
 	DirectX::XMMATRIX projectionMatrix;
 	DirectX::XMMATRIX viewMatrix;
+	DirectX::XMMATRIX rotationMatrix;
 
 	bool firstPass;
 	bool canFly;

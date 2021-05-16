@@ -1,15 +1,18 @@
 #include "Camera.h"
 
 //--------------------------------------------------------------------------------------
-Camera::Camera(std::shared_ptr<KeyboardListener> _keyboardListener, float screenHeight, float screenWidth)
+Camera::Camera(std::shared_ptr<KeyboardListener> _keyboardListener, std::shared_ptr<MouseListener> _mouseListener, float screenHeight, float screenWidth)
 	: keyboardListener(_keyboardListener)
-	, position(DirectX::XMVectorSet(0.0f, 0.0f, -5.0f, 0.0f))
+	, mouseListener(_mouseListener)
+	, position(sm::Vector3(0.0f, 0.0f, -5.0f))
 	, focusPoint(DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f))
 	, forward(DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f))
-	, cameraTarget(DirectX::XMVectorSet(0.0f, 0.0f, 0.0f,0.0f))
+	, defaultForward(sm::Vector3(0.f, 0.f, 1.f))
+	, defaultRight(sm::Vector3(1.0f, 0.0f, 0.0f))
+	, cameraTarget(DirectX::XMVectorSet(0.0f, 0.0f, 1.0f,0.0f))
 	, cameraFront(DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f))
 	, firstPass(true)
-	, yaw(90.0f)
+	, yaw(0.0f)
 	, pitch(0.0f)
 	, canFly(false)
 	, screenHeight(screenHeight)
@@ -18,6 +21,7 @@ Camera::Camera(std::shared_ptr<KeyboardListener> _keyboardListener, float screen
 	, lastY(screenHeight /2.0f)
 	, projectionMatrix(DirectX::XMMatrixIdentity())
 	, viewMatrix(DirectX::XMMatrixIdentity())
+	, rotationMatrix(DirectX::XMMatrixIdentity())
 {
 	speed = 12.0f;
 
@@ -34,81 +38,99 @@ Camera::Camera(std::shared_ptr<KeyboardListener> _keyboardListener, float screen
 
 }
 
-
-
-
-
-
 //--------------------------------------------------------------------------------------
 void Camera::move(float _deltaTime)
 {
-	DirectX::XMVECTOR speedVector;
-	if(canFly)
-		speedVector = DirectX::XMVectorSet(speed * _deltaTime, speed * _deltaTime, speed * _deltaTime, speed * _deltaTime);
-	else
-		speedVector = DirectX::XMVectorSet(speed * _deltaTime, 0.0f, speed * _deltaTime, speed * _deltaTime);
+	double xpos = mouseListener->getMousePos().x;
+	double ypos = mouseListener->getMousePos().y;
+
+	if (this->mouseListener->getRMouseButtonDown())
+	{
+		float xoffset = (float)xpos - lastX;
+		float yoffset = (float)ypos - lastY;
+
+		float sensitivity = 0.5f;
+
+		xoffset *= (sensitivity * _deltaTime);
+		yoffset *= (sensitivity * _deltaTime);
+
+		yaw += xoffset;
+		pitch += yoffset;
+
+		//Limit pitch to ALMOST stright up or down, i remove a lil to avoid gible lock. 
+		float limit = DirectX::XM_PI / 2.0f - 0.01f;
+		pitch = std::max<float>(-limit, pitch);
+		pitch = std::min<float>(+limit, pitch);
+
+
+		//keep longitude in sane range by wrapping
+		if (yaw > DirectX::XM_PI)
+		{
+			yaw -= DirectX::XM_PI * 2.0f;
+		}
+		else if (yaw < -DirectX::XM_PI)
+		{
+			yaw += DirectX::XM_PI * 2.0f;
+		}
+	}
+
+	lastY = ypos;
+	lastX = xpos;
+
+	sm::Vector3 moveVec = sm::Vector3::Zero;
 
 	if (keyboardListener->isKeyDown(Key::W))
 	{
-		position = DirectX::XMVectorAdd(position, DirectX::XMVectorMultiply(cameraFront, speedVector));
+		moveVec.z += speed;
 	}
-	if (keyboardListener->isKeyDown(Key::S) || keyboardListener->isKeyDown(Key::DOWN_ARROW))
+	if (keyboardListener->isKeyDown(Key::A))
 	{
-		position = DirectX::XMVectorSubtract(position, DirectX::XMVectorMultiply(cameraFront, speedVector));
+		moveVec.x -= speed;
 	}
-	if (keyboardListener->isKeyDown(Key::A) || keyboardListener->isKeyDown(Key::LEFT_ARROW))
+	if (keyboardListener->isKeyDown(Key::D))
 	{
-		position = DirectX::XMVectorAdd(position, DirectX::XMVectorMultiply(DirectX::XMVector4Normalize(DirectX::XMVector3Cross(cameraFront,cameraUp)), speedVector));
+		moveVec.x += speed;
 	}
-	if (keyboardListener->isKeyDown(Key::D) || keyboardListener->isKeyDown(Key::RIGHT_ARROW))
-	{ 
-		position = DirectX::XMVectorSubtract(position, DirectX::XMVectorMultiply(DirectX::XMVector4Normalize(DirectX::XMVector3Cross(cameraFront, cameraUp)), speedVector));
+	if (keyboardListener->isKeyDown(Key::S))
+	{
+		moveVec.z -= speed;
 	}
 	if (keyboardListener->isKeyDown(Key::Q))
 	{
-		position = DirectX::XMVectorSubtract(position, DirectX::XMVectorMultiply(cameraUp, speedVector));
+		moveVec.y -= speed;
 	}
 	if (keyboardListener->isKeyDown(Key::E))
 	{
-		position = DirectX::XMVectorAdd(position, DirectX::XMVectorMultiply(cameraUp, speedVector));
+		moveVec.y += speed;
 	}
+
+	sm::Quaternion q = sm::Quaternion::CreateFromYawPitchRoll(yaw, pitch, 0.0f);
+	moveVec = sm::Vector3::Transform(moveVec, q);
+	moveVec *= _deltaTime;
+
+	this->position += moveVec;
+
+
+	this->rotationMatrix = DirectX::XMMatrixRotationRollPitchYaw(pitch, yaw, 0.0f);
+	this->cameraTarget = DirectX::XMVector3TransformCoord(this->defaultForward, this->rotationMatrix);
+	this->cameraTarget = DirectX::XMVector3Normalize(this->cameraTarget);
+
+	//Temp rotation matrix for updating rotation of the camera
+	DirectX::XMMATRIX rotateYTempMatrix = DirectX::XMMatrixRotationAxis({ 0, 1, 0 }, pitch);
+
+	//Transform the camera rotation
+	this->cameraRight = DirectX::XMVector3TransformNormal(this->defaultRight, rotateYTempMatrix);
+	this->cameraUp = DirectX::XMVector3TransformNormal(this->cameraUp, rotateYTempMatrix);
+	this->forward = DirectX::XMVector3TransformNormal(this->defaultForward, rotateYTempMatrix);
+
+	//add the position of the camera to the target vector
+	this->cameraTarget = DirectX::XMVectorAdd(this->cameraTarget, this->position);
 
 	//Update viewMatrix
 	this->viewMatrix = DirectX::XMMatrixLookAtLH(this->position, this->cameraTarget, this->cameraUp);
 	
 }
 
-
-
-
-
-//--------------------------------------------------------------------------------------
-void Camera::mouseInput(float _deltaTime, double xpos, double ypos)
-{
-
-	float xoffset = (float)xpos - lastX;
-	float yoffset = lastY - (float)ypos;
-
-	float sensitivity = 0.5f;
-	xoffset *= (-sensitivity * _deltaTime);
-	yoffset *= (sensitivity * _deltaTime);
-
-	yaw += xoffset;
-	pitch += yoffset;
-
-	if (pitch > 89.0f)
-		pitch = 89.0f;
-	if (pitch < -89.0f)
-		pitch = -89.0f;
-
-	DirectX::XMVECTOR direction = DirectX::XMVectorSet(
-		DirectX::XMScalarCos(DirectX::XMConvertToRadians(yaw)) * DirectX::XMScalarCos(DirectX::XMConvertToRadians(pitch)),
-		DirectX::XMScalarSin(DirectX::XMConvertToRadians(pitch)),
-		DirectX::XMScalarSin(DirectX::XMConvertToRadians(yaw)) * DirectX::XMScalarCos(DirectX::XMConvertToRadians(pitch)),0.0f
-	);
-
-	cameraFront = DirectX::XMVector3Normalize(direction);
-}
 
 
 
@@ -128,7 +150,7 @@ DirectX::XMMATRIX Camera::getView() const
 }
 
 //--------------------------------------------------------------------------------------
-DirectX::XMVECTOR Camera::getPosition() const
+sm::Vector3  Camera::getPosition() const
 {
 	return position;
 }

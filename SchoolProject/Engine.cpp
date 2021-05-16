@@ -25,7 +25,7 @@ Engine::Engine(HINSTANCE& hInstance, HINSTANCE& hPrevIntance, LPWSTR& lpmCmdLine
 	this->mouseListener = std::make_shared<MouseListener>((float)screenHeight, (float)screenWidth);
 
 	//Initialize Camera
-	this->camera = std::make_shared<Camera>(this->keyboardListener, screenHeight, screenWidth);
+	this->camera = std::make_shared<Camera>(this->keyboardListener,this->mouseListener, screenHeight, screenWidth);
 
 	// Initialize ResourceManager.
 	this->resourceManager = new ResourceManager(this->d3d11Core);
@@ -86,6 +86,10 @@ void Engine::Update()
 			// Submit.
 			// a vector with objects.
 
+			//Camera update
+			camera->move(deltaTime);
+
+
 			// Draw.
 			renderer->BeginFrame();
 
@@ -122,10 +126,10 @@ void Engine::drawImGUI()
 	ImGui::Begin("Statistics");
 	std::string frameRate = "FPS: " + std::to_string((int)(1 / deltaTime));
 	std::string screenRes = "Screen Resolution: " + std::to_string(window->getWidth()) + "x" + std::to_string(window->getHeight());
-	//std::string cameraPos = "Camera Position: x:" + std::to_string();
+	std::string cameraPos = "Camera Position: X:" + std::to_string(camera->getPosition().x) + " Y: " + std::to_string(camera->getPosition().y) + " Z: " + std::to_string(camera->getPosition().z);
 	ImGui::Text(screenRes.c_str());
 	ImGui::Text(frameRate.c_str());
-	//ImGui::Text(cameraPos.c_str());
+	ImGui::Text(cameraPos.c_str());
 	ImGui::End();
 	ImGui::ShowDemoWindow();
 }
@@ -174,7 +178,11 @@ bool Engine::handleMessage()
 		// Time to quit ?
 		if (msg.message == WM_QUIT)
 			return false;
-	
+		
+
+		keyboardListener->updateKeyboard(this->msg);
+
+		mouseListener->updateMouse(this->msg, window->getHwnd());
 		// Process possible GUI events
 	
 	}
