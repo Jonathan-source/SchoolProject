@@ -7,6 +7,7 @@
 #include "ResourceManager.h"
 #include "Timer.h"
 #include "Renderer.h"
+#include "Scene.h"
 
 #include "Object.h"
 
@@ -44,8 +45,11 @@ private:
 	std::shared_ptr<KeyboardListener> keyboardListener;
 	std::shared_ptr<MouseListener> mouseListener;
 
-	// ResourceManager
-	ResourceManager * resourceManager;
+	//ResourceManager
+	std::shared_ptr<ResourceManager> resourceManager;
+
+	//Scene
+	std::unique_ptr<Scene> scene;
 
 	// Timer
 	Timer timer;
@@ -57,9 +61,6 @@ private:
 
 	// Engine specific functions
 	//void initializeImGui();
-
-	//test
-	Object * obj;
 
 
 	bool handleMessage();

@@ -28,19 +28,13 @@ Engine::Engine(HINSTANCE& hInstance, HINSTANCE& hPrevIntance, LPWSTR& lpmCmdLine
 	this->camera = std::make_shared<Camera>(this->keyboardListener,this->mouseListener, screenHeight, screenWidth);
 
 	// Initialize ResourceManager.
-	this->resourceManager = new ResourceManager(this->d3d11Core);
-	
+	this->resourceManager = std::make_shared<ResourceManager>(this->d3d11Core);
+
+	this->scene = std::make_unique<Scene>(d3d11Core->device.Get(), resourceManager);
+
+
 	// Initialize Renderer
-	this->renderer = new Renderer(d3d11Core, this->window, this->camera.get(), this->resourceManager);
-
-
-
-	this->obj = new Object(this->d3d11Core->device.Get());
-	obj->SetMesh(this->resourceManager->GetMesh("Monkey.obj").get());
-
-
-
-
+	this->renderer = new Renderer(d3d11Core, this->window, this->camera.get(), this->resourceManager.get());
 
 	// Setup ImGUI
 	IMGUI_CHECKVERSION();
@@ -89,13 +83,11 @@ void Engine::Update()
 			//Camera update
 			camera->update(deltaTime);
 
-
 			// Draw.
 			renderer->BeginFrame();
 
-			// For each object:
-			this->obj->Draw(this->d3d11Core->deviceContext.Get());
-
+			this->scene->draw(this->d3d11Core->deviceContext.Get());
+			
 			renderer->EndFrame();
 
 #ifdef _DEBUG
@@ -147,9 +139,7 @@ Engine::~Engine()
 
 	delete this->window;
 	delete this->d3d11Core;
-	delete this->resourceManager;
 	delete this->renderer;
-	delete this->obj;
 }
 
 
