@@ -11,6 +11,36 @@
 #include "ConstantBuffer.h"
 #include "IndexBuffer.h"
 
+// Material
+struct Material
+{
+	std::string name;		// Name of loaded material
+	DirectX::XMFLOAT3 Ka;	// Ambient color
+	DirectX::XMFLOAT3 Kd;	// Diffuse color
+	DirectX::XMFLOAT3 Ks;	// Specular color
+	float Ns;				// Specular exponent
+	float Ni;				// Optical density
+	float d;				// Dissolve variable
+	int illum;				// Illumination variable
+	std::string map_Ka;		// Ambient texture map name
+	std::string map_Kd;		// Diffuse texture map name
+	std::string map_Ks;		// Specular texture map name
+	std::string map_d;		// Alpha texture map name
+	std::string map_bump;	// Bump map name
+
+	std::string	diffuseMap;
+	std::string	normalMap;
+	std::string	heightMap;
+	std::string	specularMap;
+	std::string	roughnessMap;
+	std::string	metallicMap;
+	std::string	emissiveMap;
+
+	bool hasDiffuseMap;
+	bool hasNormalMap;
+	bool hasSpecularMap;
+	bool hasAlphaMask;
+};
 
 // Final version.
 struct Mesh
@@ -34,6 +64,7 @@ struct MeshData
 	std::vector<DirectX::XMFLOAT2> texCoords;
 	std::vector<DirectX::XMFLOAT3> tangents;
 	std::vector<DirectX::XMUINT3>  faces;
+	std::string mtllib;
 };
 
 
@@ -47,10 +78,6 @@ public:
 	ResourceManager& operator=(const ResourceManager& other) = delete;
 	ResourceManager& operator=(ResourceManager&& other) = delete;
 	virtual ~ResourceManager() = default;
-
-	// Load-to-map methods.
-	void LoadMeshes(const std::vector<std::string>& meshes);
-	void LoadTextures(const std::vector<std::string>& textures);
 
 	// Getters.
 	ComPtr<ID3D11PixelShader>			GetPixelShader(const std::string& filename) const;
@@ -80,9 +107,10 @@ private:
 	}; 
 
 	std::unordered_map<std::string, std::shared_ptr<Mesh>>				meshMap;
+	std::unordered_map<std::string, ComPtr<ID3D11ShaderResourceView>>	textures;	// Contains all types of textures.
+	
 	std::unordered_map<std::string, std::shared_ptr<VertexBuffer>>		vBuffers;
 	std::unordered_map<std::string, std::shared_ptr<IndexBuffer>>		iBuffers;
-	std::unordered_map<std::string, ComPtr<ID3D11ShaderResourceView>>	textures;
 
 	std::unordered_map<std::string, Shader<ID3D11VertexShader>>			vShaders;
 	std::unordered_map<std::string, Shader<ID3D11PixelShader>>			pShaders;
@@ -94,7 +122,8 @@ private:
 
 	void InitializeShaders();
 	bool LoadShaderData(const std::string& filename, std::string& shaderByteCode);
-
+	void LoadModels(const std::vector<std::string>& meshFileNames);
+	void LoadTextures(const std::vector<std::string>& textures);
 
 	//----------------------------------------------------------------------------------
 	// Load texture from file.
@@ -107,4 +136,9 @@ private:
 	MeshData LoadObjFromFile(const std::string& filename);
 	void ComputeTangent(MeshData& meshData);
 	SubMesh CreateSubMesh(const MeshData& meshData);
+
+	//----------------------------------------------------------------------------------
+	// Load material from mtl file.
+	//----------------------------------------------------------------------------------
+	Material LoadMaterialFromFile(const std::string& filename);
 };
