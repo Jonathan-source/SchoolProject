@@ -87,7 +87,7 @@ void Engine::Update()
 			// a vector with objects.
 
 			//Camera update
-			camera->move(deltaTime);
+			camera->update(deltaTime);
 
 
 			// Draw.

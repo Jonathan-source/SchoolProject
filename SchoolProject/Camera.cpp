@@ -11,10 +11,8 @@ Camera::Camera(std::shared_ptr<KeyboardListener> _keyboardListener, std::shared_
 	, defaultRight(sm::Vector3(1.0f, 0.0f, 0.0f))
 	, cameraTarget(DirectX::XMVectorSet(0.0f, 0.0f, 1.0f,0.0f))
 	, cameraFront(DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f))
-	, firstPass(true)
 	, yaw(0.0f)
 	, pitch(0.0f)
-	, canFly(false)
 	, screenHeight(screenHeight)
 	, screenWidth(screenWidth)
 	, lastX(screenWidth /2.0f)
@@ -39,7 +37,7 @@ Camera::Camera(std::shared_ptr<KeyboardListener> _keyboardListener, std::shared_
 }
 
 //--------------------------------------------------------------------------------------
-void Camera::move(float _deltaTime)
+void Camera::update(float _deltaTime)
 {
 	double xpos = mouseListener->getMousePos().x;
 	double ypos = mouseListener->getMousePos().y;

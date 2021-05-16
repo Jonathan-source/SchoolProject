@@ -14,22 +14,12 @@ public:
 	Camera& operator=(Camera&& other) = delete;					
 	virtual ~Camera() = default;
 
-	// Call this function once per frame and after you've changed any state.  This
-	// regenerates all matrices.  Calling it more or less than once per frame will break
-	// temporal effects and cause unpredictable results.
-	void update(float _deltaTime,double xpos, double ypos);
-
-	// Public functions for controlling where the camera is and its orientation.
 	// Move camera
-	void move(float _deltaTime);
-	// Rotate camera around `axis` by `degrees`. Camera's position is a 
-	// pivot point of rotation, so it doesn't change
-	void mouseInput(float _deltaTime, double xpos, double ypos);
+	void update(float _deltaTime);
+
 	// Set camera position coordinates
 	void setPosition(const DirectX::XMFLOAT3 &new_position);
-	// Change camera target position
-	void setTarget(DirectX::XMFLOAT3 new_target);
-	// Returns transposed camera's View matrix	
+
 	DirectX::XMMATRIX getView() const;
 	sm::Vector3 getPosition() const;
 	DirectX::XMVECTOR getCameraFront() const;
@@ -58,8 +48,6 @@ private:
 	DirectX::XMMATRIX viewMatrix;
 	DirectX::XMMATRIX rotationMatrix;
 
-	bool firstPass;
-	bool canFly;
 	float yaw;
 	float pitch;
 	float lastX;
