@@ -8,13 +8,13 @@ Engine::Engine(HINSTANCE& hInstance, HINSTANCE& hPrevIntance, LPWSTR& lpmCmdLine
 	, hPrevIntance(hPrevIntance)
 	, lpmCmdLine(lpmCmdLine)
 	, nCmdShow(nCmdShow)
-	, screenWidth(GetSystemMetrics(SM_CXSCREEN))
-	, screenHeight(GetSystemMetrics(SM_CYSCREEN))
+	, screenWidth(1920)
+	, screenHeight(1080)
 	, deltaTime(0.0)
 {
 	// Initialize Window.
 	this->window = new Window(hInstance, nCmdShow);
-	if (!this->window->create(static_cast<LONG>(this->screenWidth / 2.f), static_cast<LONG>(this->screenHeight / 2.f), this->TITLE))
+	if (!this->window->create(static_cast<LONG>(this->screenWidth), static_cast<LONG>(this->screenHeight), this->TITLE))
 		std::cout << "ERROR::Engine::initializeWindow()::Could not initialize Window." << std::endl;
 
 	// Initialize DX11Core.
