@@ -20,6 +20,7 @@ Camera::Camera(std::shared_ptr<KeyboardListener> _keyboardListener, std::shared_
 	, projectionMatrix(DirectX::XMMatrixIdentity())
 	, viewMatrix(DirectX::XMMatrixIdentity())
 	, rotationMatrix(DirectX::XMMatrixIdentity())
+	, mouseSensitivity(0.5f)
 {
 	speed = 12.0f;
 
@@ -27,7 +28,7 @@ Camera::Camera(std::shared_ptr<KeyboardListener> _keyboardListener, std::shared_
 
 	this->cameraRight = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(cameraUp, cameraDirection));
 
-	this->cameraUp = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);//DirectX::XMVector3Cross(cameraDirection, cameraRight);
+	this->cameraUp = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
 	this->projectionMatrix = DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PI * 0.45f, (float)screenWidth / (float)screenHeight, 0.001f, 1000.0f);
 	
@@ -42,15 +43,21 @@ void Camera::update(float _deltaTime)
 	double xpos = mouseListener->getMousePos().x;
 	double ypos = mouseListener->getMousePos().y;
 
+
+#ifdef _DEBUG
+	ImGui::Begin("Camera Controlls");
+	ImGui::SliderFloat("Movement speed", &this->speed, 1.f, 100.f);
+	ImGui::SliderFloat("Mouse Sensitivity", &this->mouseSensitivity, 0.1f, 10.f);
+	ImGui::End();
+#endif // !_DEBUG
+
 	if (this->mouseListener->getRMouseButtonDown())
 	{
 		float xoffset = (float)xpos - lastX;
 		float yoffset = (float)ypos - lastY;
 
-		float sensitivity = 0.5f;
-
-		xoffset *= (sensitivity * _deltaTime);
-		yoffset *= (sensitivity * _deltaTime);
+		xoffset *= (mouseSensitivity * _deltaTime);
+		yoffset *= (mouseSensitivity * _deltaTime);
 
 		yaw += xoffset;
 		pitch += yoffset;

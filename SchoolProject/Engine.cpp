@@ -131,7 +131,6 @@ void Engine::drawImGUI()
 	ImGui::Text(frameRate.c_str());
 	ImGui::Text(cameraPos.c_str());
 	ImGui::End();
-	ImGui::ShowDemoWindow();
 }
 
 

@@ -57,6 +57,7 @@ private:
 	float screenHeight;
 
 	float speed;
+	float mouseSensitivity;
 	
 };
 
