@@ -62,13 +62,13 @@ void Camera::update(float _deltaTime)
 		yaw += xoffset;
 		pitch += yoffset;
 
-		//Limit pitch to ALMOST stright up or down, i remove a lil to avoid gible lock. 
+		// Limit pitch to ALMOST stright up or down, i remove a lil to avoid gible lock. 
 		float limit = DirectX::XM_PI / 2.0f - 0.01f;
 		pitch = std::max<float>(-limit, pitch);
 		pitch = std::min<float>(+limit, pitch);
 
 
-		//keep longitude in sane range by wrapping
+		// Keep longitude in sane range by wrapping
 		if (yaw > DirectX::XM_PI)
 		{
 			yaw -= DirectX::XM_PI * 2.0f;
