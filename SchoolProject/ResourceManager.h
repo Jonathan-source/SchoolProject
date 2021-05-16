@@ -19,27 +19,17 @@ struct Material
 	DirectX::XMFLOAT3 Kd;	// Diffuse color
 	DirectX::XMFLOAT3 Ks;	// Specular color
 	float Ns;				// Specular exponent
-	float Ni;				// Optical density
-	float d;				// Dissolve variable
-	int illum;				// Illumination variable
 	std::string map_Ka;		// Ambient texture map name
 	std::string map_Kd;		// Diffuse texture map name
+	std::string map_Ke;		// Emissive texture map name
 	std::string map_Ks;		// Specular texture map name
-	std::string map_d;		// Alpha texture map name
-	std::string map_bump;	// Bump map name
+	std::string map_Bump;	// Normal texture map name 
 
-	std::string	diffuseMap;
-	std::string	normalMap;
-	std::string	heightMap;
-	std::string	specularMap;
-	std::string	roughnessMap;
-	std::string	metallicMap;
-	std::string	emissiveMap;
-
+	bool hasAmbientMap;
 	bool hasDiffuseMap;
-	bool hasNormalMap;
+	bool hasEmissiveMap;
 	bool hasSpecularMap;
-	bool hasAlphaMask;
+	bool hasNormalMap;
 };
 
 // Final version.
@@ -86,6 +76,7 @@ public:
 	ComPtr<ID3D11GeometryShader>		GetGeometryShader(const std::string& filename) const;
 	ComPtr<ID3D11ShaderResourceView>	GetTexture(const std::string& filename) const;
 	const std::shared_ptr<Mesh>			GetMesh(const std::string& filename) const;
+	const std::shared_ptr<Material>		GetMaterial(const std::string& filename) const;
 	const IndexBuffer*					GetIndexBuffer(const std::string& filename) const;
 	const VertexBuffer*					GetVertexBuffer(const std::string& filename) const;
 
@@ -107,6 +98,7 @@ private:
 	}; 
 
 	std::unordered_map<std::string, std::shared_ptr<Mesh>>				meshMap;
+	std::unordered_map<std::string, std::shared_ptr<Material>>			materialMap;
 	std::unordered_map<std::string, ComPtr<ID3D11ShaderResourceView>>	textures;	// Contains all types of textures.
 	
 	std::unordered_map<std::string, std::shared_ptr<VertexBuffer>>		vBuffers;

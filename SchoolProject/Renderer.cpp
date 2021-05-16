@@ -14,10 +14,10 @@ Renderer::Renderer(D3D11Core* pDXCore,Window* pWindow, Camera* pCamera, Resource
 	clearColor[1] = 0.0f;
 	clearColor[2] = 0.0f;
 	clearColor[3] = 0.0f;
-	backgroundColor[0] = 0.1f;
-	backgroundColor[1] = 0.1f;
-	backgroundColor[2] = 0.1f;
-	backgroundColor[3] = 0.1f;
+	backgroundColor[0] = 0.2f;
+	backgroundColor[1] = 0.2f;
+	backgroundColor[2] = 0.2f;
+	backgroundColor[3] = 0.2f;
 
 
 	// Initialize Deferred Rendering.
@@ -83,7 +83,6 @@ void Renderer::Present()
 //--------------------------------------------------------------------------------------
 void Renderer::ClearFrame()
 {
-
 	this->pDXCore->deviceContext->ClearRenderTargetView(this->graphicsBuffer[GBUFFER::POSITION].renderTargetView.Get(), clearColor);
 	this->pDXCore->deviceContext->ClearRenderTargetView(this->graphicsBuffer[GBUFFER::NORMAL].renderTargetView.Get(), clearColor);
 	this->pDXCore->deviceContext->ClearRenderTargetView(this->graphicsBuffer[GBUFFER::DIFFUSE].renderTargetView.Get(), backgroundColor);
@@ -330,27 +329,34 @@ bool Renderer::createStructuredBufferLights()
 	ZeroMemory(&resourceViewDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
 
 	resourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
-	resourceViewDesc.BufferEx.NumElements = static_cast<UINT>(100);
+	resourceViewDesc.BufferEx.NumElements = this->MAX_NUM_LIGHTS;
 	hr = this->pDXCore->device->CreateShaderResourceView(lightBuffer.Get(), &resourceViewDesc, lightBufferSRV.GetAddressOf());
 
 	return !FAILED(hr);
 }
 
+
+
+
+
+
+
+//--------------------------------------------------------------------------------------
 void Renderer::addLight()
 {
 	//	Create lights here:
-	Light light2;
-	light2.position = { 0.0f, 2.0f, 5.0f, 1.0f };
-	light2.color = { 0.43f, 0.45f, 1.f, 1.0f };
-	light2.direction = { 0.0f, 0.0f, 1.0f, 0.0f };
-	light2.specularPower = 1.0f;
-	light2.shininess = 32.0f;
-	light2.intensity = 1.f;
-	light2.type = 0;
-	light2.range = 15.f;
-	light2.enabled = true;
+	Light newLight;
+	DirectX::XMStoreFloat4(&newLight.position, this->pCamera->getPosition());
+	DirectX::XMStoreFloat4(&newLight.direction, this->pCamera->getDirection());
+	newLight.color = { 0.43f, 0.45f, 1.f, 1.0f };
+	newLight.specularPower = 1.0f;
+	newLight.shininess = 32.0f;
+	newLight.intensity = 1.f;
+	newLight.type = 0;
+	newLight.range = 15.f;
+	newLight.enabled = true;
 
-	this->sceneLights.emplace_back(light2);
+	this->sceneLights.emplace_back(newLight);
 }
 
 
@@ -370,6 +376,7 @@ void Renderer::setPerFrameBuffer()
 		DirectX::XMStoreFloat4(&this->perFrameData.CameraPosition, pCamera->getPosition());
 		DirectX::XMStoreFloat4x4(&this->perFrameData.ViewMatrix, pCamera->getView());
 		DirectX::XMStoreFloat4x4(&this->perFrameData.ProjectionMatrix, pCamera->getProjectionMatrix());
+		this->perFrameData.GlobalAmbient = DirectX::XMFLOAT4(0.1f, 0.1f, 0.15f, 1.0f);
 		this->perFrameData.NumLights = this->sceneLights.size();
 
 		this->pDXCore->deviceContext->UpdateSubresource(this->perFrameBuffer->Get(), 0, nullptr, &this->perFrameData, 0, 0);
@@ -450,7 +457,7 @@ void Renderer::LightningPass()
 	this->pDXCore->deviceContext->VSSetShader(this->pResourceManager->GetVertexShader("deferred_lightning_vs").Get(), nullptr, 0);
 	this->pDXCore->deviceContext->PSSetShader(this->pResourceManager->GetPixelShader("deferred_lightning_ps").Get(), nullptr, 0);
 	
-	// Render (FullScreenQuad).
+	// Render FullScreenQuad.
 	this->pDXCore->deviceContext->DrawIndexed(6, 0, 0);
 	
 	ID3D11ShaderResourceView* nullSRV = nullptr;
@@ -477,10 +484,7 @@ void Renderer::imGUILightWin()
 	static float pos[3] = { sceneLights.at(currentItem).position.x,sceneLights.at(currentItem).position.y,sceneLights.at(currentItem).position.z};
 	static float color[3] = { 0.5f,0.5f,0.5f};
 
-	std::string lightText = "Lights";
-
 	const char* listsOfLights[100] = {};
-
 	std::vector<char*> writables;
 	for (int i = 0; i < sceneLights.size(); i++)
 	{
@@ -498,39 +502,34 @@ void Renderer::imGUILightWin()
 	ImGui::Text(R"(Light Entitys)");
 	ImGui::ListBox("", &currentItem, listsOfLights, sceneLights.size());
 
+
+	std::string lightText = "Lights";
 	ImGui::Text(lightText.c_str());
 	ImGui::InputFloat3("Light Position", pos);
 
 	
-	//Change lights position
+	// Change lights position
 	this->sceneLights[currentItem].position.x = pos[currentItem]; this->sceneLights[currentItem].position.y = pos[1]; this->sceneLights[currentItem].position.z = pos[2];
 	ImGui::Spacing();
 
-	ImGui::ColorPicker3("Light Color", color);
+	ImGui::ColorPicker3("Color", color);
 	this->sceneLights[currentItem].color.x = color[0]; this->sceneLights[currentItem].color.y = color[1]; this->sceneLights[currentItem].color.z = color[2];
+
 	static bool buttonlightOn = true;
 	ImGui::Checkbox("Enable Light", &buttonlightOn);
 	sceneLights[currentItem].enabled = buttonlightOn;
 
 	ImGui::Spacing();
 	ImGui::Text("Background Color");
-	ImGui::ColorPicker3("Background color", backgroundColor);
+	ImGui::ColorPicker3("Color", backgroundColor);
 
 	if (ImGui::Button("Add Light", ImVec2(100.f, 25.f)))
 	{
-		addLight();
+		this->addLight();
 	}
+
+	this->pDXCore->deviceContext->UpdateSubresource(lightBuffer.Get(), 0, nullptr, sceneLights.data(), 0, 0);
 	
-	Light * newLight = new Light [sceneLights.size()];
-	for (int i = 0; i < sceneLights.size(); i++)
-	{
-		newLight[i] = sceneLights.at(i);
-	}
-
-	this->pDXCore->deviceContext->UpdateSubresource(lightBuffer.Get(), 0, nullptr, newLight, 0, 0);
-
-	delete[] newLight;
-
 	for (auto writ : writables)
 		delete writ;
 

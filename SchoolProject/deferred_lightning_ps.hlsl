@@ -22,6 +22,7 @@ cbuffer PerFrame : register(b1)
     row_major matrix ViewMatrix;
     float4 CameraPosition;
     float4 MousePosition;
+    float4 GlobalAmbient;   // w = strenght.
     uint NumLights;
 };
 
@@ -72,7 +73,7 @@ PixelOutputType main(PixelInputType input)
 
 
     // Calculate Ambient Term:  
-    const float4 ambient = float4(0.2f, 0.2f, 0.2f, 1.0f);
+    const float4 ambient = float4(GlobalAmbient.xyz * GlobalAmbient.w, 1.0f);
     output.color = ambient * surfaceColor;
 	
 

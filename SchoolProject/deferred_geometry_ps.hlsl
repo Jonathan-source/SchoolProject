@@ -5,6 +5,9 @@ Texture2D EmissiveTexture       : TEXTURE : register(t2);
 SamplerState LinearSampler      : SAMPLER : register(s0);
 
 
+//Texture2D SpecularTexture       : register(t3);
+
+
 //--------------------------------------------------------------------------------------
 //
 //--------------------------------------------------------------------------------------

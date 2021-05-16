@@ -26,7 +26,7 @@ public:
 	DirectX::XMVECTOR getCameraUp() const;
 	DirectX::XMVECTOR getFocusPoint() const;
 	DirectX::XMMATRIX getProjectionMatrix() const;
-
+	DirectX::XMVECTOR getDirection() const;
 
 private:
 	std::shared_ptr<KeyboardListener> keyboardListener;

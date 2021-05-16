@@ -149,10 +149,17 @@ void Camera::setPosition(const DirectX::XMFLOAT3& new_position)
 
 
 
+
+
+//--------------------------------------------------------------------------------------
 DirectX::XMMATRIX Camera::getView() const
 {
 	return this->viewMatrix;
 }
+
+
+
+
 
 //--------------------------------------------------------------------------------------
 sm::Vector3  Camera::getPosition() const
@@ -198,4 +205,14 @@ DirectX::XMVECTOR Camera::getFocusPoint() const
 DirectX::XMMATRIX Camera::getProjectionMatrix() const
 {
 	return projectionMatrix;
+}
+
+
+
+
+
+//--------------------------------------------------------------------------------------
+DirectX::XMVECTOR Camera::getDirection() const
+{
+	return this->cameraDirection;
 }

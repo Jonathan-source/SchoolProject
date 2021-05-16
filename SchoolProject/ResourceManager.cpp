@@ -26,7 +26,7 @@ void ResourceManager::LoadModels(const std::vector<std::string>& meshFileNames)
 {
 	for (const auto& filename : meshFileNames)
 	{
-		// Mesh
+		// Load Mesh from OBJ.
 		MeshData meshData = this->LoadObjFromFile(filename);
 		SubMesh subMesh = this->CreateSubMesh(meshData);
 
@@ -39,7 +39,8 @@ void ResourceManager::LoadModels(const std::vector<std::string>& meshFileNames)
 
 		this->meshMap.insert(std::pair<std::string, std::shared_ptr<Mesh>>(filename, mesh));
 
-		// Material
+		// Load Material from MTL.
+		Material material = this->LoadMaterialFromFile(meshData.mtllib);
 	}
 }
 
@@ -202,6 +203,18 @@ const std::shared_ptr<Mesh> ResourceManager::GetMesh(const std::string& filename
 
 
 
+
+//--------------------------------------------------------------------------------------
+const std::shared_ptr<Material> ResourceManager::GetMaterial(const std::string& filename) const
+{
+	return this->materialMap.find(filename)->second;
+}
+
+
+
+
+
+
 //--------------------------------------------------------------------------------------
 ComPtr<ID3D11PixelShader> ResourceManager::GetPixelShader(const std::string& filename) const
 {
@@ -330,7 +343,7 @@ MeshData ResourceManager::LoadObjFromFile(const std::string& filename)
 	std::ifstream inputFile(filename.c_str());
 	if (!inputFile.is_open())
 	{
-		std::cout << "Could not open " + filename + "\n.";
+		std::cout << "Could not open " + filename << std::endl;
 	}
 
 	// Initialize new MeshData.
@@ -612,13 +625,78 @@ SubMesh ResourceManager::CreateSubMesh(const MeshData& meshData)
 //--------------------------------------------------------------------------------------
 Material ResourceManager::LoadMaterialFromFile(const std::string& filename)
 {
+	// Try to open the file.
+	std::ifstream inputFile(filename.c_str());
+	if (!inputFile.is_open())
+	{
+		std::cout << "Could not open " + filename << std::endl;
+	}
 
+	Material material = {};
+	material.name = filename;
+	material.hasAmbientMap	= false;
+	material.hasDiffuseMap = false;
+	material.hasEmissiveMap = false;
+	material.hasSpecularMap = false;
+	material.hasNormalMap = false;
 
+	// Some useful variables.
+	std::stringstream ss = {};
+	std::string line = {};
+	std::string prefix = {};
 
+	// Read from .obj file.
+	while (std::getline(inputFile, line) && !inputFile.eof())
+	{
+		// Split the content of the line at spaces, use a stringstream directly.
+		ss.clear();
+		ss.str(line);
+		ss >> prefix;
 
+		// Check what the current prefix is and store data.
+		if (prefix == "Ka")
+		{
+			ss >> material.Ka.x >> material.Ka.y >> material.Ka.z;
+		}
+		else if (prefix == "Kd") 
+		{
+			ss >> material.Kd.x >> material.Kd.y >> material.Kd.z;
+		}
+		else if (prefix == "Ks") 
+		{
+			ss >> material.Ks.x >> material.Ks.y >> material.Ks.z;
+		}
+		else if (prefix == "map_Ka")
+		{
+			ss >> material.map_Ka;
+			material.hasAmbientMap = true;
+		}
+		else if (prefix == "map_Kd") 
+		{
+			ss >> material.map_Kd;
+			material.hasDiffuseMap = true;
+		}
+		else if (prefix == "map_Ke")
+		{
+			ss >> material.map_Ke;
+			material.hasEmissiveMap = true;
+		}
+		else if (prefix == "map_Ks")
+		{
+			ss >> material.map_Ks;
+			material.hasSpecularMap = true;
+		}
+		else if (prefix == "map_Bump")
+		{
+			ss >> material.map_Bump;
+			material.hasNormalMap = true;
+		}
+	}
 
+	// Close file.
+	inputFile.close();
 
-	return Material();
+	return material;
 }
 
 
