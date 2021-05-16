@@ -11,8 +11,10 @@ ResourceManager::ResourceManager(D3D11Core* pD3D11Core)
 	this->CreateInputLayoutGP(this->vShaders.find("deferred_geometry_vs")->second.shaderData);
 	this->CreateInputLayoutLP(this->vShaders.find("deferred_lightning_vs")->second.shaderData);
 
-	std::vector<std::string> meshes{ "Cube.obj", "Monkey.obj" };
-	this->LoadMeshes(meshes);
+	// Naming convention:
+	// Monkey.obj, Monkey.mtl, Monkey_nt.png, Monkey_dt.png, Monkey_st.png"
+	std::vector<std::string> meshFileNames{ "Cube.obj", "Monkey.obj", "test.obj" };
+	this->LoadModels(meshFileNames);
 }
 
 
@@ -20,10 +22,11 @@ ResourceManager::ResourceManager(D3D11Core* pD3D11Core)
 
 
 //--------------------------------------------------------------------------------------
-void ResourceManager::LoadMeshes(const std::vector<std::string>& meshes)
+void ResourceManager::LoadModels(const std::vector<std::string>& meshFileNames)
 {
-	for (const auto& filename : meshes)
+	for (const auto& filename : meshFileNames)
 	{
+		// Mesh
 		MeshData meshData = this->LoadObjFromFile(filename);
 		SubMesh subMesh = this->CreateSubMesh(meshData);
 
@@ -35,6 +38,8 @@ void ResourceManager::LoadMeshes(const std::vector<std::string>& meshes)
 		mesh->ib.createIndexBuffer(subMesh.indexData.data(), subMesh.indexData.size());
 
 		this->meshMap.insert(std::pair<std::string, std::shared_ptr<Mesh>>(filename, mesh));
+
+		// Material
 	}
 }
 
@@ -335,6 +340,7 @@ MeshData ResourceManager::LoadObjFromFile(const std::string& filename)
 	meshData.texCoords.reserve(5000);
 	meshData.tangents.reserve(5000);
 	meshData.faces.reserve(5000);
+	meshData.mtllib = "default.mtl";
 
 
 	// Some useful variables.
@@ -353,6 +359,11 @@ MeshData ResourceManager::LoadObjFromFile(const std::string& filename)
 
 		// Check what the current segment is and store data.
 		if (prefix == "#") {}
+		else if (prefix == "mtllib") 
+		{ 
+			// Save material file.
+			ss >> meshData.mtllib;
+		}
 		else if (prefix == "o") {}
 		else if (prefix == "s") {}
 		else if (prefix == "v")
@@ -589,6 +600,25 @@ SubMesh ResourceManager::CreateSubMesh(const MeshData& meshData)
 	}
 
 	return subMesh;
+}
+
+
+
+
+
+
+
+
+//--------------------------------------------------------------------------------------
+Material ResourceManager::LoadMaterialFromFile(const std::string& filename)
+{
+
+
+
+
+
+
+	return Material();
 }
 
 
