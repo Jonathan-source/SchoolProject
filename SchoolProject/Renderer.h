@@ -51,7 +51,8 @@ private:
 	ComPtr<ID3D11Buffer>				lightBuffer;
 	ComPtr<ID3D11ShaderResourceView>	lightBufferSRV;
 
-
+	float clearColor[4];
+	float backgroundColor[4];
 
 	//
 	// Methods for initializing RenderSystem.

@@ -10,6 +10,16 @@ Renderer::Renderer(D3D11Core* pDXCore,Window* pWindow, Camera* pCamera, Resource
 	, pResourceManager(pResourceManager)
 	, perFrameBuffer(std::make_unique<ConstantBuffer>(pDXCore->device.Get(), sizeof(PerFrame)))
 {
+	clearColor[0] = 0.0f;
+	clearColor[1] = 0.0f;
+	clearColor[2] = 0.0f;
+	clearColor[3] = 0.0f;
+	backgroundColor[0] = 0.1f;
+	backgroundColor[1] = 0.1f;
+	backgroundColor[2] = 0.1f;
+	backgroundColor[3] = 0.1f;
+
+
 	// Initialize Deferred Rendering.
 	this->InitializeDeferred();
 
@@ -73,8 +83,6 @@ void Renderer::Present()
 //--------------------------------------------------------------------------------------
 void Renderer::ClearFrame()
 {
-	static const float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-	static const float backgroundColor[] = { 0.1f, 0.1f, 0.1f, 0.0f };
 
 	this->pDXCore->deviceContext->ClearRenderTargetView(this->graphicsBuffer[GBUFFER::POSITION].renderTargetView.Get(), clearColor);
 	this->pDXCore->deviceContext->ClearRenderTargetView(this->graphicsBuffer[GBUFFER::NORMAL].renderTargetView.Get(), clearColor);
@@ -277,6 +285,16 @@ void Renderer::InitializeLights()
 {
 	//	Create lights here:
 	Light light;
+	light.position = { 0.0f, 0.0f, -4.0f, 1.0f };
+	light.color = { 0.43f, 0.45f, 1.f, 1.0f };
+	light.direction = { 0.0f, 0.0f, 1.0f, 0.0f };
+	light.specularPower = 1.0f;
+	light.shininess = 32.0f;
+	light.intensity = 1.f;
+	light.type = 0;
+	light.range = 15.f;
+	light.enabled = true;
+
 	this->sceneLights.emplace_back(light);
 }
 
@@ -452,17 +470,22 @@ void Renderer::imGUILightWin()
 	ImGui::Text(lightText.c_str());
 	ImGui::InputFloat3("Light Position", pos);
 
+	
 	//Change lights position
 	this->sceneLights[currentItem].position.x = pos[currentItem]; this->sceneLights[currentItem].position.y = pos[1]; this->sceneLights[currentItem].position.z = pos[2];
 	ImGui::Spacing();
 
 	ImGui::ColorPicker3("Light Color", color);
 	this->sceneLights[currentItem].color.x = color[0]; this->sceneLights[currentItem].color.y = color[1]; this->sceneLights[currentItem].color.z = color[2];
-
 	static bool buttonlightOn = true;
-	ImGui::Checkbox("Enable Light",&buttonlightOn);
+	ImGui::Checkbox("Enable Light", &buttonlightOn);
 	sceneLights[currentItem].enabled = buttonlightOn;
 
+	ImGui::Spacing();
+	ImGui::Text("Background Color");
+	ImGui::ColorPicker3("Background color", backgroundColor);
+
+	
 	Light* newLight = new Light [sceneLights.size()];
 	for (int i = 0; i < sceneLights.size(); i++)
 	{
