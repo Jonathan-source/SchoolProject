@@ -64,6 +64,7 @@ void Scene::draw(ID3D11DeviceContext* pDeviceContext)
 
 void Scene::update(float _deltaTime)
 {
+
 }
 
 //Silly stuff

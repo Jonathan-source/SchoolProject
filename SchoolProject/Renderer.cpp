@@ -495,5 +495,6 @@ void Renderer::imGUILightWin()
 	this->pDXCore->deviceContext->UpdateSubresource(lightBuffer.Get(), 0, nullptr, newLight, 0, 0);
 
 	delete[] newLight;
+
 	ImGui::End();
 }
