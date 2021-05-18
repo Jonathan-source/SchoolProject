@@ -36,8 +36,8 @@ struct PerFrame
 //--------------------------------------------------------------------------------------
 struct Ray
 {
-	DirectX::XMFLOAT4 origin;
-	DirectX::XMFLOAT4 direction;
+	sm::Vector3 origin;
+	sm::Vector3 direction;
 };
 
 

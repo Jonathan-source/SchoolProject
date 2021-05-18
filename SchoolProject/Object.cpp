@@ -8,6 +8,7 @@ Object::Object(ID3D11Device* pDevice)
 	, position(sm::Vector3{0.f,0.f,5.f})
 	, scale(sm::Vector3{ 1.f,1.f,1.f })
 	, rotation(sm::Vector3{ 0.f,0.f,0.f })
+	, boundingBox(nullptr)
 {
 	DirectX::XMMATRIX matrix = DirectX::XMMatrixIdentity();
 	DirectX::XMStoreFloat4x4(&this->worldMatrix, matrix);
@@ -130,6 +131,11 @@ void Object::SetScale(const sm::Vector3& scale)
 	this->scale = scale;
 }
 
+void Object::setBoundingBox(std::shared_ptr<BoundingBox> _boundingBox)
+{
+	this->boundingBox = _boundingBox;
+}
+
 
 
 
@@ -172,6 +178,11 @@ const sm::Vector3& Object::GetRotation() const
 const sm::Vector3& Object::GetScale() const
 {
 	return this->scale;
+}
+
+BoundingBox* Object::getBoundingBox() const
+{
+	return this->boundingBox.get();
 }
 
 

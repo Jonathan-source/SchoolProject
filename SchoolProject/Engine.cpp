@@ -30,7 +30,7 @@ Engine::Engine(HINSTANCE& hInstance, HINSTANCE& hPrevIntance, LPWSTR& lpmCmdLine
 	// Initialize ResourceManager.
 	this->resourceManager = std::make_shared<ResourceManager>(this->d3d11Core);
 
-	this->scene = std::make_unique<Scene>(d3d11Core->device.Get(), resourceManager);
+	this->scene = std::make_unique<Scene>(d3d11Core->device.Get(), resourceManager, this->mouseListener);
 
 
 	// Initialize Renderer
@@ -80,8 +80,11 @@ void Engine::Update()
 			// Submit.
 			// a vector with objects.
 
+			this->scene->update(deltaTime);
+
 			//Camera update
 			camera->update(deltaTime);
+
 
 			// Draw.
 			renderer->BeginFrame();
@@ -172,6 +175,7 @@ bool Engine::handleMessage()
 		keyboardListener->updateKeyboard(this->msg);
 
 		mouseListener->updateMouse(this->msg, window->getHwnd());
+		mouseListener->updateRay(camera->getProjectionMatrix(), camera->getView());
 		// Process possible GUI events
 	
 	}

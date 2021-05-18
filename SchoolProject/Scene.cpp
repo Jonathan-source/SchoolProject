@@ -3,9 +3,10 @@
 
 
 //--------------------------------------------------------------------------------------
-Scene::Scene(ID3D11Device* pDevice, std::shared_ptr<ResourceManager> resourceManager)
+Scene::Scene(ID3D11Device* pDevice, std::shared_ptr<ResourceManager> resourceManager, std::shared_ptr<MouseListener> mouseListener)
 	:resourceManager(resourceManager)
-	,pDevice(pDevice)
+	, pDevice(pDevice)
+	, mouseListener(mouseListener)
 {
 	std::srand(std::time(nullptr));
 	this->initObjects();
@@ -22,6 +23,12 @@ void Scene::initObjects()
 	Object* obj = new Object(pDevice);
 	obj->SetMesh(resourceManager->GetMesh("test.obj").get());
 	obj->SetMaterial(resourceManager->GetMaterial("test.obj").get());
+	obj->SetPosition(0.f, 0.f, 0.f);
+	obj->setBoundingBox(std::make_shared<BoundingBox>(DirectX::XMVectorSet(obj->GetPosition().x, obj->GetPosition().y, obj->GetPosition().z, 0.0f),
+		DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f),
+		DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f),
+		DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f),
+		DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f)));
 	this->objects.push_back(obj);
 }
 
@@ -66,6 +73,19 @@ void Scene::draw(ID3D11DeviceContext* pDeviceContext)
 void Scene::update(float _deltaTime)
 {
 
+	//Check collision with mouse & object
+	for (auto& obj : this->objects)
+	{
+		float t = 0;
+
+		if (obj->getBoundingBox() && obj->getBoundingBox()->intersection(mouseListener->getRay(), t))
+		{
+			obj->SetScale(DirectX::XMFLOAT3(1.5f, 1.5f, 1.5f));
+			std::cout << " yes" << std::endl;
+		}
+		else
+			obj->SetScale(DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f));
+	}
 }
 
 //Silly stuff

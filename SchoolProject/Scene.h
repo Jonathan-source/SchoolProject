@@ -2,11 +2,12 @@
 #include "pch.h"
 #include "Object.h"
 #include "ResourceManager.h"
+#include "MouseListener.h"
 
 class Scene
 {
 public:
-	Scene(ID3D11Device* pDevice, std::shared_ptr<ResourceManager> resourceManager);
+	Scene(ID3D11Device* pDevice, std::shared_ptr<ResourceManager> resourceManager, std::shared_ptr<MouseListener> mouseListener);
 	void initObjects();
 	virtual ~Scene();
 
@@ -19,6 +20,7 @@ public:
 private:
 	std::vector<Object*> objects;
 	std::shared_ptr<ResourceManager> resourceManager;
+	std::shared_ptr<MouseListener> mouseListener;
 	ID3D11Device* pDevice;
 };
 
