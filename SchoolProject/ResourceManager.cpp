@@ -40,7 +40,17 @@ void ResourceManager::LoadModels(const std::vector<std::string>& meshFileNames)
 		this->meshMap.insert(std::pair<std::string, std::shared_ptr<Mesh>>(filename, mesh));
 
 		// Load Material from MTL.
-		Material material = this->LoadMaterialFromFile(meshData.mtllib);
+		std::shared_ptr<MaterialData> materialData = std::make_shared<MaterialData>(this->LoadMaterialFromFile(meshData.mtllib));
+		this->materialDataMap.insert(std::pair<std::string, std::shared_ptr<MaterialData>>(filename, materialData));
+
+		std::shared_ptr<Material> material = std::make_shared<Material>();
+		this->CreateMaterial(material.get(), materialData);
+
+		this->materialMap.insert(std::pair<std::string, std::shared_ptr<Material>>(filename, material));
+
+		// Parse Textures.
+		std::vector<std::string> textureNames = ParseTextures(materialData);
+		this->LoadTextures(textureNames);
 	}
 }
 
@@ -216,6 +226,17 @@ const std::shared_ptr<Material> ResourceManager::GetMaterial(const std::string& 
 
 
 //--------------------------------------------------------------------------------------
+const std::shared_ptr<MaterialData> ResourceManager::GetMaterialData(const std::string& filename) const
+{
+	return this->materialDataMap.find(filename)->second;
+}
+
+
+
+
+
+
+//--------------------------------------------------------------------------------------
 ComPtr<ID3D11PixelShader> ResourceManager::GetPixelShader(const std::string& filename) const
 {
 	return this->pShaders.find(filename)->second.ID3D11Shader;
@@ -327,6 +348,58 @@ ComPtr<ID3D11ShaderResourceView> ResourceManager::LoadTextureFromFile(const char
 }
 
 
+
+
+
+//--------------------------------------------------------------------------------------
+std::vector<std::string> ResourceManager::ParseTextures(const std::shared_ptr<MaterialData> materialData)
+{
+	std::vector<std::string> temp;
+
+	std::string segment = "";
+
+	segment = materialData->map_Ka;
+	if (segment.size() != 0)
+	{
+		size_t index = segment.find_last_of('\\', segment.length());
+		std::cout << segment.substr(index + 1, segment.length()) << std::endl;
+		temp.emplace_back(segment);
+	}
+
+	segment = materialData->map_Kd;
+	if (segment.size() != 0)
+	{
+		size_t index = segment.find_last_of('\\', segment.length());
+		std::cout << segment.substr(index + 1, segment.length()) << std::endl;
+		temp.emplace_back(segment);
+	}
+
+	segment = materialData->map_Ke;
+	if (segment.size() != 0)
+	{
+		size_t index = segment.find_last_of('\\', segment.length());
+		std::cout << segment.substr(index + 1, segment.length()) << std::endl;
+		temp.emplace_back(segment);
+	}
+
+	segment = materialData->map_Ks;
+	if (segment.size() != 0)
+	{
+		size_t index = segment.find_last_of('\\', segment.length());
+		std::cout << segment.substr(index + 1, segment.length()) << std::endl;
+		temp.emplace_back(segment);
+	}
+
+	segment = materialData->map_Bump;
+	if (segment.size() != 0)
+	{
+		size_t index = segment.find_last_of('\\', segment.length());
+		std::cout << segment.substr(index + 1, segment.length()) << std::endl;
+		temp.emplace_back(segment);
+	}
+
+	return temp;
+}
 
 
 
@@ -623,7 +696,7 @@ SubMesh ResourceManager::CreateSubMesh(const MeshData& meshData)
 
 
 //--------------------------------------------------------------------------------------
-Material ResourceManager::LoadMaterialFromFile(const std::string& filename)
+MaterialData ResourceManager::LoadMaterialFromFile(const std::string& filename)
 {
 	// Try to open the file.
 	std::ifstream inputFile(filename.c_str());
@@ -632,13 +705,13 @@ Material ResourceManager::LoadMaterialFromFile(const std::string& filename)
 		std::cout << "Could not open " + filename << std::endl;
 	}
 
-	Material material = {};
-	material.name = filename;
-	material.hasAmbientMap	= false;
-	material.hasDiffuseMap = false;
-	material.hasEmissiveMap = false;
-	material.hasSpecularMap = false;
-	material.hasNormalMap = false;
+	MaterialData materialData = {};
+	materialData.name = filename;
+	materialData.hasAmbientMap	= false;
+	materialData.hasDiffuseMap = false;
+	materialData.hasEmissiveMap = false;
+	materialData.hasSpecularMap = false;
+	materialData.hasNormalMap = false;
 
 	// Some useful variables.
 	std::stringstream ss = {};
@@ -656,47 +729,77 @@ Material ResourceManager::LoadMaterialFromFile(const std::string& filename)
 		// Check what the current prefix is and store data.
 		if (prefix == "Ka")
 		{
-			ss >> material.Ka.x >> material.Ka.y >> material.Ka.z;
+			ss >> materialData.Ka.x >> materialData.Ka.y >> materialData.Ka.z;
+			materialData.Ka.w = 1.0f;
 		}
 		else if (prefix == "Kd") 
 		{
-			ss >> material.Kd.x >> material.Kd.y >> material.Kd.z;
+			ss >> materialData.Kd.x >> materialData.Kd.y >> materialData.Kd.z;
+			materialData.Kd.w = 1.0f;
+		}
+		else if (prefix == "Ke")
+		{
+			ss >> materialData.Ke.x >> materialData.Ke.y >> materialData.Ke.z;
+			materialData.Ke.w = 1.0f;
 		}
 		else if (prefix == "Ks") 
 		{
-			ss >> material.Ks.x >> material.Ks.y >> material.Ks.z;
+			ss >> materialData.Ks.x >> materialData.Ks.y >> materialData.Ks.z;
+			materialData.Ks.w = 1.0f;
 		}
 		else if (prefix == "map_Ka")
 		{
-			ss >> material.map_Ka;
-			material.hasAmbientMap = true;
+			ss >> materialData.map_Ka;
+			materialData.hasAmbientMap = true;
 		}
 		else if (prefix == "map_Kd") 
 		{
-			ss >> material.map_Kd;
-			material.hasDiffuseMap = true;
+			ss >> materialData.map_Kd;
+			materialData.hasDiffuseMap = true;
 		}
 		else if (prefix == "map_Ke")
 		{
-			ss >> material.map_Ke;
-			material.hasEmissiveMap = true;
+			ss >> materialData.map_Ke;
+			materialData.hasEmissiveMap = true;
 		}
 		else if (prefix == "map_Ks")
 		{
-			ss >> material.map_Ks;
-			material.hasSpecularMap = true;
+			ss >> materialData.map_Ks;
+			materialData.hasSpecularMap = true;
 		}
 		else if (prefix == "map_Bump")
 		{
-			ss >> material.map_Bump;
-			material.hasNormalMap = true;
+			ss >> materialData.map_Bump;
+			materialData.hasNormalMap = true;
 		}
 	}
 
 	// Close file.
 	inputFile.close();
 
-	return material;
+	return materialData;
+}
+
+
+
+
+
+
+
+
+//--------------------------------------------------------------------------------------
+void ResourceManager::CreateMaterial(Material * material, const std::shared_ptr<MaterialData> materialData)
+{
+	material->Ka = materialData->Ka;
+	material->Kd = materialData->Kd;
+	material->Ke = materialData->Ke;
+	material->Ks = materialData->Ks;
+
+	material->hasAmbientMap = materialData->hasAmbientMap;
+	material->hasDiffuseMap = materialData->hasDiffuseMap;
+	material->hasEmissiveMap = materialData->hasEmissiveMap;
+	material->hasSpecularMap = materialData->hasSpecularMap;
+	material->hasNormalMap = materialData->hasNormalMap;
 }
 
 

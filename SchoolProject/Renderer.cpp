@@ -309,7 +309,7 @@ bool Renderer::createStructuredBufferLights()
 	D3D11_BUFFER_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
 
-	desc.ByteWidth = sizeof(Light) * this->MAX_NUM_LIGHTS;
+	desc.ByteWidth = sizeof(Light) * static_cast<UINT>(this->MAX_NUM_LIGHTS);
 	desc.StructureByteStride = sizeof(Light);
 	desc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_FLAG::D3D11_BIND_SHADER_RESOURCE;
 	desc.MiscFlags = D3D11_RESOURCE_MISC_FLAG::D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
@@ -329,7 +329,7 @@ bool Renderer::createStructuredBufferLights()
 	ZeroMemory(&resourceViewDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
 
 	resourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
-	resourceViewDesc.BufferEx.NumElements = this->MAX_NUM_LIGHTS;
+	resourceViewDesc.BufferEx.NumElements = static_cast<UINT>(this->MAX_NUM_LIGHTS);
 	hr = this->pDXCore->device->CreateShaderResourceView(lightBuffer.Get(), &resourceViewDesc, lightBufferSRV.GetAddressOf());
 
 	return !FAILED(hr);
@@ -478,13 +478,17 @@ void Renderer::LightningPass()
 //Debug imGuI for manipulating lights
 void Renderer::imGUILightWin()
 {	
+	bool hasChanged = false;
+
+
 	// Light window
 	ImGui::Begin("Lights");
 	static int currentItem = 0;
 	static float pos[3] = { sceneLights.at(currentItem).position.x,sceneLights.at(currentItem).position.y,sceneLights.at(currentItem).position.z};
 	static float color[3] = { 0.5f,0.5f,0.5f};
 
-	const char* listsOfLights[100] = {};
+	// Fuck C. 
+	const char* listsOfLights[10] = {};
 	std::vector<char*> writables;
 	for (int i = 0; i < sceneLights.size(); i++)
 	{
@@ -500,36 +504,58 @@ void Renderer::imGUILightWin()
 	}
 
 	ImGui::Text(R"(Light Entitys)");
+	
 	ImGui::ListBox("", &currentItem, listsOfLights, sceneLights.size());
-
 
 	std::string lightText = "Lights";
 	ImGui::Text(lightText.c_str());
-	ImGui::InputFloat3("Light Position", pos);
 
-	
-	// Change lights position
-	this->sceneLights[currentItem].position.x = pos[currentItem]; this->sceneLights[currentItem].position.y = pos[1]; this->sceneLights[currentItem].position.z = pos[2];
+	if (ImGui::InputFloat3("Light Position", pos))
+	{
+		// Change lights position
+		this->sceneLights[currentItem].position.x = pos[currentItem]; this->sceneLights[currentItem].position.y = pos[1]; this->sceneLights[currentItem].position.z = pos[2];
+		hasChanged = true;
+	}
+
 	ImGui::Spacing();
 
-	ImGui::ColorPicker3("Color", color);
-	this->sceneLights[currentItem].color.x = color[0]; this->sceneLights[currentItem].color.y = color[1]; this->sceneLights[currentItem].color.z = color[2];
+	if (ImGui::ColorPicker3("Color", color))
+	{
+		this->sceneLights[currentItem].color.x = color[0]; this->sceneLights[currentItem].color.y = color[1]; this->sceneLights[currentItem].color.z = color[2];
+		hasChanged = true;
+	}
 
 	static bool buttonlightOn = true;
-	ImGui::Checkbox("Enable Light", &buttonlightOn);
-	sceneLights[currentItem].enabled = buttonlightOn;
+	if (ImGui::Checkbox("Enable Light", &buttonlightOn))
+	{
+		sceneLights[currentItem].enabled = buttonlightOn;
+		hasChanged = true;
+	}
 
 	ImGui::Spacing();
+
 	ImGui::Text("Background Color");
+
 	ImGui::ColorPicker3("Color", backgroundColor);
 
 	if (ImGui::Button("Add Light", ImVec2(100.f, 25.f)))
 	{
 		this->addLight();
+		hasChanged = true;
 	}
 
-	this->pDXCore->deviceContext->UpdateSubresource(lightBuffer.Get(), 0, nullptr, sceneLights.data(), 0, 0);
-	
+	if (hasChanged)
+	{
+		size_t NR_OF_LIGHTS = sceneLights.size();
+		Light* lightArr = new Light[NR_OF_LIGHTS];
+		for (size_t i = 0; i < NR_OF_LIGHTS; i++)
+			lightArr[i] = sceneLights.at(i);
+
+		this->pDXCore->deviceContext->UpdateSubresource(lightBuffer.Get(), 0, nullptr, lightArr, 0, 0);
+
+		delete[] lightArr;
+	}
+
 	for (auto writ : writables)
 		delete writ;
 

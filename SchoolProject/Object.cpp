@@ -3,6 +3,7 @@
 //--------------------------------------------------------------------------------------
 Object::Object(ID3D11Device* pDevice)
 	: mesh(nullptr)
+	, material(nullptr)
 	, perObjectConstantBuffer(std::make_unique<ConstantBuffer>(pDevice, sizeof(PerFrame)))
 	, position(sm::Vector3{0.f,0.f,5.f})
 	, scale(sm::Vector3{ 1.f,1.f,1.f })
@@ -38,14 +39,6 @@ void Object::SetPostProcessingEffect()
 
 
 
-//--------------------------------------------------------------------------------------
-void Object::SetTexture()
-{
-}
-
-
-
-
 
 
 //--------------------------------------------------------------------------------------
@@ -60,48 +53,9 @@ void Object::SetMesh(Mesh * pMesh)
 
 
 //--------------------------------------------------------------------------------------
-void Object::SetMaterial()
+void Object::SetMaterial(Material * pMaterial)
 {
-}
-
-
-
-
-
-
-//--------------------------------------------------------------------------------------
-void Object::SetNormalTexture()
-{
-}
-
-
-
-
-
-
-//--------------------------------------------------------------------------------------
-void Object::SetSpecularTexture()
-{
-}
-
-
-
-
-
-
-//--------------------------------------------------------------------------------------
-void Object::SetOcclusionTexture()
-{
-}
-
-
-
-
-
-
-//--------------------------------------------------------------------------------------
-void Object::SetEmissiveTexture()
-{
+	this->material = pMaterial;
 }
 
 
@@ -252,11 +206,12 @@ void Object::Draw(ID3D11DeviceContext* pDeviceContext)
 
 		pDeviceContext->IASetVertexBuffers(0, 1, this->mesh->vb.GetAddressOf(), &stride, &offset);
 		pDeviceContext->IASetIndexBuffer(this->mesh->ib.Get(), DXGI_FORMAT_R32_UINT, 0);
-
 		this->UpdateConstantBuffer(pDeviceContext);
-
-		
 		pDeviceContext->VSSetConstantBuffers(0, 1, this->perObjectConstantBuffer->GetAddressOf());
+
+		// Textures.
+		if (this->material->hasDiffuseMap)
+			//pDeviceContext->PSSetShaderResources(0, 1, renderShaderResourceView->GetAddressOf());
 
 		pDeviceContext->DrawIndexed(this->mesh->ib.getIndexCount(), 0, 0);
 	}

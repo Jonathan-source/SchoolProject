@@ -47,7 +47,7 @@ private:
 		ComPtr<ID3D11Buffer> ib;
 	} fullScreenQuad;
 
-	const UINT MAX_NUM_LIGHTS = 100;
+	const int MAX_NUM_LIGHTS = 10;
 	std::vector<Light>					sceneLights;
 	ComPtr<ID3D11Buffer>				lightBuffer;
 	ComPtr<ID3D11ShaderResourceView>	lightBufferSRV;

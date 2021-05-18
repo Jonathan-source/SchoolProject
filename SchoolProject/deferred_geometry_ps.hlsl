@@ -5,7 +5,6 @@ Texture2D EmissiveTexture       : TEXTURE : register(t2);
 SamplerState LinearSampler      : SAMPLER : register(s0);
 
 
-//Texture2D SpecularTexture       : register(t3);
 
 
 //--------------------------------------------------------------------------------------
@@ -72,7 +71,7 @@ PixelShaderOutput main(PixelShaderInput input)
     input.normalWS = normalize(input.normalWS);
     
     // Sample from DiffuseTexture map.
-    output.diffuse = float4(1.0f, 1.0f, 0.0f, 1.0f); //DiffuseTexture.Sample(LinearSampler, input.texCoord);
+    output.diffuse = DiffuseTexture.Sample(LinearSampler, input.texCoord);
 
     // Sample from EmissiveTexture map.
     // output.emissive = EmissiveTexture.Sample(LinearSampler, input.texCoord);

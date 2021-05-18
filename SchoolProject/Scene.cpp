@@ -20,7 +20,8 @@ Scene::Scene(ID3D11Device* pDevice, std::shared_ptr<ResourceManager> resourceMan
 void Scene::initObjects()
 {
 	Object* obj = new Object(pDevice);
-	obj->SetMesh(resourceManager->GetMesh("Monkey.obj").get());
+	obj->SetMesh(resourceManager->GetMesh("test.obj").get());
+	obj->SetMaterial(resourceManager->GetMaterial("test.obj").get());
 	this->objects.push_back(obj);
 }
 

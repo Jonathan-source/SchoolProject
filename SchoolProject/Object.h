@@ -11,13 +11,8 @@ public:
 	virtual ~Object();
 
 	void SetPostProcessingEffect();
-	void SetTexture();
 	void SetMesh(Mesh* pMesh);
-	void SetMaterial();
-	void SetNormalTexture();
-	void SetSpecularTexture();
-	void SetOcclusionTexture();
-	void SetEmissiveTexture();
+	void SetMaterial(Material* pMaterial);
 
 	// Transformation methods.
 	void SetPosition(float x, float y, float z);
@@ -40,7 +35,7 @@ public:
 	void Draw(ID3D11DeviceContext* pDeviceContext);
 private:
 	Mesh * mesh;
-	// Material
+	Material* material;
 	DirectX::XMFLOAT4X4 worldMatrix;
 	sm::Vector3 position;
 	sm::Vector3 rotation;
