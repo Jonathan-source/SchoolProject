@@ -11,8 +11,7 @@ public:
 	virtual ~Object();
 
 	void SetPostProcessingEffect();
-	void SetMesh(Mesh* pMesh);
-	void SetMaterial(Material* pMaterial);
+	void SetModel(Model* pModel);
 
 	// Transformation methods.
 	void SetPosition(float x, float y, float z);
@@ -34,14 +33,15 @@ public:
 	// Call this once every frame to render the object.
 	void Draw(ID3D11DeviceContext* pDeviceContext);
 private:
-	Mesh * mesh;
-	Material* material;
+	Model * model;
+
 	DirectX::XMFLOAT4X4 worldMatrix;
 	sm::Vector3 position;
 	sm::Vector3 rotation;
 	sm::Vector3 scale;
 
 	std::unique_ptr<ConstantBuffer> perObjectConstantBuffer;
+
 	void UpdateConstantBuffer(ID3D11DeviceContext* pDeviceContext);
 };
 

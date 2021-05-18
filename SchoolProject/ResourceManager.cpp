@@ -26,7 +26,9 @@ void ResourceManager::LoadModels(const std::vector<std::string>& meshFileNames)
 {
 	for (const auto& filename : meshFileNames)
 	{
+		//
 		// Load Mesh from OBJ.
+		//
 		MeshData meshData = this->LoadObjFromFile(filename);
 		SubMesh subMesh = this->CreateSubMesh(meshData);
 
@@ -37,20 +39,42 @@ void ResourceManager::LoadModels(const std::vector<std::string>& meshFileNames)
 		mesh->vb.createVertexBuffer(subMesh.vertexData.data(), subMesh.vertexData.size());
 		mesh->ib.createIndexBuffer(subMesh.indexData.data(), subMesh.indexData.size());
 
+		// Insert.
 		this->meshMap.insert(std::pair<std::string, std::shared_ptr<Mesh>>(filename, mesh));
 
+
+		//
 		// Load Material from MTL.
+		//
 		std::shared_ptr<MaterialData> materialData = std::make_shared<MaterialData>(this->LoadMaterialFromFile(meshData.mtllib));
+
+		// Insert.
 		this->materialDataMap.insert(std::pair<std::string, std::shared_ptr<MaterialData>>(filename, materialData));
 
 		std::shared_ptr<Material> material = std::make_shared<Material>();
 		this->CreateMaterial(material.get(), materialData);
 
+		// Insert.
 		this->materialMap.insert(std::pair<std::string, std::shared_ptr<Material>>(filename, material));
 
 		// Parse Textures.
 		std::vector<std::string> textureNames = ParseTextures(materialData);
 		this->LoadTextures(textureNames);
+
+		std::shared_ptr<TextureResources> textureResource = std::make_shared<TextureResources>();
+		this->InitializeTextureResources(textureResource, materialData);
+
+		// Insert.
+		this->textureResourceMap.insert(std::pair<std::string, std::shared_ptr<TextureResources>>(filename, textureResource));
+
+		// Insert.
+		std::shared_ptr<Model> model = std::make_shared<Model>();
+
+		model->mesh = mesh.get();
+		model->material = material.get();
+		model->textureResources = textureResource.get();
+
+		this->modelMap.insert(std::pair<std::string, std::shared_ptr<Model>>(filename, model));
 	}
 }
 
@@ -70,6 +94,27 @@ void ResourceManager::LoadTextures(const std::vector<std::string>& textures)
 		this->textures.insert(std::pair<std::string, ComPtr<ID3D11ShaderResourceView>>(filename, texture));
 	}
 }
+
+
+
+
+
+//--------------------------------------------------------------------------------------
+void ResourceManager::InitializeTextureResources(std::shared_ptr<TextureResources> textureResource, std::shared_ptr<MaterialData> materialData)
+{
+	if(materialData->hasAmbientMap)
+		textureResource->ambientRSV = this->GetTexture(materialData->map_Ka).Get();
+	if (materialData->hasDiffuseMap)
+		textureResource->diffuseRSV = this->GetTexture(materialData->map_Kd).Get();
+	if (materialData->hasEmissiveMap)
+		textureResource->emissiveRSV = this->GetTexture(materialData->map_Ke).Get();
+	if (materialData->hasNormalMap)
+		textureResource->normalRSV = this->GetTexture(materialData->map_Bump).Get();
+	if (materialData->hasSpecularMap)
+		textureResource->specularRSV = this->GetTexture(materialData->map_Ks).Get();
+}
+
+
 
 
 
@@ -215,6 +260,17 @@ const std::shared_ptr<Mesh> ResourceManager::GetMesh(const std::string& filename
 
 
 //--------------------------------------------------------------------------------------
+const std::shared_ptr<Model> ResourceManager::GetModel(const std::string& filename) const
+{
+	return this->modelMap.find(filename)->second;
+}
+
+
+
+
+
+
+//--------------------------------------------------------------------------------------
 const std::shared_ptr<Material> ResourceManager::GetMaterial(const std::string& filename) const
 {
 	return this->materialMap.find(filename)->second;
@@ -229,6 +285,17 @@ const std::shared_ptr<Material> ResourceManager::GetMaterial(const std::string& 
 const std::shared_ptr<MaterialData> ResourceManager::GetMaterialData(const std::string& filename) const
 {
 	return this->materialDataMap.find(filename)->second;
+}
+
+
+
+
+
+
+//--------------------------------------------------------------------------------------
+const std::shared_ptr<TextureResources> ResourceManager::GetTextureResources(const std::string& filename)
+{
+	return this->textureResourceMap.find(filename)->second;
 }
 
 
@@ -277,7 +344,7 @@ ComPtr<ID3D11GeometryShader> ResourceManager::GetGeometryShader(const std::strin
 
 
 //--------------------------------------------------------------------------------------
-ComPtr<ID3D11ShaderResourceView> ResourceManager::GetTexture(const std::string& filename) const
+ComPtr<ID3D11ShaderResourceView> ResourceManager::GetTexture(const std::string& filename)
 {
 	return this->textures.find(filename)->second;
 }
@@ -352,7 +419,7 @@ ComPtr<ID3D11ShaderResourceView> ResourceManager::LoadTextureFromFile(const char
 
 
 //--------------------------------------------------------------------------------------
-std::vector<std::string> ResourceManager::ParseTextures(const std::shared_ptr<MaterialData> materialData)
+std::vector<std::string> ResourceManager::ParseTextures(std::shared_ptr<MaterialData> materialData)
 {
 	std::vector<std::string> temp;
 
@@ -362,7 +429,8 @@ std::vector<std::string> ResourceManager::ParseTextures(const std::shared_ptr<Ma
 	if (segment.size() != 0)
 	{
 		size_t index = segment.find_last_of('\\', segment.length());
-		std::cout << segment.substr(index + 1, segment.length()) << std::endl;
+		segment = segment.substr(index + 1, segment.length());
+		materialData->map_Ka = segment;
 		temp.emplace_back(segment);
 	}
 
@@ -370,7 +438,8 @@ std::vector<std::string> ResourceManager::ParseTextures(const std::shared_ptr<Ma
 	if (segment.size() != 0)
 	{
 		size_t index = segment.find_last_of('\\', segment.length());
-		std::cout << segment.substr(index + 1, segment.length()) << std::endl;
+		segment = segment.substr(index + 1, segment.length());
+		materialData->map_Kd = segment;
 		temp.emplace_back(segment);
 	}
 
@@ -378,7 +447,8 @@ std::vector<std::string> ResourceManager::ParseTextures(const std::shared_ptr<Ma
 	if (segment.size() != 0)
 	{
 		size_t index = segment.find_last_of('\\', segment.length());
-		std::cout << segment.substr(index + 1, segment.length()) << std::endl;
+		segment = segment.substr(index + 1, segment.length());
+		materialData->map_Ke = segment;
 		temp.emplace_back(segment);
 	}
 
@@ -386,7 +456,8 @@ std::vector<std::string> ResourceManager::ParseTextures(const std::shared_ptr<Ma
 	if (segment.size() != 0)
 	{
 		size_t index = segment.find_last_of('\\', segment.length());
-		std::cout << segment.substr(index + 1, segment.length()) << std::endl;
+		segment = segment.substr(index + 1, segment.length());
+		materialData->map_Ks = segment;
 		temp.emplace_back(segment);
 	}
 
@@ -394,7 +465,8 @@ std::vector<std::string> ResourceManager::ParseTextures(const std::shared_ptr<Ma
 	if (segment.size() != 0)
 	{
 		size_t index = segment.find_last_of('\\', segment.length());
-		std::cout << segment.substr(index + 1, segment.length()) << std::endl;
+		segment = segment.substr(index + 1, segment.length());
+		materialData->map_Bump = segment;
 		temp.emplace_back(segment);
 	}
 

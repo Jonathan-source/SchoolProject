@@ -2,8 +2,7 @@
 
 //--------------------------------------------------------------------------------------
 Object::Object(ID3D11Device* pDevice)
-	: mesh(nullptr)
-	, material(nullptr)
+	: model(nullptr)
 	, perObjectConstantBuffer(std::make_unique<ConstantBuffer>(pDevice, sizeof(PerFrame)))
 	, position(sm::Vector3{0.f,0.f,5.f})
 	, scale(sm::Vector3{ 1.f,1.f,1.f })
@@ -40,23 +39,12 @@ void Object::SetPostProcessingEffect()
 
 
 
-
 //--------------------------------------------------------------------------------------
-void Object::SetMesh(Mesh * pMesh)
+void Object::SetModel(Model* pModel)
 {
-	this->mesh = pMesh;
+	this->model = pModel;
 }
 
-
-
-
-
-
-//--------------------------------------------------------------------------------------
-void Object::SetMaterial(Material * pMaterial)
-{
-	this->material = pMaterial;
-}
 
 
 
@@ -199,21 +187,21 @@ const DirectX::XMFLOAT4X4& Object::GetMatrix()
 //--------------------------------------------------------------------------------------
 void Object::Draw(ID3D11DeviceContext* pDeviceContext)
 {
-	if (this->mesh != nullptr)
+	if (this->model != nullptr)
 	{
 		static UINT stride = sizeof(SimpleVertex);
 		static UINT offset = 0;
 
-		pDeviceContext->IASetVertexBuffers(0, 1, this->mesh->vb.GetAddressOf(), &stride, &offset);
-		pDeviceContext->IASetIndexBuffer(this->mesh->ib.Get(), DXGI_FORMAT_R32_UINT, 0);
+		pDeviceContext->IASetVertexBuffers(0, 1, this->model->mesh->vb.GetAddressOf(), &stride, &offset);
+		pDeviceContext->IASetIndexBuffer(this->model->mesh->ib.Get(), DXGI_FORMAT_R32_UINT, 0);
 		this->UpdateConstantBuffer(pDeviceContext);
 		pDeviceContext->VSSetConstantBuffers(0, 1, this->perObjectConstantBuffer->GetAddressOf());
 
 		// Textures.
-		if (this->material->hasDiffuseMap)
-			//pDeviceContext->PSSetShaderResources(0, 1, renderShaderResourceView->GetAddressOf());
+		if (this->model->material->hasDiffuseMap)
+			pDeviceContext->PSSetShaderResources(0, 1, &this->model->textureResources->diffuseRSV);
 
-		pDeviceContext->DrawIndexed(this->mesh->ib.getIndexCount(), 0, 0);
+		pDeviceContext->DrawIndexed(this->model->mesh->ib.getIndexCount(), 0, 0);
 	}
 }
 

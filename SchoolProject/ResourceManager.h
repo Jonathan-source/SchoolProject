@@ -11,7 +11,6 @@
 #include "ConstantBuffer.h"
 #include "IndexBuffer.h"
 
-// Final version.
 struct Material
 {
 	DirectX::XMFLOAT4 Ka;
@@ -25,6 +24,16 @@ struct Material
 	bool hasSpecularMap;
 	bool hasNormalMap;
 };
+
+struct TextureResources
+{									 
+	ID3D11ShaderResourceView* ambientRSV; 
+	ID3D11ShaderResourceView* diffuseRSV; 
+	ID3D11ShaderResourceView* emissiveRSV; 
+	ID3D11ShaderResourceView* specularRSV; 
+	ID3D11ShaderResourceView* normalRSV;
+};
+
 
 // Raw data upon loading an MTL file. 
 struct MaterialData
@@ -73,7 +82,13 @@ struct MeshData
 	std::string mtllib;
 };
 
-
+// Final version.
+struct Model
+{
+	Mesh *mesh;
+	Material *material;
+	TextureResources *textureResources;
+};
 
 class ResourceManager
 {
@@ -86,16 +101,18 @@ public:
 	virtual ~ResourceManager() = default;
 
 	// Getters.
-	ComPtr<ID3D11PixelShader>			GetPixelShader(const std::string& filename) const;
-	ComPtr<ID3D11VertexShader>			GetVertexShader(const std::string& filename) const;
-	ComPtr<ID3D11ComputeShader>			GetComputeShader(const std::string& filename) const;
-	ComPtr<ID3D11GeometryShader>		GetGeometryShader(const std::string& filename) const;
-	ComPtr<ID3D11ShaderResourceView>	GetTexture(const std::string& filename) const;
-	const std::shared_ptr<Mesh>			GetMesh(const std::string& filename) const;
-	const std::shared_ptr<Material>		GetMaterial(const std::string& filename) const;
-	const std::shared_ptr<MaterialData>	GetMaterialData(const std::string& filename) const;
-	const IndexBuffer*					GetIndexBuffer(const std::string& filename) const;
-	const VertexBuffer*					GetVertexBuffer(const std::string& filename) const;
+	ComPtr<ID3D11PixelShader>				GetPixelShader(const std::string& filename) const;
+	ComPtr<ID3D11VertexShader>				GetVertexShader(const std::string& filename) const;
+	ComPtr<ID3D11ComputeShader>				GetComputeShader(const std::string& filename) const;
+	ComPtr<ID3D11GeometryShader>			GetGeometryShader(const std::string& filename) const;
+	ComPtr<ID3D11ShaderResourceView>		GetTexture(const std::string& filename);
+	const std::shared_ptr<Mesh>				GetMesh(const std::string& filename) const;
+	const std::shared_ptr<Model>			GetModel(const std::string& filename) const;
+	const std::shared_ptr<Material>			GetMaterial(const std::string& filename) const;
+	const std::shared_ptr<MaterialData>		GetMaterialData(const std::string& filename) const;
+	const std::shared_ptr<TextureResources>	GetTextureResources(const std::string& filename);
+	const IndexBuffer*						GetIndexBuffer(const std::string& filename) const;
+	const VertexBuffer*						GetVertexBuffer(const std::string& filename) const;
 
 	ComPtr<ID3D11InputLayout> inputLayoutGP;	// InputLayout for Geometry Pass.
 	ComPtr<ID3D11InputLayout> inputLayoutLP;	// InputLayout for Lightning Pass.
@@ -115,8 +132,10 @@ private:
 	}; 
 
 	std::unordered_map<std::string, std::shared_ptr<Mesh>>				meshMap;
+	std::unordered_map<std::string, std::shared_ptr<Model>>				modelMap;
 	std::unordered_map<std::string, std::shared_ptr<Material>>			materialMap;
 	std::unordered_map<std::string, std::shared_ptr<MaterialData>>		materialDataMap;
+	std::unordered_map<std::string, std::shared_ptr<TextureResources>>	textureResourceMap;
 	std::unordered_map<std::string, ComPtr<ID3D11ShaderResourceView>>	textures;	// Contains all types of textures.
 	
 	std::unordered_map<std::string, std::shared_ptr<VertexBuffer>>		vBuffers;
@@ -134,12 +153,13 @@ private:
 	bool LoadShaderData(const std::string& filename, std::string& shaderByteCode);
 	void LoadModels(const std::vector<std::string>& meshFileNames);
 	void LoadTextures(const std::vector<std::string>& textures);
+	void InitializeTextureResources(std::shared_ptr<TextureResources> textureResource, std::shared_ptr<MaterialData> materialData);
 
 	//----------------------------------------------------------------------------------
 	// Load texture from file.
 	//----------------------------------------------------------------------------------
 	ComPtr<ID3D11ShaderResourceView> LoadTextureFromFile(const char* filename);
-	std::vector<std::string> ParseTextures(const std::shared_ptr<MaterialData> materialData);
+	std::vector<std::string> ParseTextures(std::shared_ptr<MaterialData> materialData);
 
 	//----------------------------------------------------------------------------------
 	// Load mesh from obj file.

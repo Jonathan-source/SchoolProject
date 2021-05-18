@@ -20,8 +20,7 @@ Scene::Scene(ID3D11Device* pDevice, std::shared_ptr<ResourceManager> resourceMan
 void Scene::initObjects()
 {
 	Object* obj = new Object(pDevice);
-	obj->SetMesh(resourceManager->GetMesh("test.obj").get());
-	obj->SetMaterial(resourceManager->GetMaterial("test.obj").get());
+	obj->SetModel(this->resourceManager->GetModel("test.obj").get());
 	this->objects.push_back(obj);
 }
 
@@ -68,11 +67,11 @@ void Scene::update(float _deltaTime)
 
 }
 
-//Silly stuff
+// Silly stuff
 void Scene::addMonkey()
 {
 	Object* obj = new Object(pDevice);
-	obj->SetMesh(resourceManager->GetMesh("Monkey.obj").get());
+	obj->SetModel(resourceManager->GetModel("Monkey.obj").get());
 	float randomPositionX = (float)(rand() % 20);
 	float randomPositionY = (float)(rand() % 20);
 	float randomPositionZ = (float)(rand() % 20);
