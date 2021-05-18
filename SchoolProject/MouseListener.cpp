@@ -91,63 +91,29 @@ void MouseListener::setRMouseButtonDown(bool condition)
 void MouseListener::updateRay(DirectX::XMMATRIX projection, sm::Matrix view)
 {
 
+	//----------------------------------------------		
+
 	//3d Normalised Device Coordinates
-	viewSpaceX = ((2.0f * (float)posX) / (screenWidth)) - 1.0f;
-	viewSpaceY = (((2.0f * (float)posY) / screenHeight) - 1.0f) * -1.0f;
-	viewSpaceZ = 4.0f;
-	
+	float pointX = ((2.0f * (float)posX) / (screenWidth)) - 1.0f;
+	float pointY = (((2.0f * (float)posY) / screenHeight) - 1.0f) * -1.0f;
+	float pointZ = 1.0f;
 
 	//Adjust the points using the projection matrix to account for the aspect ratio of the viewport.
-	viewSpaceX /= DirectX::XMVectorGetX(projection.r[0]);
-	viewSpaceY /= DirectX::XMVectorGetY(projection.r[1]);
+	pointX = pointX / DirectX::XMVectorGetX(projection.r[0]);
+	pointY = pointY / DirectX::XMVectorGetY(projection.r[1]);
 
-	pickRayInViewSpacePos = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-	DirectX::XMVECTOR pickRayInViewSpaceDir = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-
-	pickRayInViewSpaceDir = DirectX::XMVectorSet(viewSpaceX, viewSpaceY, viewSpaceZ, 0.0f);
-	pickRayInViewSpacePos = pickRayInViewSpaceDir;
-
-	DirectX::XMVECTOR pickRayInWorldSpaceDir;
-
-	DirectX::XMMATRIX pickRayToWordlSpaceMatrix;
-	DirectX::XMVECTOR matInvDeter;
-
-	pickRayToWordlSpaceMatrix = DirectX::XMMatrixInverse(&matInvDeter, view);
-	pickRayInWorldSpacePos = DirectX::XMVector2TransformCoord(pickRayInViewSpacePos, pickRayToWordlSpaceMatrix);
-	pickRayInWorldSpaceDir = DirectX::XMVector2TransformCoord(pickRayInViewSpaceDir, pickRayToWordlSpaceMatrix);
-
-	ray.origin.x = DirectX::XMVectorGetX(pickRayInWorldSpacePos);
-	ray.origin.y = DirectX::XMVectorGetY(pickRayInWorldSpacePos);
-	ray.origin.z = DirectX::XMVectorGetZ(pickRayInWorldSpacePos);
-
-
-	//std::cout << ray.origin.x << " " << ray.origin.y << " " << ray.origin.y << std::endl;
-
-	/*
-	//3d Normalised Device Coordinates
-	float viewSpaceX = ((2.0f * (float)posX) / (screenWidth)) - 1.0f;
-	float viewSpaceY = (((2.0f * (float)posY) / screenHeight) - 1.0f) * -1.0f;
-	float viewSpaceZ = 1.0f;
-
-
-	//Adjust the points using the projection matrix to account for the aspect ratio of the viewport.
-	viewSpaceX /= dx::XMVectorGetX(projection.r[0]);
-	viewSpaceY /= dx::XMVectorGetY(projection.r[1]);
-
-	sm::Vector4 rayViewPos(0.0f, 0.0f, 0.0f, 1.0f);
-	sm::Vector4 rayViewDirection(viewSpaceX, viewSpaceY, viewSpaceZ, 0.0f);
+	DirectX::XMVECTOR rayViewPos = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+	DirectX::XMVECTOR rayViewDirection = DirectX::XMVectorSet(pointX, pointY, pointZ, 1.0f);
 
 	// Transform 3D Ray from View space to 3D ray in World space
-	sm::Matrix rayInWorldSpace = view.Invert();
-
+	DirectX::XMMATRIX rayWorldSpace = DirectX::XMMatrixInverse(nullptr, view);
 	//TransformCoord for points
-	rayViewPos = dx::XMVector3TransformCoord(rayViewPos, rayInWorldSpace);
-
+	rayViewPos = DirectX::XMVector3TransformCoord(rayViewPos, rayWorldSpace);
 	//TransformNormal for vectors
-	rayViewDirection = dx::XMVector3TransformNormal(rayViewDirection, rayInWorldSpace);
+	rayViewDirection = DirectX::XMVector3TransformNormal(rayViewDirection, rayWorldSpace);
 
 	ray.direction = rayViewDirection;
-	ray.origin = rayViewPos;*/
+	ray.origin = rayViewPos;
 
 }
 

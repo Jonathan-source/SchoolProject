@@ -15,7 +15,7 @@ public:
 	void draw(ID3D11DeviceContext* pDeviceContext);
 	void update(float _deltaTime);
 
-	void addMonkey();
+	void addObject(const std::string& name);
 	std::vector<Object*> getObjects() const;
 private:
 	std::vector<Object*> objects;

@@ -21,7 +21,7 @@ Scene::Scene(ID3D11Device* pDevice, std::shared_ptr<ResourceManager> resourceMan
 void Scene::initObjects()
 {
 	Object* obj = new Object(pDevice);
-	obj->SetModel(this->resourceManager->GetModel("test.obj").get());
+	obj->SetModel(this->resourceManager->GetModel("Cube.obj").get());
 	obj->SetPosition(0.f, 0.f, 0.f);
 	obj->setBoundingBox(std::make_shared<BoundingBox>(DirectX::XMVectorSet(obj->GetPosition().x, obj->GetPosition().y, obj->GetPosition().z, 0.0f),
 		DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f),
@@ -55,10 +55,11 @@ void Scene::draw(ID3D11DeviceContext* pDeviceContext)
 	ImGui::Begin("Scene Statistic");
 	std::string numberOfObjects = "Amount of objects: " + std::to_string(this->objects.size());
 	ImGui::Text(numberOfObjects.c_str());
+
 	if (ImGui::Button("Add monkey", ImVec2(100.f, 25.f)))
 	{
 		for(int i = 0; i < 1; i++)
-			addMonkey();
+			addObject("Monkey.obj");
 	}
 
 	ImGui::End();
@@ -80,7 +81,6 @@ void Scene::update(float _deltaTime)
 		if (obj->getBoundingBox() && obj->getBoundingBox()->intersection(mouseListener->getRay(), t))
 		{
 			obj->SetScale(DirectX::XMFLOAT3(1.5f, 1.5f, 1.5f));
-			std::cout << " yes" << std::endl;
 		}
 		else
 			obj->SetScale(DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f));
@@ -88,10 +88,15 @@ void Scene::update(float _deltaTime)
 }
 
 // Silly stuff
-void Scene::addMonkey()
+void Scene::addObject(const std::string& name)
 {
+
 	Object* obj = new Object(pDevice);
-	obj->SetModel(resourceManager->GetModel("Monkey.obj").get());
+	obj->SetModel(this->resourceManager->GetModel(name).get());
+
+	//Object* obj = new Object(pDevice);
+	//obj->SetModel(resourceManager->GetModel("Monkey.obj").get());
+
 	float randomPositionX = (float)(rand() % 20);
 	float randomPositionY = (float)(rand() % 20);
 	float randomPositionZ = (float)(rand() % 20);
@@ -106,6 +111,12 @@ void Scene::addMonkey()
 	float randomRotation = (float)(rand() % 180);
 	obj->SetPosition(sm::Vector3(randomPositionX, randomPositionY, randomPositionZ));
 	obj->SetRotation(sm::Vector3(randomRotation, randomRotation, randomRotation));
+
+	obj->setBoundingBox(std::make_shared<BoundingBox>(DirectX::XMVectorSet(obj->GetPosition().x, obj->GetPosition().y, obj->GetPosition().z, 0.0f),
+		DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f),
+		DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f),
+		DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f),
+		DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f)));
 	this->objects.push_back(obj);
 }
 
