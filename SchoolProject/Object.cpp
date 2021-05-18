@@ -197,9 +197,15 @@ void Object::Draw(ID3D11DeviceContext* pDeviceContext)
 		this->UpdateConstantBuffer(pDeviceContext);
 		pDeviceContext->VSSetConstantBuffers(0, 1, this->perObjectConstantBuffer->GetAddressOf());
 
-		// Textures.
+
+
+		// TexturesRSV.
 		if (this->model->material->hasDiffuseMap)
 			pDeviceContext->PSSetShaderResources(0, 1, &this->model->textureResources->diffuseRSV);
+		if (this->model->material->hasNormalMap)
+			pDeviceContext->PSSetShaderResources(1, 1, &this->model->textureResources->normalRSV);
+
+
 
 		pDeviceContext->DrawIndexed(this->model->mesh->ib.getIndexCount(), 0, 0);
 	}
