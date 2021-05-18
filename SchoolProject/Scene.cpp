@@ -21,8 +21,7 @@ Scene::Scene(ID3D11Device* pDevice, std::shared_ptr<ResourceManager> resourceMan
 void Scene::initObjects()
 {
 	Object* obj = new Object(pDevice);
-	obj->SetMesh(resourceManager->GetMesh("test.obj").get());
-	obj->SetMaterial(resourceManager->GetMaterial("test.obj").get());
+	obj->SetModel(this->resourceManager->GetModel("test.obj").get());
 	obj->SetPosition(0.f, 0.f, 0.f);
 	obj->setBoundingBox(std::make_shared<BoundingBox>(DirectX::XMVectorSet(obj->GetPosition().x, obj->GetPosition().y, obj->GetPosition().z, 0.0f),
 		DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f),
@@ -88,11 +87,11 @@ void Scene::update(float _deltaTime)
 	}
 }
 
-//Silly stuff
+// Silly stuff
 void Scene::addMonkey()
 {
 	Object* obj = new Object(pDevice);
-	obj->SetMesh(resourceManager->GetMesh("Monkey.obj").get());
+	obj->SetModel(resourceManager->GetModel("Monkey.obj").get());
 	float randomPositionX = (float)(rand() % 20);
 	float randomPositionY = (float)(rand() % 20);
 	float randomPositionZ = (float)(rand() % 20);
