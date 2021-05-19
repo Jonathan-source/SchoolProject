@@ -557,6 +557,9 @@ void Renderer::imGUILightWin()
 		bFlag = true;
 	}
 
+	ImGui::Spacing();
+	ImGui::Spacing();
+
 	bool buttonlightOn = this->sceneLights[currentItem].enabled;
 	if(ImGui::Checkbox("Enable Light", &buttonlightOn))
 	{
@@ -567,27 +570,57 @@ void Renderer::imGUILightWin()
 	ImGui::Spacing();		
 	ImGui::Spacing();
 
+	// Buttons.
+	ImGui::SameLine(0.0f, 0.0f);
 	if (ImGui::Button("Add Light", ImVec2(100.f, 25.f)))
 		bFlag = this->addLight();
 
-	ImGui::Spacing();
-	ImGui::Spacing();
-
+	ImGui::SameLine(100, 15.f);
 	if (ImGui::Button("Remove Light", ImVec2(100.f, 25.f)))
 	{
 		if (bFlag = this->removeLight(currentItem))
 			currentItem -= 1;
 	}
 
-	ImGui::Spacing();
-	ImGui::Spacing();
-
+	ImGui::SameLine(200, 30.f);
 	if (ImGui::Button("Set Position", ImVec2(100.f, 25.f)))
 	{
 		sm::Vector3 pos = this->pCamera->getPosition();
 		this->sceneLights[currentItem].position.x = pos.x;
 		this->sceneLights[currentItem].position.y = pos.y;
 		this->sceneLights[currentItem].position.z = pos.z;
+		bFlag = true;
+	}
+
+	ImGui::Spacing();
+	ImGui::Spacing();
+
+	// Sliders.
+	float specPower = this->sceneLights[currentItem].specularPower;
+	if (ImGui::SliderFloat("Specular Power:", (float*)&specPower, 0.0f, 50.0f))
+	{
+		this->sceneLights[currentItem].specularPower = specPower;
+		bFlag = true;
+	}
+
+	float shininess = this->sceneLights[currentItem].shininess;
+	if (ImGui::SliderFloat("Shininess:", (float*)&shininess, 0.0f, 128.0f))
+	{
+		this->sceneLights[currentItem].shininess = shininess;
+		bFlag = true;
+	}
+
+	float intensity = this->sceneLights[currentItem].intensity;
+	if (ImGui::SliderFloat("Intensity:", (float*)&intensity, 0.0f, 10.0f))
+	{
+		this->sceneLights[currentItem].intensity = intensity;
+		bFlag = true;
+	}
+
+	float range = this->sceneLights[currentItem].range;
+	if (ImGui::SliderFloat("Range:", (float*)&range, 0.0f, 50.0f))
+	{
+		this->sceneLights[currentItem].range = range;
 		bFlag = true;
 	}
 
