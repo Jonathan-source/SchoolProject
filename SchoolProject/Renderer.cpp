@@ -309,7 +309,7 @@ bool Renderer::createStructuredBufferLights()
 	D3D11_BUFFER_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
 
-	desc.ByteWidth = sizeof(Light) * static_cast<UINT>(this->MAX_NUM_LIGHTS);
+	desc.ByteWidth = static_cast<UINT>(sizeof(Light) * this->MAX_NUM_LIGHTS);
 	desc.StructureByteStride = sizeof(Light);
 	desc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_FLAG::D3D11_BIND_SHADER_RESOURCE;
 	desc.MiscFlags = D3D11_RESOURCE_MISC_FLAG::D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
@@ -317,7 +317,7 @@ bool Renderer::createStructuredBufferLights()
 	D3D11_SUBRESOURCE_DATA data;
 	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
 
-	data.pSysMem = this->sceneLights.data();
+	data.pSysMem = this->sceneLights.data(); // Make sure that there's minimum one initalized light.
 	data.SysMemPitch = 0;
 	data.SysMemSlicePitch = 0;
 
@@ -342,21 +342,46 @@ bool Renderer::createStructuredBufferLights()
 
 
 //--------------------------------------------------------------------------------------
-void Renderer::addLight()
+bool Renderer::addLight()
 {
-	//	Create lights here:
-	Light newLight;
-	DirectX::XMStoreFloat4(&newLight.position, this->pCamera->getPosition());
-	DirectX::XMStoreFloat4(&newLight.direction, this->pCamera->getDirection());
-	newLight.color = { 0.43f, 0.45f, 1.f, 1.0f };
-	newLight.specularPower = 1.0f;
-	newLight.shininess = 32.0f;
-	newLight.intensity = 1.f;
-	newLight.type = 0;
-	newLight.range = 15.f;
-	newLight.enabled = true;
+	bool bSuccess = false;
+	if (this->sceneLights.size() != this->MAX_NUM_LIGHTS)
+	{
+		Light newLight;
+		DirectX::XMStoreFloat4(&newLight.position, this->pCamera->getPosition());
+		DirectX::XMStoreFloat4(&newLight.direction, this->pCamera->getDirection());
+		newLight.color = { 0.43f, 0.45f, 1.f, 1.0f };
+		newLight.specularPower = 1.0f;
+		newLight.shininess = 32.0f;
+		newLight.intensity = 1.f;
+		newLight.type = 0;
+		newLight.range = 15.f;
+		newLight.enabled = true;
 
-	this->sceneLights.emplace_back(newLight);
+		this->sceneLights.emplace_back(newLight);
+		bSuccess = true;
+	}
+
+	return bSuccess;
+}
+
+
+
+
+
+
+
+//--------------------------------------------------------------------------------------
+bool Renderer::removeLight(UINT index)
+{
+	bool bSuccess = false;
+	if (this->sceneLights.size() != 1 && index != 0)
+	{
+		this->sceneLights.erase(sceneLights.begin() + index);
+		bSuccess = true;
+	}
+
+	return bSuccess;
 }
 
 
@@ -475,22 +500,27 @@ void Renderer::LightningPass()
 
 
 //--------------------------------------------------------------------------------------
-//Debug imGuI for manipulating lights
+// Debug imGuI for manipulating lights.
 void Renderer::imGUILightWin()
 {	
-	bool hasChanged = false;
-
+	// Flag for checking if UpdateSubresource is required.
+	bool bFlag = false;
 
 	// Light window
 	ImGui::Begin("Lights");
 	static int currentItem = 0;
-	static float pos[3] = { sceneLights.at(currentItem).position.x,sceneLights.at(currentItem).position.y,sceneLights.at(currentItem).position.z};
-	static float color[3] = { 0.5f,0.5f,0.5f};
+	static float pos[3] = {
+		this->sceneLights.at(currentItem).position.x,
+		this->sceneLights.at(currentItem).position.y,
+		this->sceneLights.at(currentItem).position.z
+	};
+	static float color[3] = { 0.5f, 0.5f, 0.5f };
 
+		
 	// Fuck C. 
 	const char* listsOfLights[10] = {};
 	std::vector<char*> writables;
-	for (int i = 0; i < sceneLights.size(); i++)
+	for (int i = 0; i < this->sceneLights.size(); i++)
 	{
 		std::string str = "Light " + std::to_string(i + 1);
 		char* writable = new char[str.size() + 1];
@@ -499,65 +529,75 @@ void Renderer::imGUILightWin()
 
 		listsOfLights[i] = writable;
 
-		//Emplace it in a vector so it can be deleted after it has been drawn
+		// Emplace it in a vector so it can be deleted after it has been drawn
 		writables.emplace_back(writable);
 	}
-
+	
 	ImGui::Text(R"(Light Entitys)");
 	
-	ImGui::ListBox("", &currentItem, listsOfLights, sceneLights.size());
+	ImGui::ListBox("", &currentItem, listsOfLights, this->sceneLights.size());
 
-	std::string lightText = "Lights";
-	ImGui::Text(lightText.c_str());
-
-	if (ImGui::InputFloat3("Light Position", pos))
+	// Change lights position
+	if(ImGui::InputFloat3("Light Position", pos))
 	{
-		// Change lights position
-		this->sceneLights[currentItem].position.x = pos[currentItem]; this->sceneLights[currentItem].position.y = pos[1]; this->sceneLights[currentItem].position.z = pos[2];
-		hasChanged = true;
+		this->sceneLights[currentItem].position.x = pos[0];
+		this->sceneLights[currentItem].position.y = pos[1];
+		this->sceneLights[currentItem].position.z = pos[2];
+		bFlag = true;
 	}
 
 	ImGui::Spacing();
 
-	if (ImGui::ColorPicker3("Color", color))
+	// Change light color.
+	if(ImGui::ColorPicker3("Color", color))
 	{
-		this->sceneLights[currentItem].color.x = color[0]; this->sceneLights[currentItem].color.y = color[1]; this->sceneLights[currentItem].color.z = color[2];
-		hasChanged = true;
+		this->sceneLights[currentItem].color.x = color[0];
+		this->sceneLights[currentItem].color.y = color[1];
+		this->sceneLights[currentItem].color.z = color[2];
+		bFlag = true;
 	}
 
-	static bool buttonlightOn = true;
-	if (ImGui::Checkbox("Enable Light", &buttonlightOn))
+	bool buttonlightOn = this->sceneLights[currentItem].enabled;
+	if(ImGui::Checkbox("Enable Light", &buttonlightOn))
 	{
-		sceneLights[currentItem].enabled = buttonlightOn;
-		hasChanged = true;
+		this->sceneLights[currentItem].enabled = buttonlightOn;
+		bFlag = true;
 	}
 
+	ImGui::Spacing();		
 	ImGui::Spacing();
-
-	ImGui::Text("Background Color");
-
-	ImGui::ColorPicker3("Color", backgroundColor);
 
 	if (ImGui::Button("Add Light", ImVec2(100.f, 25.f)))
+		bFlag = this->addLight();
+
+	ImGui::Spacing();
+	ImGui::Spacing();
+
+	if (ImGui::Button("Remove Light", ImVec2(100.f, 25.f)))
 	{
-		this->addLight();
-		hasChanged = true;
+		if (bFlag = this->removeLight(currentItem))
+			currentItem -= 1;
 	}
 
-	if (hasChanged)
+	ImGui::Spacing();
+	ImGui::Spacing();
+
+	if (ImGui::Button("Set Position", ImVec2(100.f, 25.f)))
 	{
-		size_t NR_OF_LIGHTS = sceneLights.size();
-		Light* lightArr = new Light[NR_OF_LIGHTS];
-		for (size_t i = 0; i < NR_OF_LIGHTS; i++)
-			lightArr[i] = sceneLights.at(i);
-
-		this->pDXCore->deviceContext->UpdateSubresource(lightBuffer.Get(), 0, nullptr, lightArr, 0, 0);
-
-		delete[] lightArr;
+		sm::Vector3 pos = this->pCamera->getPosition();
+		this->sceneLights[currentItem].position.x = pos.x;
+		this->sceneLights[currentItem].position.y = pos.y;
+		this->sceneLights[currentItem].position.z = pos.z;
+		bFlag = true;
 	}
+
+
+	// UpdateSubresource.
+	if (bFlag)	
+		this->pDXCore->deviceContext->UpdateSubresource(this->lightBuffer.Get(), 0, nullptr, this->sceneLights.data(), 0, 0);
+	
+	ImGui::End();
 
 	for (auto writ : writables)
 		delete writ;
-
-	ImGui::End();
 }

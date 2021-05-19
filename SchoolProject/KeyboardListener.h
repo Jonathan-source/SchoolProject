@@ -38,6 +38,5 @@ public:
 private:
 	std::unordered_map<Key, boolean> keysDown;
 	std::unordered_map<Key, boolean> keysClicked;
-
 };
 

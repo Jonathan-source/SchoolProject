@@ -83,6 +83,10 @@ PixelOutputType main(PixelInputType input)
         // Get current light.
         const Light currentLight = SceneLights[i];
         
+        // Ignore non-enabled lights.
+        if (!currentLight.enabled) 
+            continue;
+
         // Calculate point to light vector. 
         const float3 pointToLight = (currentLight.type == DIRECTIONAL_LIGHT) ? -normalize(currentLight.direction.xyz) : (currentLight.position.xyz - surfacePosition);
  	

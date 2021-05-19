@@ -65,13 +65,16 @@ private:
 	bool createShaderResourceViews(D3D11_TEXTURE2D_DESC& textureDesc);
 
 	void InitializeLights();
-	void addLight();
 	bool createStructuredBufferLights();
+	
 	
 	// Different Passes.
 	void GeometryPass();
 	void LightningPass();
 	
+
+	bool addLight();
+	bool removeLight(UINT index);
 	void imGUILightWin();
 };
 

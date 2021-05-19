@@ -24,7 +24,7 @@ Engine::Engine(HINSTANCE& hInstance, HINSTANCE& hPrevIntance, LPWSTR& lpmCmdLine
 	this->keyboardListener = std::make_shared<KeyboardListener>();
 	this->mouseListener = std::make_shared<MouseListener>((float)screenHeight, (float)screenWidth);
 
-	//Initialize Camera
+	// Initialize Camera
 	this->camera = std::make_shared<Camera>(this->keyboardListener,this->mouseListener, screenHeight, screenWidth);
 
 	// Initialize ResourceManager.
@@ -77,9 +77,6 @@ void Engine::Update()
 			ImGui::NewFrame();
 #endif // DEBUG
 
-			// Submit.
-			// a vector with objects.
-
 			this->scene->update(deltaTime);
 
 			//Camera update
@@ -117,7 +114,7 @@ void Engine::Update()
 void Engine::drawImGUI()
 {
 
-	//Statistics window
+	// Statistics window
 	ImGui::Begin("Statistics");
 	std::string frameRate = "FPS: " + std::to_string((int)(1 / deltaTime));
 	std::string screenRes = "Screen Resolution: " + std::to_string(window->getWidth()) + "x" + std::to_string(window->getHeight());
