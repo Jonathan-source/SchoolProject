@@ -75,7 +75,9 @@ PixelShaderOutput main(PixelShaderInput input)
 	
     // Sample from NormalTexture map.	
     output.normal = normalMapping(input);
+    
     output.normal = input.normalWS;
+    
     output.position = input.positionWS;
 
     return output;
