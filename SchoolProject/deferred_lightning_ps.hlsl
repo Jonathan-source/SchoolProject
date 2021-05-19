@@ -84,7 +84,7 @@ PixelOutputType main(PixelInputType input)
         const Light currentLight = SceneLights[i];
         
         // Ignore non-enabled lights.
-        if (!currentLight.enabled) 
+        if (currentLight.enabled == 0) 
             continue;
 
         // Calculate point to light vector. 

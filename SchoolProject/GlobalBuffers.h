@@ -56,7 +56,7 @@ struct Light
 	float shininess;
 	float intensity;
 	float range;
-	bool enabled;
+	UINT enabled;
 	UINT type;
 };
 

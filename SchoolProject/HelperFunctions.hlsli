@@ -11,7 +11,7 @@ struct Light
     float shininess;        // 4 bytes
     float intensity;        // 4 bytes
     float range;            // 4 bytes
-    bool enabled;           // 4 bytes
+    uint enabled;           // 4 bytes
     uint type;              // 4 bytes
 };                          // Total: 72 bytes.
 

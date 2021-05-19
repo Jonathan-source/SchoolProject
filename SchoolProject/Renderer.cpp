@@ -292,7 +292,7 @@ void Renderer::InitializeLights()
 	light.intensity = 1.f;
 	light.type = 0;
 	light.range = 15.f;
-	light.enabled = true;
+	light.enabled = 1;
 
 	this->sceneLights.emplace_back(light);
 }
@@ -560,7 +560,7 @@ void Renderer::imGUILightWin()
 	bool buttonlightOn = this->sceneLights[currentItem].enabled;
 	if(ImGui::Checkbox("Enable Light", &buttonlightOn))
 	{
-		this->sceneLights[currentItem].enabled = buttonlightOn;
+		this->sceneLights[currentItem].enabled = (buttonlightOn) ? 1 : 0;
 		bFlag = true;
 	}
 
