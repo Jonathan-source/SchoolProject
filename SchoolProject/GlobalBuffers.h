@@ -119,3 +119,18 @@ struct SimpleVertex
 		this->tangent = tangent;
 	}
 };
+
+
+
+
+
+// Raw data upon loading an OBJ file.
+struct MeshData
+{
+	std::vector<DirectX::XMFLOAT3> vertices;
+	std::vector<DirectX::XMFLOAT3> normals;
+	std::vector<DirectX::XMFLOAT2> texCoords;
+	std::vector<DirectX::XMFLOAT3> tangents;
+	std::vector<DirectX::XMUINT3>  faces;
+	std::string mtllib;
+};

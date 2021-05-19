@@ -10,6 +10,7 @@
 #include "VertexBuffer.h"
 #include "ConstantBuffer.h"
 #include "IndexBuffer.h"
+#include "HeightMap.h"
 
 struct Material
 {
@@ -35,6 +36,30 @@ struct TextureResources
 };
 
 
+
+// Final version.
+struct Mesh
+{
+	VertexBuffer vb;
+	IndexBuffer ib;
+};
+
+// Intermediate struct.
+struct SubMesh
+{
+	std::vector<SimpleVertex> vertexData;
+	std::vector<UINT> indexData;
+};
+
+// Final version.
+struct Model
+{
+	Mesh* mesh;
+	Material* material;
+	TextureResources* textureResources;
+};
+
+
 // Raw data upon loading an MTL file. 
 struct MaterialData
 {
@@ -55,39 +80,6 @@ struct MaterialData
 	bool hasEmissiveMap;
 	bool hasSpecularMap;
 	bool hasNormalMap;
-};
-
-// Final version.
-struct Mesh
-{
-	VertexBuffer vb;
-	IndexBuffer ib;
-};
-
-// Intermediate struct.
-struct SubMesh
-{
-	std::vector<SimpleVertex> vertexData;
-	std::vector<UINT> indexData;
-};
-
-// Raw data upon loading an OBJ file.
-struct MeshData
-{
-	std::vector<DirectX::XMFLOAT3> vertices;
-	std::vector<DirectX::XMFLOAT3> normals;
-	std::vector<DirectX::XMFLOAT2> texCoords;
-	std::vector<DirectX::XMFLOAT3> tangents;
-	std::vector<DirectX::XMUINT3>  faces;
-	std::string mtllib;
-};
-
-// Final version.
-struct Model
-{
-	Mesh *mesh;
-	Material *material;
-	TextureResources *textureResources;
 };
 
 class ResourceManager
@@ -152,6 +144,7 @@ private:
 	void InitializeShaders();
 	bool LoadShaderData(const std::string& filename, std::string& shaderByteCode);
 	void LoadModels(const std::vector<std::string>& meshFileNames);
+	void LoadHeightMap(const std::string& Name);
 	void LoadTextures(const std::vector<std::string>& textures);
 	void InitializeTextureResources(std::shared_ptr<TextureResources> textureResource, std::shared_ptr<MaterialData> materialData);
 

@@ -72,16 +72,11 @@ PixelShaderOutput main(PixelShaderInput input)
     
     // Sample from DiffuseTexture map.
     output.diffuse = DiffuseTexture.Sample(LinearSampler, input.texCoord);
-
-    // Sample from EmissiveTexture map.
-    // output.emissive = EmissiveTexture.Sample(LinearSampler, input.texCoord);
 	
     // Sample from NormalTexture map.	
-    output.normal = input.normalWS; 
-    output.normal.a = output.diffuse.a; // Because the normal-"Color" needs to blend just like diffuse
-
+    output.normal = normalMapping(input);
+    output.normal = input.normalWS;
     output.position = input.positionWS;
-    output.position.a = output.diffuse.a; // Because the position-"Color" needs to blend just like diffuse
 
     return output;
 }

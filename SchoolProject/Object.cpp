@@ -200,6 +200,12 @@ void Object::Draw(ID3D11DeviceContext* pDeviceContext)
 {
 	if (this->model != nullptr)
 	{
+
+		ID3D11ShaderResourceView* nullSRV = nullptr;
+		pDeviceContext->PSSetShaderResources(0, 1, &nullSRV);
+		pDeviceContext->PSSetShaderResources(1, 1, &nullSRV);
+
+
 		static UINT stride = sizeof(SimpleVertex);
 		static UINT offset = 0;
 
@@ -209,10 +215,11 @@ void Object::Draw(ID3D11DeviceContext* pDeviceContext)
 		pDeviceContext->VSSetConstantBuffers(0, 1, this->perObjectConstantBuffer->GetAddressOf());
 
 
-
 		// TexturesRSV.
 		if (this->model->material->hasDiffuseMap)
 			pDeviceContext->PSSetShaderResources(0, 1, &this->model->textureResources->diffuseRSV);
+
+
 		if (this->model->material->hasNormalMap)
 			pDeviceContext->PSSetShaderResources(1, 1, &this->model->textureResources->normalRSV);
 

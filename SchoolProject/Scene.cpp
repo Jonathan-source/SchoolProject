@@ -10,6 +10,7 @@ Scene::Scene(ID3D11Device* pDevice, std::shared_ptr<ResourceManager> resourceMan
 {
 	std::srand(std::time(nullptr));
 	this->initObjects();
+	std::shared_ptr<HeightMap> karlskrona = std::make_shared<HeightMap>("Heightmap.png");
 }
 
 
@@ -29,6 +30,13 @@ void Scene::initObjects()
 		DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f),
 		DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f)));
 	this->objects.push_back(obj);
+
+
+
+	Object* obj2 = new Object(pDevice);
+	obj2->SetModel(this->resourceManager->GetModel("Heightmap.png").get());
+	obj2->SetPosition(0.f, 0.f, 0.f);
+	this->objects.push_back(obj2);
 }
 
 

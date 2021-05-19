@@ -15,9 +15,66 @@ ResourceManager::ResourceManager(D3D11Core* pD3D11Core)
 	// Monkey.obj, Monkey.mtl, Monkey_nt.png, Monkey_dt.png, Monkey_st.png"
 	std::vector<std::string> meshFileNames{ "Cube.obj", "Monkey.obj", "test.obj", "Plane.obj" };
 	this->LoadModels(meshFileNames);
+	this->LoadHeightMap("Heightmap.png");
 }
 
 
+
+
+//--------------------------------------------------------------------------------------
+void ResourceManager::LoadHeightMap(const std::string& name)
+{
+		//
+		// Load Mesh.
+		//
+		std::shared_ptr<HeightMap> heightmap = std::make_shared<HeightMap>(name.c_str());
+		
+		SubMesh subMesh = this->CreateSubMesh(*heightmap->getMesh());
+
+		std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
+		mesh->vb.setDevice(this->pD3D11Core->device.Get());
+		mesh->ib.setDevice(this->pD3D11Core->device.Get());
+
+		mesh->vb.createVertexBuffer(subMesh.vertexData.data(), subMesh.vertexData.size());
+		mesh->ib.createIndexBuffer(subMesh.indexData.data(), subMesh.indexData.size());
+
+		// Insert.
+		this->meshMap.insert(std::pair<std::string, std::shared_ptr<Mesh>>(name, mesh));
+
+
+		//
+		// Load Material from MTL.
+		//
+		std::shared_ptr<MaterialData> materialData = std::make_shared<MaterialData>(this->LoadMaterialFromFile("default.mtl"));
+
+		// Insert.
+		this->materialDataMap.insert(std::pair<std::string, std::shared_ptr<MaterialData>>(name, materialData));
+
+		std::shared_ptr<Material> material = std::make_shared<Material>();
+		this->CreateMaterial(material.get(), materialData);
+
+		// Insert.
+		this->materialMap.insert(std::pair<std::string, std::shared_ptr<Material>>(name, material));
+
+		// Parse Textures.
+		std::vector<std::string> textureNames = ParseTextures(materialData);
+		this->LoadTextures(textureNames);
+
+		std::shared_ptr<TextureResources> textureResource = std::make_shared<TextureResources>();
+		this->InitializeTextureResources(textureResource, materialData);
+
+		// Insert.
+		this->textureResourceMap.insert(std::pair<std::string, std::shared_ptr<TextureResources>>(name, textureResource));
+
+		// Insert.
+		std::shared_ptr<Model> model = std::make_shared<Model>();
+
+		model->mesh = mesh.get();
+		model->material = material.get();
+		model->textureResources = textureResource.get();
+
+		this->modelMap.insert(std::pair<std::string, std::shared_ptr<Model>>(name, model));
+}
 
 
 
@@ -39,6 +96,7 @@ void ResourceManager::LoadModels(const std::vector<std::string>& meshFileNames)
 		mesh->vb.createVertexBuffer(subMesh.vertexData.data(), subMesh.vertexData.size());
 		mesh->ib.createIndexBuffer(subMesh.indexData.data(), subMesh.indexData.size());
 
+		
 		// Insert.
 		this->meshMap.insert(std::pair<std::string, std::shared_ptr<Mesh>>(filename, mesh));
 

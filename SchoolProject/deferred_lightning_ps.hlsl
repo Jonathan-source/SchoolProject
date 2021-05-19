@@ -76,7 +76,6 @@ PixelOutputType main(PixelInputType input)
     const float4 ambient = float4(GlobalAmbient.xyz * GlobalAmbient.w, 1.0f);
     output.color = ambient * surfaceColor;
 	
-
     // FOR EACH LIGHT:
     for (int i = 0; i < NumLights; i++)
     {

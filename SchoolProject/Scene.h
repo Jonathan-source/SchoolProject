@@ -3,6 +3,7 @@
 #include "Object.h"
 #include "ResourceManager.h"
 #include "MouseListener.h"
+#include "HeightMap.h"
 
 class Scene
 {
