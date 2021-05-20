@@ -12,19 +12,6 @@
 #include "IndexBuffer.h"
 #include "HeightMap.h"
 
-struct Material
-{
-	DirectX::XMFLOAT4 Ka;
-	DirectX::XMFLOAT4 Kd;
-	DirectX::XMFLOAT4 Ke;
-	DirectX::XMFLOAT4 Ks;
-
-	bool hasAmbientMap;
-	bool hasDiffuseMap;
-	bool hasEmissiveMap;
-	bool hasSpecularMap;
-	bool hasNormalMap;
-};
 
 struct TextureResources
 {									 
@@ -34,8 +21,6 @@ struct TextureResources
 	ID3D11ShaderResourceView* specularRSV; 
 	ID3D11ShaderResourceView* normalRSV;
 };
-
-
 
 // Final version.
 struct Mesh
@@ -75,11 +60,11 @@ struct MaterialData
 	std::string map_Ks;		// Specular texture map name
 	std::string map_Bump;	// Normal texture map name 
 
-	bool hasAmbientMap;
-	bool hasDiffuseMap;
-	bool hasEmissiveMap;
-	bool hasSpecularMap;
-	bool hasNormalMap;
+	BOOL hasAmbientMap;
+	BOOL hasDiffuseMap;
+	BOOL hasEmissiveMap;
+	BOOL hasSpecularMap;
+	BOOL hasNormalMap;
 };
 
 class ResourceManager

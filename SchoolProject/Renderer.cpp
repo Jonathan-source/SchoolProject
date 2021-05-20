@@ -9,6 +9,8 @@ Renderer::Renderer(D3D11Core* pDXCore,Window* pWindow, Camera* pCamera, Resource
 	, pCamera(pCamera)
 	, pResourceManager(pResourceManager)
 	, perFrameBuffer(std::make_unique<ConstantBuffer>(pDXCore->device.Get(), sizeof(PerFrame)))
+	, imGUI_GBufferData({ FALSE, FALSE, FALSE })
+	, imGuiCB(std::make_unique<ConstantBuffer>(pDXCore->device.Get(), sizeof(ImGuiCB)))
 {
 	clearColor[0] = 0.0f;
 	clearColor[1] = 0.0f;
@@ -454,6 +456,7 @@ void Renderer::LightningPass()
 {
 #ifdef _DEBUG
 	imGUILightWin();
+	imGUIGraphicBuffers();
 #endif // DEBUG
 
 	static UINT stride = sizeof(Quad);
@@ -477,6 +480,7 @@ void Renderer::LightningPass()
 	this->pDXCore->deviceContext->PSSetShaderResources(0, 3, renderShaderResourceView->GetAddressOf());	// GBuffer
 	this->pDXCore->deviceContext->PSSetShaderResources(3, 1, this->lightBufferSRV.GetAddressOf());		// StructuredBuffer
 	this->pDXCore->deviceContext->PSSetConstantBuffers(1, 1, this->perFrameBuffer->GetAddressOf());
+	this->pDXCore->deviceContext->PSSetConstantBuffers(2, 1, this->imGuiCB->GetAddressOf());			// ImGUI.
 	this->pDXCore->deviceContext->PSSetSamplers(0, 1, this->pDXCore->pointSamplerState.GetAddressOf());
 	
 	this->pDXCore->deviceContext->VSSetShader(this->pResourceManager->GetVertexShader("deferred_lightning_vs").Get(), nullptr, 0);
@@ -547,6 +551,7 @@ void Renderer::imGUILightWin()
 	}
 
 	ImGui::Spacing();
+	ImGui::Spacing();
 
 	// Change light color.
 	if(ImGui::ColorPicker3("Color", color))
@@ -557,9 +562,11 @@ void Renderer::imGUILightWin()
 		bFlag = true;
 	}
 
+
 	ImGui::Spacing();
 	ImGui::Spacing();
 
+	ImGui::SameLine(0.0f, 0.0f);
 	bool buttonlightOn = this->sceneLights[currentItem].enabled;
 	if(ImGui::Checkbox("Enable Light", &buttonlightOn))
 	{
@@ -568,6 +575,19 @@ void Renderer::imGUILightWin()
 	}
 
 	ImGui::Spacing();		
+	ImGui::Spacing();
+
+	static const char* items[]{ "Point Light", "Directional Light", "Spot Light" };
+	
+	int selectedItem = this->sceneLights[currentItem].type;
+	if (ImGui::ListBox("Light types", &selectedItem, items, IM_ARRAYSIZE(items)))
+	{
+		this->sceneLights[currentItem].type = selectedItem;
+		bFlag = true;
+	}
+	
+
+	ImGui::Spacing();
 	ImGui::Spacing();
 
 	// Buttons.
@@ -589,6 +609,8 @@ void Renderer::imGUILightWin()
 		this->sceneLights[currentItem].position.x = pos.x;
 		this->sceneLights[currentItem].position.y = pos.y;
 		this->sceneLights[currentItem].position.z = pos.z;
+
+		DirectX::XMStoreFloat4(&this->sceneLights[currentItem].direction, this->pCamera->getDirection());
 		bFlag = true;
 	}
 
@@ -633,4 +655,57 @@ void Renderer::imGUILightWin()
 
 	for (auto writ : writables)
 		delete writ;
+}
+
+
+
+
+
+
+
+
+//--------------------------------------------------------------------------------------
+void Renderer::imGUIGraphicBuffers()
+{
+	// Flag for checking if UpdateSubresource is required.
+	bool bFlag = false;
+
+	// Light window
+	ImGui::Begin("GBuffers");
+
+	ImGui::Spacing();
+	ImGui::Spacing();
+
+	static bool bGPositionButton = false;
+	if (ImGui::Checkbox("GPosition", &bGPositionButton))
+	{
+		this->imGUI_GBufferData.bPrintGPositionTexture = (bGPositionButton) ? TRUE : FALSE;
+		bFlag = true;
+	}
+
+	ImGui::Spacing();
+	ImGui::Spacing();
+
+	static bool bGDiffuseButton = false;
+	if (ImGui::Checkbox("GDiffuse", &bGDiffuseButton))
+	{
+		this->imGUI_GBufferData.bPrintGDiffuseTexture = (bGDiffuseButton) ? TRUE : FALSE;
+		bFlag = true;
+	}
+
+	ImGui::Spacing();
+	ImGui::Spacing();
+
+	static bool bGNormalButton = false;
+	if (ImGui::Checkbox("GNormal", &bGNormalButton))
+	{
+		this->imGUI_GBufferData.bPrintGNormalTexture = (bGNormalButton) ? TRUE : FALSE;
+		bFlag = true;
+	}
+
+	// UpdateSubresource.
+	if (bFlag)
+		this->pDXCore->deviceContext->UpdateSubresource(this->imGuiCB->Get(), 0, nullptr, &this->imGUI_GBufferData, 0, 0);
+
+	ImGui::End();
 }

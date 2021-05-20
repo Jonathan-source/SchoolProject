@@ -62,7 +62,6 @@ private:
 	// Engine specific functions
 	//void initializeImGui();
 
-
 	bool handleMessage();
 	void Update();
 	void drawImGUI();

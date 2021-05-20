@@ -7,7 +7,6 @@ StructuredBuffer<Light> SceneLights : register(t3);
 
 SamplerState PointSampler           : register(s0);
 
-
 // GLOBAL DEFINES.
 #define POINT_LIGHT 0
 #define DIRECTIONAL_LIGHT 1
@@ -30,6 +29,17 @@ cbuffer PerFrame : register(b1)
 //--------------------------------------------------------------------------------------
 // 
 //--------------------------------------------------------------------------------------
+cbuffer ImGUI : register(b2)
+{
+    int bPrintGPositionTexture;
+    int bPrintGDiffuseTexture;
+    int bPrintGNormalTexture;
+};
+
+
+//--------------------------------------------------------------------------------------
+// 
+//--------------------------------------------------------------------------------------
 struct PixelInputType
 {
     float4 position : SV_POSITION; 
@@ -38,43 +48,36 @@ struct PixelInputType
 };
 
 
-//--------------------------------------------------------------------------------------
-// 
-//--------------------------------------------------------------------------------------
-struct PixelOutputType
-{
-    float4 color            : SV_TARGET;
-    //float4 brightnessColor  : SV_Target1;
-};
-
-
-
 
 //--------------------------------------------------------------------------------------
 // MAIN
 //--------------------------------------------------------------------------------------
 [earlydepthstencil]
-PixelOutputType main(PixelInputType input)
+float4 main(PixelInputType input) : SV_TARGET
 {
     // Initialize output.
-    PixelOutputType output;
-	//output.brightnessColor  = float4(0.0f, 0.0f, 0.0f, 1.0f);
-
+    float4 outputColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 
 	// Sample the color / normal / position (in world space) from respective render texture.
+    const float3 surfacePosition    = GPositionTexture.Sample(PointSampler, input.texCoord.xy).xyz; 
 	const float4 surfaceColor       = GDiffuseTexture.Sample(PointSampler, input.texCoord.xy);
     float3 surfaceNormal            = GNormalTexture.Sample(PointSampler, input.texCoord.xy).xyz;
-    const float3 surfacePosition    = GPositionTexture.Sample(PointSampler, input.texCoord.xy).xyz; 
 
+    // ImGuiDebug
+    if (bPrintGPositionTexture)
+        return float4(surfacePosition, 1.0f);
+    if (bPrintGDiffuseTexture)
+        return surfaceColor;
+    if (bPrintGNormalTexture)
+        return float4(surfaceNormal, 1.0f);
 
     // The vertex's normal vector is being interpolated across the primitive
     // which can make it un-normalized. So normalize the vertex's normal vector.
     surfaceNormal = normalize(surfaceNormal);
 
-
     // Calculate Ambient Term:  
     const float4 ambient = float4(GlobalAmbient.xyz * GlobalAmbient.w, 1.0f);
-    output.color = ambient * surfaceColor;
+    outputColor = ambient * surfaceColor;
 	
     // FOR EACH LIGHT:
     for (int i = 0; i < NumLights; i++)
@@ -100,10 +103,10 @@ PixelOutputType main(PixelInputType input)
         switch (currentLight.type)
         {
 		case POINT_LIGHT:
-            output.color += PointLight(currentLight, pointToLight, pointToCamera, surfaceNormal, surfaceColor);
+            outputColor += PointLight(currentLight, pointToLight, pointToCamera, surfaceNormal, surfaceColor);
 		break;
 		case DIRECTIONAL_LIGHT:
-            output.color += DirectionalLight(currentLight, pointToLight, pointToCamera, surfaceNormal, surfaceColor);
+            outputColor += DirectionalLight(currentLight, pointToLight, pointToCamera, surfaceNormal, surfaceColor);
 		break;
 		case SPOT_LIGHT:
 			// TODO?
@@ -112,9 +115,6 @@ PixelOutputType main(PixelInputType input)
 			break;
         }
     }
-	
-	// Calculate and store brightness color.
-    //output.brightnessColor = ComputeBrightnessColor(output.color);
-	
-	return output;
+		
+	return outputColor;
 }

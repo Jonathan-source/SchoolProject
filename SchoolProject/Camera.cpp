@@ -115,10 +115,11 @@ void Camera::update(float _deltaTime)
 
 	this->position += moveVec;
 
-
 	this->rotationMatrix = DirectX::XMMatrixRotationRollPitchYaw(pitch, yaw, 0.0f);
 	this->cameraTarget = DirectX::XMVector3TransformCoord(this->defaultForward, this->rotationMatrix);
 	this->cameraTarget = DirectX::XMVector3Normalize(this->cameraTarget);
+
+	this->cameraDirection = this->cameraTarget;
 
 	//Temp rotation matrix for updating rotation of the camera
 	DirectX::XMMATRIX rotateYTempMatrix = DirectX::XMMatrixRotationAxis({ 0, 1, 0 }, pitch);

@@ -3,7 +3,8 @@
 //--------------------------------------------------------------------------------------
 Object::Object(ID3D11Device* pDevice)
 	: model(nullptr)
-	, perObjectConstantBuffer(std::make_unique<ConstantBuffer>(pDevice, sizeof(PerFrame)))
+	, perObjectConstantBuffer(std::make_unique<ConstantBuffer>(pDevice, sizeof(PerObject)))
+	, materialConstantBuffer(std::make_unique<ConstantBuffer>(pDevice, sizeof(Material)))
 	, position(sm::Vector3{0.f,0.f,5.f})
 	, scale(sm::Vector3{ 1.f,1.f,1.f })
 	, rotation(sm::Vector3{ 0.f,0.f,0.f })
@@ -168,6 +169,12 @@ const sm::Vector3& Object::GetScale() const
 	return this->scale;
 }
 
+
+
+
+
+
+//--------------------------------------------------------------------------------------
 BoundingBox* Object::getBoundingBox() const
 {
 	return this->boundingBox.get();
@@ -200,30 +207,25 @@ void Object::Draw(ID3D11DeviceContext* pDeviceContext)
 {
 	if (this->model != nullptr)
 	{
-
 		ID3D11ShaderResourceView* nullSRV = nullptr;
 		pDeviceContext->PSSetShaderResources(0, 1, &nullSRV);
 		pDeviceContext->PSSetShaderResources(1, 1, &nullSRV);
-
 
 		static UINT stride = sizeof(SimpleVertex);
 		static UINT offset = 0;
 
 		pDeviceContext->IASetVertexBuffers(0, 1, this->model->mesh->vb.GetAddressOf(), &stride, &offset);
 		pDeviceContext->IASetIndexBuffer(this->model->mesh->ib.Get(), DXGI_FORMAT_R32_UINT, 0);
-		this->UpdateConstantBuffer(pDeviceContext);
-		pDeviceContext->VSSetConstantBuffers(0, 1, this->perObjectConstantBuffer->GetAddressOf());
 
+		this->UpdateConstantBuffers(pDeviceContext);
+		pDeviceContext->VSSetConstantBuffers(0, 1, this->perObjectConstantBuffer->GetAddressOf());
+		pDeviceContext->PSSetConstantBuffers(0, 1, this->materialConstantBuffer->GetAddressOf());
 
 		// TexturesRSV.
 		if (this->model->material->hasDiffuseMap)
 			pDeviceContext->PSSetShaderResources(0, 1, &this->model->textureResources->diffuseRSV);
-
-
 		if (this->model->material->hasNormalMap)
 			pDeviceContext->PSSetShaderResources(1, 1, &this->model->textureResources->normalRSV);
-
-
 
 		pDeviceContext->DrawIndexed(this->model->mesh->ib.getIndexCount(), 0, 0);
 	}
@@ -235,7 +237,7 @@ void Object::Draw(ID3D11DeviceContext* pDeviceContext)
 
 
 //--------------------------------------------------------------------------------------
-void Object::UpdateConstantBuffer(ID3D11DeviceContext* pDeviceContext)
+void Object::UpdateConstantBuffers(ID3D11DeviceContext* pDeviceContext)
 {
 	PerObject objectData = {};
 	objectData.WorldMatrix = GetMatrix();
@@ -246,6 +248,19 @@ void Object::UpdateConstantBuffer(ID3D11DeviceContext* pDeviceContext)
 
 	const sm::Matrix matTranslateInverse = worldMatrix.Invert();
 	DirectX::XMStoreFloat4x4(&objectData.WorldInvTransposeMatrix, matTranslateInverse.Transpose());
-	
+
 	pDeviceContext->UpdateSubresource(this->perObjectConstantBuffer->Get(), 0, nullptr, &objectData, 0, 0);
+
+	Material material = {};
+	material.Ka = this->model->material->Ka;
+	material.Kd = this->model->material->Kd;
+	material.Ke = this->model->material->Ke;
+	material.Ks = this->model->material->Ks;
+	material.hasAmbientMap = this->model->material->hasAmbientMap;
+	material.hasDiffuseMap = this->model->material->hasDiffuseMap;
+	material.hasEmissiveMap = this->model->material->hasEmissiveMap;
+	material.hasSpecularMap = this->model->material->hasSpecularMap;
+	material.hasNormalMap = this->model->material->hasNormalMap;
+
+	pDeviceContext->UpdateSubresource(this->materialConstantBuffer->Get(), 0, nullptr, &material, 0, 0);
 }

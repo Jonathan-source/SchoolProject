@@ -1,10 +1,24 @@
 Texture2D DiffuseTexture        : TEXTURE : register(t0);
 Texture2D NormalTexture         : TEXTURE : register(t1);
-Texture2D EmissiveTexture       : TEXTURE : register(t2);
 
 SamplerState LinearSampler      : SAMPLER : register(s0);
 
 
+//--------------------------------------------------------------------------------------
+//
+//--------------------------------------------------------------------------------------
+cbuffer Material : register(b0)
+{
+    float4 Ka;                  // 16 bytes
+    float4 Kd;                  // 16 bytes
+    float4 Ke;                  // 16 bytes
+    float4 Ks;                  // 16 bytes
+    int HasAmbientMap;          // 4 bytes
+    int HasDiffuseMap;          // 4 bytes
+    int HasEmissiveMap;         // 4 bytes
+    int HasSpecularMap;         // 4 bytes
+    int HasNormalMap;           // 4 bytes
+};                              // Total: 84 bytes.
 
 
 //--------------------------------------------------------------------------------------
@@ -22,7 +36,7 @@ struct PixelShaderInput
 
 
 //--------------------------------------------------------------------------------------
-// Used to store the final result of the lighting pass.
+// 
 //--------------------------------------------------------------------------------------
 struct PixelShaderOutput
 {
@@ -33,9 +47,9 @@ struct PixelShaderOutput
 
 
 //--------------------------------------------------------------------------------------
-// Normal mapping.
+// 
 //--------------------------------------------------------------------------------------
-float4 normalMapping(PixelShaderInput input)
+float4 DoNormalMapping(PixelShaderInput input)
 {   
     // Normalize the TBN after interpolation.
     const float3x3 TBN = float3x3(  normalize(input.tangentWS.xyz),
@@ -45,8 +59,7 @@ float4 normalMapping(PixelShaderInput input)
     // Sample the tangent-space normal map in range [0,1] and decompress. 
     // Tangent and binormal (UV) are used as direction vectors.
     float3 normalTS = NormalTexture.Sample(LinearSampler, input.texCoord.xy).rgb;
-    //normalTS.xyz = normalTS.xzy;
-    //normalTS.y = -normalTS.y;
+    
     // Change normal map range from [0, 1] to [-1, 1].
     normalTS = normalize(normalTS * 2.0f - 1.0f);
     
@@ -60,7 +73,7 @@ float4 normalMapping(PixelShaderInput input)
 
 
 //--------------------------------------------------------------------------------------
-// G-Buffer pixel shader.
+// 
 //--------------------------------------------------------------------------------------
 [earlydepthstencil]
 PixelShaderOutput main(PixelShaderInput input)
@@ -70,14 +83,14 @@ PixelShaderOutput main(PixelShaderInput input)
     // Interpolating normal may cause unnormalize.
     input.normalWS = normalize(input.normalWS);
     
-    // Sample from DiffuseTexture map.
-    output.diffuse = DiffuseTexture.Sample(LinearSampler, input.texCoord);
+    output.diffuse = Kd;
+    if(HasDiffuseMap)   // Sample from DiffuseTexture map.
+        output.diffuse = DiffuseTexture.Sample(LinearSampler, input.texCoord);
 	
-    // Sample from NormalTexture map.	
-    output.normal = normalMapping(input);
-    
     output.normal = input.normalWS;
-    
+    if(HasNormalMap)    // Sample from NormalTexture map.	
+        output.normal = DoNormalMapping(input);
+        
     output.position = input.positionWS;
 
     return output;

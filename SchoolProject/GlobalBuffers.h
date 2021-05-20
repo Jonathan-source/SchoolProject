@@ -81,6 +81,19 @@ struct TextureRenderTarget
 //--------------------------------------------------------------------------------------
 //
 //--------------------------------------------------------------------------------------
+struct ImGuiCB
+{
+	BOOL bPrintGPositionTexture;
+	BOOL bPrintGDiffuseTexture;
+	BOOL bPrintGNormalTexture;
+};
+
+
+
+
+//--------------------------------------------------------------------------------------
+//
+//--------------------------------------------------------------------------------------
 struct Quad
 {
 	DirectX::XMFLOAT3 position;
@@ -124,7 +137,9 @@ struct SimpleVertex
 
 
 
-// Raw data upon loading an OBJ file.
+//--------------------------------------------------------------------------------------
+// 
+//--------------------------------------------------------------------------------------
 struct MeshData
 {
 	std::vector<DirectX::XMFLOAT3> vertices;
@@ -133,4 +148,24 @@ struct MeshData
 	std::vector<DirectX::XMFLOAT3> tangents;
 	std::vector<DirectX::XMUINT3>  faces;
 	std::string mtllib;
+};
+
+
+
+
+
+//--------------------------------------------------------------------------------------
+// 
+//--------------------------------------------------------------------------------------
+struct Material
+{
+	DirectX::XMFLOAT4 Ka;
+	DirectX::XMFLOAT4 Kd;
+	DirectX::XMFLOAT4 Ke;
+	DirectX::XMFLOAT4 Ks;
+	BOOL hasAmbientMap;
+	BOOL hasDiffuseMap;
+	BOOL hasEmissiveMap;
+	BOOL hasSpecularMap;
+	BOOL hasNormalMap;
 };

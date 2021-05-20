@@ -45,7 +45,8 @@ private:
 	sm::Vector3 scale;
 
 	std::unique_ptr<ConstantBuffer> perObjectConstantBuffer;
+	std::unique_ptr<ConstantBuffer> materialConstantBuffer;
 
-	void UpdateConstantBuffer(ID3D11DeviceContext* pDeviceContext);
+	void UpdateConstantBuffers(ID3D11DeviceContext* pDeviceContext);
 };
 

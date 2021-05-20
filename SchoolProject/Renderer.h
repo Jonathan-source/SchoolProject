@@ -76,5 +76,9 @@ private:
 	bool addLight();
 	bool removeLight(UINT index);
 	void imGUILightWin();
+
+	ImGuiCB imGUI_GBufferData;
+	std::unique_ptr<ConstantBuffer> imGuiCB;
+	void imGUIGraphicBuffers();
 };
 

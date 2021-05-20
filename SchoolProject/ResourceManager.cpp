@@ -837,11 +837,11 @@ MaterialData ResourceManager::LoadMaterialFromFile(const std::string& filename)
 
 	MaterialData materialData = {};
 	materialData.name = filename;
-	materialData.hasAmbientMap	= false;
-	materialData.hasDiffuseMap = false;
-	materialData.hasEmissiveMap = false;
-	materialData.hasSpecularMap = false;
-	materialData.hasNormalMap = false;
+	materialData.hasAmbientMap	= FALSE;
+	materialData.hasDiffuseMap = FALSE;
+	materialData.hasEmissiveMap = FALSE;
+	materialData.hasSpecularMap = FALSE;
+	materialData.hasNormalMap = FALSE;
 
 	// Some useful variables.
 	std::stringstream ss = {};
@@ -880,27 +880,27 @@ MaterialData ResourceManager::LoadMaterialFromFile(const std::string& filename)
 		else if (prefix == "map_Ka")
 		{
 			ss >> materialData.map_Ka;
-			materialData.hasAmbientMap = true;
+			materialData.hasAmbientMap = TRUE;
 		}
 		else if (prefix == "map_Kd") 
 		{
 			ss >> materialData.map_Kd;
-			materialData.hasDiffuseMap = true;
+			materialData.hasDiffuseMap = TRUE;
 		}
 		else if (prefix == "map_Ke")
 		{
 			ss >> materialData.map_Ke;
-			materialData.hasEmissiveMap = true;
+			materialData.hasEmissiveMap = TRUE;
 		}
 		else if (prefix == "map_Ks")
 		{
 			ss >> materialData.map_Ks;
-			materialData.hasSpecularMap = true;
+			materialData.hasSpecularMap = TRUE;
 		}
 		else if (prefix == "map_Bump")
 		{
 			ss >> materialData.map_Bump;
-			materialData.hasNormalMap = true;
+			materialData.hasNormalMap = TRUE;
 		}
 	}
 

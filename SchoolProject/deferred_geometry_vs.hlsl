@@ -82,7 +82,6 @@ VertexShaderOutput main(VertexShaderInput input)
     float4 positionVS   = mul(output.positionWS, ViewMatrix);
     output.positionCS   = mul(positionVS, ProjectionMatrix);
     
-    
     output.texCoord     = input.texCoord;
     
     return output;
