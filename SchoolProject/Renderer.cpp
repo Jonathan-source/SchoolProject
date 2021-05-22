@@ -456,6 +456,7 @@ void Renderer::GeometryPass()
 	// Set the vertex and pixel shaders, and finally sampler state to use in the pixel shader.
 	this->pDXCore->deviceContext->VSSetShader(this->pResourceManager->GetVertexShader("deferred_geometry_vs").Get(), nullptr, 0);
 	this->pDXCore->deviceContext->PSSetShader(this->pResourceManager->GetPixelShader("deferred_geometry_ps").Get(), nullptr, 0);
+	this->pDXCore->deviceContext->GSSetShader(this->pResourceManager->GetGeometryShader("BackFaceCulling_GS").Get(), nullptr, 0);
 	this->pDXCore->deviceContext->PSSetSamplers(0, 1, this->pDXCore->linearSamplerState.GetAddressOf());	
 }
 
@@ -499,6 +500,7 @@ void Renderer::LightningPass()
 	
 	this->pDXCore->deviceContext->VSSetShader(this->pResourceManager->GetVertexShader("deferred_lightning_vs").Get(), nullptr, 0);
 	this->pDXCore->deviceContext->PSSetShader(this->pResourceManager->GetPixelShader("deferred_lightning_ps").Get(), nullptr, 0);
+
 	
 	// Render FullScreenQuad.
 	this->pDXCore->deviceContext->DrawIndexed(6, 0, 0);

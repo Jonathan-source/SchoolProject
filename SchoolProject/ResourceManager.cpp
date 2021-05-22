@@ -232,7 +232,7 @@ void ResourceManager::InitializeShaders()
 	this->pShaders.insert(std::pair<std::string, Shader<ID3D11PixelShader>>("deferred_lightning_ps", Shader<ID3D11PixelShader>("deferred_lightning_ps")));
 
 	// GeometryShaders:
-
+	this->gShaders.insert(std::pair<std::string, Shader<ID3D11GeometryShader>>("BackFaceCulling_GS", Shader<ID3D11GeometryShader>("BackFaceCulling_GS")));
 
 	// ComputeShaders:
 	this->cShaders.insert(std::pair<std::string, Shader<ID3D11ComputeShader>>("gaussian_filter_cs", Shader<ID3D11ComputeShader>("gaussian_filter_cs")));
