@@ -67,11 +67,14 @@ private:
 	void InitializeLights();
 	bool createStructuredBufferLights();
 	
-	
 	// Different Passes.
 	void GeometryPass();
 	void LightningPass();
 	
+	enum class Filter { NONE, GAUSSIAN, BILATERAL } filter;
+
+	void ApplyGaussianFilter();
+	void ApplyBilateralFilter();
 
 	bool addLight();
 	bool removeLight(UINT index);
@@ -80,5 +83,6 @@ private:
 	ImGuiCB imGUI_GBufferData;
 	std::unique_ptr<ConstantBuffer> imGuiCB;
 	void imGUIGraphicBuffers();
+	void postEffectsImGUI();
 };
 

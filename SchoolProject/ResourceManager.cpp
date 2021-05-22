@@ -235,7 +235,8 @@ void ResourceManager::InitializeShaders()
 
 
 	// ComputeShaders:
-
+	this->cShaders.insert(std::pair<std::string, Shader<ID3D11ComputeShader>>("gaussian_filter_cs", Shader<ID3D11ComputeShader>("gaussian_filter_cs")));
+	this->cShaders.insert(std::pair<std::string, Shader<ID3D11ComputeShader>>("bilateral_filter_cs", Shader<ID3D11ComputeShader>("bilateral_filter_cs")));
 
 
 	// Load ShaderData.

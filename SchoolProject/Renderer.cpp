@@ -11,6 +11,7 @@ Renderer::Renderer(D3D11Core* pDXCore,Window* pWindow, Camera* pCamera, Resource
 	, perFrameBuffer(std::make_unique<ConstantBuffer>(pDXCore->device.Get(), sizeof(PerFrame)))
 	, imGUI_GBufferData({ FALSE, FALSE, FALSE })
 	, imGuiCB(std::make_unique<ConstantBuffer>(pDXCore->device.Get(), sizeof(ImGuiCB)))
+	, filter(Filter::NONE)
 {
 	clearColor[0] = 0.0f;
 	clearColor[1] = 0.0f;
@@ -59,8 +60,22 @@ void Renderer::BeginFrame()
 //--------------------------------------------------------------------------------------
 void Renderer::EndFrame()
 {
-	this->LightningPass();
+	this->LightningPass();	
+
+	this->postEffectsImGUI();
+	
 	// PostProcessing.
+	switch (this->filter)
+	{
+	case Filter::NONE:
+		break;
+	case Filter::GAUSSIAN:
+		this->ApplyGaussianFilter();
+		break;
+	case Filter::BILATERAL:
+		this->ApplyBilateralFilter();
+		break;
+	}
 }
 
 
@@ -436,7 +451,6 @@ void Renderer::GeometryPass()
 	this->pDXCore->deviceContext->IASetInputLayout(this->pResourceManager->inputLayoutGP.Get());
 	this->pDXCore->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	
 	this->pDXCore->deviceContext->VSSetConstantBuffers(1, 1, this->perFrameBuffer->GetAddressOf());
 
 	// Set the vertex and pixel shaders, and finally sampler state to use in the pixel shader.
@@ -502,9 +516,49 @@ void Renderer::LightningPass()
 
 
 
+//--------------------------------------------------------------------------------------
+void Renderer::ApplyGaussianFilter()
+{
+	ID3D11RenderTargetView* nullRTV = nullptr;
+	this->pDXCore->deviceContext->OMSetRenderTargets(1, &nullRTV, nullptr);
+
+	// Set compute shader.
+	this->pDXCore->deviceContext->CSSetShader(this->pResourceManager->GetComputeShader("gaussian_filter_cs").Get(), nullptr, 0);
+
+	this->pDXCore->deviceContext->CSSetUnorderedAccessViews(0, 1, this->pDXCore->backBufferUAV.GetAddressOf(), nullptr);
+
+	// (Frame Buffer width rounded up to the next multiple of Thread Group width) / Thread Group Width, 
+	// (Frame Buffer height rounded up to the next multiple of Thread Group height) / Thread Group Height, 1)
+	// How many groups do we need to dispatch to cover a column of pixels.
+	this->pDXCore->deviceContext->Dispatch(240, 135, 1);
+
+	// Unbind output from compute shader.
+	ID3D11UnorderedAccessView* nullUAV = nullptr;
+	this->pDXCore->deviceContext->CSSetUnorderedAccessViews(0, 1, &nullUAV, nullptr);
+
+	// Disable compute shader.
+	this->pDXCore->deviceContext->CSSetShader(nullptr, nullptr, 0);
+}
+
+
+
+
+
+
 
 //--------------------------------------------------------------------------------------
-// Debug imGuI for manipulating lights.
+void Renderer::ApplyBilateralFilter()
+{
+
+}
+
+
+
+
+
+
+
+//--------------------------------------------------------------------------------------
 void Renderer::imGUILightWin()
 {	
 	// Flag for checking if UpdateSubresource is required.
@@ -677,6 +731,10 @@ void Renderer::imGUIGraphicBuffers()
 	ImGui::Spacing();
 
 	static bool bGPositionButton = false;
+	static bool bGDiffuseButton = false;
+	static bool bGNormalButton = false;
+
+
 	if (ImGui::Checkbox("GPosition", &bGPositionButton))
 	{
 		this->imGUI_GBufferData.bPrintGPositionTexture = (bGPositionButton) ? TRUE : FALSE;
@@ -686,7 +744,6 @@ void Renderer::imGUIGraphicBuffers()
 	ImGui::Spacing();
 	ImGui::Spacing();
 
-	static bool bGDiffuseButton = false;
 	if (ImGui::Checkbox("GDiffuse", &bGDiffuseButton))
 	{
 		this->imGUI_GBufferData.bPrintGDiffuseTexture = (bGDiffuseButton) ? TRUE : FALSE;
@@ -696,7 +753,6 @@ void Renderer::imGUIGraphicBuffers()
 	ImGui::Spacing();
 	ImGui::Spacing();
 
-	static bool bGNormalButton = false;
 	if (ImGui::Checkbox("GNormal", &bGNormalButton))
 	{
 		this->imGUI_GBufferData.bPrintGNormalTexture = (bGNormalButton) ? TRUE : FALSE;
@@ -706,6 +762,51 @@ void Renderer::imGUIGraphicBuffers()
 	// UpdateSubresource.
 	if (bFlag)
 		this->pDXCore->deviceContext->UpdateSubresource(this->imGuiCB->Get(), 0, nullptr, &this->imGUI_GBufferData, 0, 0);
+
+	ImGui::End();
+}
+
+
+
+
+
+
+
+
+
+
+
+//--------------------------------------------------------------------------------------
+void Renderer::postEffectsImGUI()
+{
+	// Flag for checking if UpdateSubresource is required.
+	bool bFlag = false;
+
+	// Post Processing Effects Window.
+	ImGui::Begin("Filters");
+
+	ImGui::Spacing();
+	ImGui::Spacing();
+
+	static bool bGaussianButton = false;
+	static bool bBilateralButton = false;
+
+
+	if (ImGui::Checkbox("Gaussian Filter", &bGaussianButton))
+	{
+		this->filter = Filter::GAUSSIAN;
+	}
+
+	ImGui::Spacing();
+	ImGui::Spacing();
+
+	if (ImGui::Checkbox("Bilateral Filter", &bBilateralButton))
+	{
+		this->filter = Filter::BILATERAL;
+	}
+
+	if (!bGaussianButton && !bBilateralButton)
+		this->filter = Filter::NONE;
 
 	ImGui::End();
 }

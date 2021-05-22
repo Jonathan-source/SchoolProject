@@ -80,15 +80,14 @@ void Engine::Update()
 			this->scene->update(deltaTime);
 
 			//Camera update
-			camera->update(deltaTime);
-
+			this->camera->update(deltaTime);
 
 			// Draw.
-			renderer->BeginFrame();
+			this->renderer->BeginFrame();
 
 			this->scene->draw(this->d3d11Core->deviceContext.Get());
 			
-			renderer->EndFrame();
+			this->renderer->EndFrame();
 
 #ifdef _DEBUG
 			// Draw imgui window
@@ -99,11 +98,9 @@ void Engine::Update()
 			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 #endif // DEBUG
 
-			renderer->Present();
+			this->renderer->Present();
 		}
-
 	}
-
 }
 
 
@@ -113,7 +110,6 @@ void Engine::Update()
 //--------------------------------------------------------------------------------------
 void Engine::drawImGUI()
 {
-
 	// Statistics window
 	ImGui::Begin("Statistics");
 	std::string frameRate = "FPS: " + std::to_string((int)(1 / deltaTime));
@@ -124,6 +120,10 @@ void Engine::drawImGUI()
 	ImGui::Text(cameraPos.c_str());
 	ImGui::End();
 }
+
+
+
+
 
 
 
@@ -170,7 +170,6 @@ bool Engine::handleMessage()
 		
 
 		keyboardListener->updateKeyboard(this->msg);
-
 		mouseListener->updateMouse(this->msg, window->getHwnd());
 		mouseListener->updateRay(camera->getProjectionMatrix(), camera->getView());
 		// Process possible GUI events
