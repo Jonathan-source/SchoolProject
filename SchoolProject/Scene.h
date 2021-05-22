@@ -4,11 +4,12 @@
 #include "ResourceManager.h"
 #include "MouseListener.h"
 #include "HeightMap.h"
+#include "Camera.h"
 
 class Scene
 {
 public:
-	Scene(ID3D11Device* pDevice, std::shared_ptr<ResourceManager> resourceManager, std::shared_ptr<MouseListener> mouseListener);
+	Scene(ID3D11Device* pDevice, std::shared_ptr<ResourceManager> resourceManager, std::shared_ptr<MouseListener> mouseListener, std::shared_ptr<Camera> camera);
 	void initObjects();
 	virtual ~Scene();
 
@@ -22,6 +23,13 @@ private:
 	std::vector<Object*> objects;
 	std::shared_ptr<ResourceManager> resourceManager;
 	std::shared_ptr<MouseListener> mouseListener;
+	std::shared_ptr<Camera> camera;
+
+	//Heightmap values
+	std::vector<std::vector<float>> heightMapValues;
+	int terrainWidth;
+	int terrainHeight;
+
 	ID3D11Device* pDevice;
 };
 

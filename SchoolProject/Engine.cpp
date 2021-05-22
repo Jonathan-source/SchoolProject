@@ -30,7 +30,7 @@ Engine::Engine(HINSTANCE& hInstance, HINSTANCE& hPrevIntance, LPWSTR& lpmCmdLine
 	// Initialize ResourceManager.
 	this->resourceManager = std::make_shared<ResourceManager>(this->d3d11Core);
 
-	this->scene = std::make_unique<Scene>(d3d11Core->device.Get(), resourceManager, this->mouseListener);
+	this->scene = std::make_unique<Scene>(d3d11Core->device.Get(), resourceManager, this->mouseListener, this->camera);
 
 
 	// Initialize Renderer

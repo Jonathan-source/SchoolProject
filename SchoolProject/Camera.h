@@ -19,6 +19,7 @@ public:
 
 	// Set camera position coordinates
 	void setPosition(const DirectX::XMFLOAT3 &new_position);
+	void setPositionY(const float yPos);
 
 	DirectX::XMMATRIX getView() const;
 	sm::Vector3 getPosition() const;

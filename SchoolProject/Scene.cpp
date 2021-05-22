@@ -3,10 +3,11 @@
 
 
 //--------------------------------------------------------------------------------------
-Scene::Scene(ID3D11Device* pDevice, std::shared_ptr<ResourceManager> resourceManager, std::shared_ptr<MouseListener> mouseListener)
+Scene::Scene(ID3D11Device* pDevice, std::shared_ptr<ResourceManager> resourceManager, std::shared_ptr<MouseListener> mouseListener, std::shared_ptr<Camera> camera)
 	:resourceManager(resourceManager)
 	, pDevice(pDevice)
 	, mouseListener(mouseListener)
+	, camera(camera)
 {
 	std::srand(std::time(nullptr));
 	this->initObjects();
@@ -37,6 +38,35 @@ void Scene::initObjects()
 	obj2->SetModel(this->resourceManager->GetModel("Heightmap.png").get());
 	obj2->SetPosition(0.f, 0.f, 0.f);
 	this->objects.push_back(obj2);
+
+
+	//----------------- Init Heightmap values -----------------
+	int channels;
+	int index;
+	unsigned char* heightMapData = stbi_load("Heightmap.png", &terrainWidth, &terrainHeight, &channels, STBI_grey);
+
+	std::vector<float> heightVal;
+	for (int i = 0; i < terrainHeight * terrainWidth; i++)
+	{
+		heightVal.emplace_back(heightMapData[i]);
+	}
+
+	//loading in vertices Coords into vector from imagedata
+	std::vector<std::vector<float>> tempVec(terrainHeight);
+	//heightMapValues.reserve(terrainHeight);
+	for (int j = 0; j < terrainHeight; j++)
+	{
+		tempVec[j] = std::vector<float>(terrainHeight);
+		for (int i = 0; i < terrainWidth; i++)
+		{
+			//float height = heightVal.at(i + (j * terrainHeight));
+			//heightVal = DirectX::XMFLOAT3((float)i, heightVal[i + (j * terrainHeight)] / 4.0f, (float)j);
+
+			tempVec[j][i] = (heightVal.at(i + (j * terrainHeight)));
+		}
+	}
+	heightMapValues = tempVec;
+	//----------------- END -----------------
 }
 
 
@@ -93,6 +123,19 @@ void Scene::update(float _deltaTime)
 		else
 			obj->SetScale(DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f));
 	}
+
+	//Adjust camera height on heightmap
+	this->updateCameraHeight();
+
+}
+
+void Scene::updateCameraHeight()
+{
+	//Camera adjustment in height if inside heightmap
+	int x = round(this->camera->getPosition().x);
+	int z = round(this->camera->getPosition().z);
+	if (x >= 0 && x < terrainHeight && z >= 0 && z < terrainHeight)
+		this->camera->setPositionY((heightMapValues[z][x] / 4.0f) + 4.0f);
 }
 
 // Silly stuff
