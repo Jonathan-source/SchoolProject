@@ -226,13 +226,15 @@ void ResourceManager::InitializeShaders()
 	// VertexShaders:
 	this->vShaders.insert(std::pair<std::string, Shader<ID3D11VertexShader>>("deferred_geometry_vs", Shader<ID3D11VertexShader>("deferred_geometry_vs")));
 	this->vShaders.insert(std::pair<std::string, Shader<ID3D11VertexShader>>("deferred_lightning_vs", Shader<ID3D11VertexShader>("deferred_lightning_vs")));
+	this->vShaders.insert(std::pair<std::string, Shader<ID3D11VertexShader>>("shadow_mapping_vs", Shader<ID3D11VertexShader>("shadow_mapping_vs")));
 
 	// PixelShaders:
 	this->pShaders.insert(std::pair<std::string, Shader<ID3D11PixelShader>>("deferred_geometry_ps", Shader<ID3D11PixelShader>("deferred_geometry_ps")));
 	this->pShaders.insert(std::pair<std::string, Shader<ID3D11PixelShader>>("deferred_lightning_ps", Shader<ID3D11PixelShader>("deferred_lightning_ps")));
+	this->pShaders.insert(std::pair<std::string, Shader<ID3D11PixelShader>>("shadow_mapping_ps", Shader<ID3D11PixelShader>("shadow_mapping_ps")));
 
 	// GeometryShaders:
-	this->gShaders.insert(std::pair<std::string, Shader<ID3D11GeometryShader>>("BackFaceCulling_GS", Shader<ID3D11GeometryShader>("BackFaceCulling_GS")));
+	this->gShaders.insert(std::pair<std::string, Shader<ID3D11GeometryShader>>("BackFaceCulling_gs", Shader<ID3D11GeometryShader>("BackFaceCulling_gs")));
 
 	// ComputeShaders:
 	this->cShaders.insert(std::pair<std::string, Shader<ID3D11ComputeShader>>("gaussian_filter_cs", Shader<ID3D11ComputeShader>("gaussian_filter_cs")));

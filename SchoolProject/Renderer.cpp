@@ -56,15 +56,9 @@ void Renderer::BeginFrame()
 
 
 
-
 //--------------------------------------------------------------------------------------
-void Renderer::EndFrame()
+void Renderer::PostProcessEffects()
 {
-	this->LightningPass();	
-
-	this->postEffectsImGUI();
-	
-	// PostProcessing.
 	switch (this->filter)
 	{
 	case Filter::NONE:
@@ -76,6 +70,22 @@ void Renderer::EndFrame()
 		this->ApplyBilateralFilter();
 		break;
 	}
+}
+
+
+
+
+
+
+
+
+
+//--------------------------------------------------------------------------------------
+void Renderer::EndFrame()
+{
+	this->LightningPass();	
+
+	this->postEffectsImGUI();
 }
 
 
@@ -456,7 +466,7 @@ void Renderer::GeometryPass()
 	// Set the vertex and pixel shaders, and finally sampler state to use in the pixel shader.
 	this->pDXCore->deviceContext->VSSetShader(this->pResourceManager->GetVertexShader("deferred_geometry_vs").Get(), nullptr, 0);
 	this->pDXCore->deviceContext->PSSetShader(this->pResourceManager->GetPixelShader("deferred_geometry_ps").Get(), nullptr, 0);
-	this->pDXCore->deviceContext->GSSetShader(this->pResourceManager->GetGeometryShader("BackFaceCulling_GS").Get(), nullptr, 0);
+	this->pDXCore->deviceContext->GSSetShader(this->pResourceManager->GetGeometryShader("BackFaceCulling_gs").Get(), nullptr, 0);
 	this->pDXCore->deviceContext->PSSetSamplers(0, 1, this->pDXCore->linearSamplerState.GetAddressOf());	
 }
 
@@ -521,8 +531,8 @@ void Renderer::LightningPass()
 //--------------------------------------------------------------------------------------
 void Renderer::ApplyGaussianFilter()
 {
-	ID3D11RenderTargetView* nullRTV = nullptr;
-	this->pDXCore->deviceContext->OMSetRenderTargets(1, &nullRTV, nullptr);
+	//ID3D11RenderTargetView* nullRTV = nullptr;
+	//this->pDXCore->deviceContext->OMSetRenderTargets(1, &nullRTV, nullptr);
 
 	// Set compute shader.
 	this->pDXCore->deviceContext->CSSetShader(this->pResourceManager->GetComputeShader("gaussian_filter_cs").Get(), nullptr, 0);
@@ -551,7 +561,25 @@ void Renderer::ApplyGaussianFilter()
 //--------------------------------------------------------------------------------------
 void Renderer::ApplyBilateralFilter()
 {
+	//ID3D11RenderTargetView* nullRTV = nullptr;
+	//this->pDXCore->deviceContext->OMSetRenderTargets(1, &this->pDXCore->renderTargetView, nullptr);
 
+	// Set compute shader.
+	this->pDXCore->deviceContext->CSSetShader(this->pResourceManager->GetComputeShader("bilateral_filter_cs").Get(), nullptr, 0);
+
+	this->pDXCore->deviceContext->CSSetUnorderedAccessViews(0, 1, this->pDXCore->backBufferUAV.GetAddressOf(), nullptr);
+
+	// (Frame Buffer width rounded up to the next multiple of Thread Group width) / Thread Group Width, 
+	// (Frame Buffer height rounded up to the next multiple of Thread Group height) / Thread Group Height, 1)
+	// How many groups do we need to dispatch to cover a column of pixels.
+	this->pDXCore->deviceContext->Dispatch(240, 135, 1);
+
+	// Unbind output from compute shader.
+	ID3D11UnorderedAccessView* nullUAV = nullptr;
+	this->pDXCore->deviceContext->CSSetUnorderedAccessViews(0, 1, &nullUAV, nullptr);
+
+	// Disable compute shader.
+	this->pDXCore->deviceContext->CSSetShader(nullptr, nullptr, 0);
 }
 
 

@@ -98,6 +98,8 @@ void Engine::Update()
 			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 #endif // DEBUG
 
+			//this->renderer->PostProcessEffects();
+
 			this->renderer->Present();
 		}
 	}
@@ -171,9 +173,7 @@ bool Engine::handleMessage()
 
 		keyboardListener->updateKeyboard(this->msg);
 		mouseListener->updateMouse(this->msg, window->getHwnd());
-		mouseListener->updateRay(camera->getProjectionMatrix(), camera->getView());
-		// Process possible GUI events
-	
+		mouseListener->updateRay(camera->getProjectionMatrix(), camera->getView());	
 	}
 
 	return true;

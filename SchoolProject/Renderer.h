@@ -24,6 +24,7 @@ public:
 
 	void ClearFrame();
 	void BeginFrame();
+	void PostProcessEffects();
 	void EndFrame();
 	void Present();
 
@@ -38,7 +39,7 @@ private:
 	void setPerFrameBuffer();
 	
 	enum GBUFFER { POSITION, NORMAL, DIFFUSE, BUFFER_COUNT };
-	std::array<TextureRenderTarget, BUFFER_COUNT> graphicsBuffer;
+	std::array<TextureResource, BUFFER_COUNT> graphicsBuffer;
 
 	struct FullScreenQuad
 	{

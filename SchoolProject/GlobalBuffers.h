@@ -34,6 +34,21 @@ struct PerFrame
 //--------------------------------------------------------------------------------------
 // 
 //--------------------------------------------------------------------------------------
+struct Shadow
+{
+	DirectX::XMFLOAT4X4 LightInvViewMatrix;        
+	DirectX::XMFLOAT4X4 LightProjectionMatrix;
+	DirectX::XMFLOAT4X4 LightViewMatrix;
+};
+
+
+
+
+
+
+//--------------------------------------------------------------------------------------
+// 
+//--------------------------------------------------------------------------------------
 struct Ray
 {
 	sm::Vector3 origin;
@@ -67,7 +82,7 @@ struct Light
 //--------------------------------------------------------------------------------------
 //
 //--------------------------------------------------------------------------------------
-struct TextureRenderTarget
+struct TextureResource
 {
 	ComPtr<ID3D11Texture2D> texture;
 	ComPtr<ID3D11RenderTargetView> renderTargetView;
