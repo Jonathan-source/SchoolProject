@@ -146,6 +146,11 @@ void Camera::setPosition(const DirectX::XMFLOAT3& new_position)
 	this->position = DirectX::XMVectorSet(new_position.x, new_position.y, new_position.z, 0.0f);
 }
 
+void Camera::setPositionY(const float yPos)
+{
+	this->position.y = yPos;
+}
+
 
 
 
