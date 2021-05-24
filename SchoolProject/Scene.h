@@ -35,8 +35,5 @@ private:
 	std::vector<std::vector<float>> heightMapValues;
 	int terrainWidth;
 	int terrainHeight;
-
-	void updateCameraHeight();
-
 };
 

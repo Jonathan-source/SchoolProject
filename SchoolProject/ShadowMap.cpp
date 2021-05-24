@@ -9,6 +9,7 @@ ShadowMap::ShadowMap(D3D11Core* pD3D11Core, Window* pWindow, ResourceManager * p
 {
     if (!this->CreateShadowMap())
         std::cout << "ERROR::ShadowMap::CreateShadowMap()::Could not create shadow map." << std::endl;
+    std::cout << "ha" << std::endl;
 }
 
 
@@ -111,7 +112,7 @@ bool ShadowMap::CreateShadowMap()
 
     // Create the texture for the depth buffer using the filled out description.
     HRESULT hr = this->pD3D11Core->device->CreateTexture2D(&textureDesc, nullptr, this->depthMap.texture2D.GetAddressOf());
-    if (!FAILED(hr))
+    if (FAILED(hr))
         return false;
 
     D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilvDesc;
@@ -123,7 +124,7 @@ bool ShadowMap::CreateShadowMap()
     depthStencilvDesc.Texture2D.MipSlice = 0;
 
     hr = this->pD3D11Core->device->CreateDepthStencilView(this->depthMap.texture2D.Get(), &depthStencilvDesc, this->depthMap.depthStencilView.GetAddressOf());
-    if (!FAILED(hr))
+    if (FAILED(hr))
         return false;
 
     D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
