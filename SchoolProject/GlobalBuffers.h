@@ -35,10 +35,8 @@ struct PerFrame
 // 
 //--------------------------------------------------------------------------------------
 struct Shadow
-{
-	DirectX::XMFLOAT4X4 LightInvViewMatrix;        
+{    
 	DirectX::XMFLOAT4X4 LightProjectionMatrix;
-	DirectX::XMFLOAT4X4 LightViewMatrix;
 };
 
 
@@ -101,6 +99,7 @@ struct ImGuiCB
 	BOOL bPrintGPositionTexture;
 	BOOL bPrintGDiffuseTexture;
 	BOOL bPrintGNormalTexture;
+	BOOL bPrintGDepthTexture;
 };
 
 

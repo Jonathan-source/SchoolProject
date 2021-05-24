@@ -17,21 +17,6 @@ public:
 
 	// Render the scene depth from the viewpoint of the light into the shadow map. Per-Frame use.
 	void ShadowPass();
-	
-	// ORTHOGRAPHIC PROJECTION
-	void setProjectionMatrix();
-
-private:
-	D3D11Core* pD3D11Core;
-	Window* pWindow;
-	ResourceManager* pResourceManager;
-
-	DirectX::XMFLOAT4X4 LightViewProjectionMatrix;
-	std::unique_ptr<ConstantBuffer> lightMatrixCS;
-
-	Light* pLight;
-	DirectX::XMMATRIX lightProjectionMatrix;
-	DirectX::XMMATRIX lightViewMatrix;
 
 	struct DepthMap
 	{
@@ -39,7 +24,23 @@ private:
 		ComPtr<ID3D11RenderTargetView> renderTargetView;
 		ComPtr<ID3D11ShaderResourceView> shaderResourceView;
 		ComPtr <ID3D11DepthStencilView>	depthStencilView;
-	} depthMap;
+	};
+	DepthMap depthMap;
+
+private:
+	D3D11Core* pD3D11Core;
+	Window* pWindow;
+	ResourceManager* pResourceManager;
+
+	Shadow shadow;
+	std::unique_ptr<ConstantBuffer> lightMatrixCS;
+
+	Light* pLight;
+	DirectX::XMMATRIX lightProjectionMatrix;
+	DirectX::XMMATRIX lightViewMatrix;
+
+	// ORTHOGRAPHIC PROJECTION
+	void setProjectionMatrix();
 	
 	bool CreateShadowMap();
 };

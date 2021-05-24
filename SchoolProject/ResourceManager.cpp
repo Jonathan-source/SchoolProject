@@ -8,6 +8,7 @@ ResourceManager::ResourceManager(D3D11Core* pD3D11Core)
 	: pD3D11Core(pD3D11Core)
 {
 	this->InitializeShaders();
+	this->CreateInputLayoutSM(this->vShaders.find("shadow_mapping_vs")->second.shaderData);
 	this->CreateInputLayoutGP(this->vShaders.find("deferred_geometry_vs")->second.shaderData);
 	this->CreateInputLayoutLP(this->vShaders.find("deferred_lightning_vs")->second.shaderData);
 
@@ -190,6 +191,24 @@ bool ResourceManager::CreateInputLayoutLP(const std::string& vShaderByteCode)
 	};
 
 	HRESULT hr = this->pD3D11Core->device->CreateInputLayout(inputDesc, ARRAYSIZE(inputDesc), vShaderByteCode.c_str(), vShaderByteCode.length(), this->inputLayoutLP.GetAddressOf());
+
+	return !FAILED(hr);
+}
+
+
+
+
+
+
+//--------------------------------------------------------------------------------------
+bool ResourceManager::CreateInputLayoutSM(const std::string& vShaderByteCode)
+{
+	D3D11_INPUT_ELEMENT_DESC inputDesc[] =
+	{
+		{"POSITION",	0, DXGI_FORMAT_R32G32B32_FLOAT,		0,                   0,					D3D11_INPUT_PER_VERTEX_DATA, 0}
+	};
+
+	HRESULT hr = this->pD3D11Core->device->CreateInputLayout(inputDesc, ARRAYSIZE(inputDesc), vShaderByteCode.c_str(), vShaderByteCode.length(), this->inputLayoutSM.GetAddressOf());
 
 	return !FAILED(hr);
 }

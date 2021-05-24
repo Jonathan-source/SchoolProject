@@ -56,10 +56,10 @@ static const float kernal_coefficients[KERNAL_SIZE][KERNAL_SIZE] =
 // The brute force approach to implementing the bilateral filter.
 //--------------------------------------------------------------------------------------
 [numthreads(SIZE_X, SIZE_Y, 1)]
-void main(uint3 GroupID             : SV_GroupID,               // To which group it belongs in 3D.
-          uint3 DispatchThreadID    : SV_DispatchThreadID,      // What is the thread id in the whole dispatch.
-          uint3 GroupThreadID       : SV_GroupThreadID,         // What is the thread id inside the group.
-          uint GroupIndex           : SV_GroupIndex)            // "Flattened" 1D version of thread id inside the group.
+void main(int3 GroupID             : SV_GroupID,               // To which group it belongs in 3D.
+          int3 DispatchThreadID    : SV_DispatchThreadID,      // What is the thread id in the whole dispatch.
+          int3 GroupThreadID       : SV_GroupThreadID,         // What is the thread id inside the group.
+          int GroupIndex           : SV_GroupIndex)            // "Flattened" 1D version of thread id inside the group.
 {
     // Offset the texture location to the first sample location
     int3 textureCoords = DispatchThreadID - int3(3, 3, 0);

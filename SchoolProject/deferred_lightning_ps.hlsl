@@ -5,6 +5,8 @@ Texture2D GNormalTexture            : register(t1);
 Texture2D GDiffuseTexture           : register(t2);
 StructuredBuffer<Light> SceneLights : register(t3);
 
+Texture2D GDepthTexture              : register(t4);
+
 SamplerState PointSampler           : register(s0);
 
 // GLOBAL DEFINES.
@@ -34,6 +36,7 @@ cbuffer ImGUI : register(b2)
     int bPrintGPositionTexture;
     int bPrintGDiffuseTexture;
     int bPrintGNormalTexture;
+    int bPrintGDepthTexture;
 };
 
 
@@ -62,6 +65,7 @@ float4 main(PixelInputType input) : SV_TARGET
     const float3 surfacePosition    = GPositionTexture.Sample(PointSampler, input.texCoord.xy).xyz; 
 	const float4 surfaceColor       = GDiffuseTexture.Sample(PointSampler, input.texCoord.xy);
     float3 surfaceNormal            = GNormalTexture.Sample(PointSampler, input.texCoord.xy).xyz;
+    const float surfaceDepth        = GDepthTexture.Sample(PointSampler, input.texCoord.xy);
 
     // ImGuiDebug
     if (bPrintGPositionTexture)
@@ -70,6 +74,9 @@ float4 main(PixelInputType input) : SV_TARGET
         return surfaceColor;
     if (bPrintGNormalTexture)
         return float4(surfaceNormal, 1.0f);
+    if(bPrintGDepthTexture)
+        return float4(surfaceDepth, surfaceDepth, surfaceDepth, 1.0f);
+
 
     // The vertex's normal vector is being interpolated across the primitive
     // which can make it un-normalized. So normalize the vertex's normal vector.

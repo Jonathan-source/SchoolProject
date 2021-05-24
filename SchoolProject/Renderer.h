@@ -7,7 +7,7 @@
 #include "IndexBuffer.h"
 #include "ConstantBuffer.h"
 #include "ResourceManager.h"
-
+#include "ShadowMap.h"
 
 //--------------------------------------------------------------------------------------
 // Deferred Rendering.
@@ -33,6 +33,8 @@ private:
 	Window*				pWindow;
 	Camera*				pCamera;
 	ResourceManager*	pResourceManager;
+	std::unique_ptr<ShadowMap> shadowMap;
+
 
 	PerFrame perFrameData;
 	std::unique_ptr<ConstantBuffer> perFrameBuffer;

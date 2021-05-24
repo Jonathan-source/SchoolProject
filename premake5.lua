@@ -43,5 +43,8 @@ workspace "SchoolProject"
         filter("files:**_ps.hlsl")
             shadertype("Pixel")
         
-        filter("files:**_GS.hlsl")
+        filter("files:**_gs.hlsl")
             shadertype("Geometry")
+
+        filter("files:**_cs.hlsl")
+            shadertype("Compute")

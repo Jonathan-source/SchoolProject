@@ -91,6 +91,7 @@ public:
 	const IndexBuffer*						GetIndexBuffer(const std::string& filename) const;
 	const VertexBuffer*						GetVertexBuffer(const std::string& filename) const;
 
+	ComPtr<ID3D11InputLayout> inputLayoutSM;	// InputLayout for ShadowMap Pass.
 	ComPtr<ID3D11InputLayout> inputLayoutGP;	// InputLayout for Geometry Pass.
 	ComPtr<ID3D11InputLayout> inputLayoutLP;	// InputLayout for Lightning Pass.
 private:
@@ -125,6 +126,7 @@ private:
 
 	bool CreateInputLayoutGP(const std::string& vShaderByteCode);
 	bool CreateInputLayoutLP(const std::string& vShaderByteCode);
+	bool CreateInputLayoutSM(const std::string& vShaderByteCode);
 
 	void InitializeShaders();
 	bool LoadShaderData(const std::string& filename, std::string& shaderByteCode);

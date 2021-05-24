@@ -12,6 +12,7 @@ Renderer::Renderer(D3D11Core* pDXCore,Window* pWindow, Camera* pCamera, Resource
 	, imGUI_GBufferData({ FALSE, FALSE, FALSE })
 	, imGuiCB(std::make_unique<ConstantBuffer>(pDXCore->device.Get(), sizeof(ImGuiCB)))
 	, filter(Filter::NONE)
+	, shadowMap(std::make_unique<ShadowMap>(pDXCore, pWindow, pResourceManager))
 {
 	clearColor[0] = 0.0f;
 	clearColor[1] = 0.0f;
@@ -42,6 +43,8 @@ Renderer::Renderer(D3D11Core* pDXCore,Window* pWindow, Camera* pCamera, Resource
 //--------------------------------------------------------------------------------------
 void Renderer::BeginFrame()
 {
+	this->shadowMap->ShadowPass();
+
 	this->ClearFrame();
 
 	this->setPerFrameBuffer();
@@ -502,10 +505,13 @@ void Renderer::LightningPass()
 		this->graphicsBuffer[GBUFFER::NORMAL].shaderResourceView,
 		this->graphicsBuffer[GBUFFER::DIFFUSE].shaderResourceView,
 	};
-	this->pDXCore->deviceContext->PSSetShaderResources(0, 3, renderShaderResourceView->GetAddressOf());	// GBuffer
-	this->pDXCore->deviceContext->PSSetShaderResources(3, 1, this->lightBufferSRV.GetAddressOf());		// StructuredBuffer
+	this->pDXCore->deviceContext->PSSetShaderResources(0, 3, renderShaderResourceView->GetAddressOf());							// GBuffer
+	this->pDXCore->deviceContext->PSSetShaderResources(3, 1, this->lightBufferSRV.GetAddressOf());								// StructuredBuffer
+	this->pDXCore->deviceContext->PSSetShaderResources(4, 1, this->shadowMap->depthMap.shaderResourceView.GetAddressOf());		// ShadowMap
+
 	this->pDXCore->deviceContext->PSSetConstantBuffers(1, 1, this->perFrameBuffer->GetAddressOf());
-	this->pDXCore->deviceContext->PSSetConstantBuffers(2, 1, this->imGuiCB->GetAddressOf());			// ImGUI.
+	this->pDXCore->deviceContext->PSSetConstantBuffers(2, 1, this->imGuiCB->GetAddressOf());									// ImGUI.
+
 	this->pDXCore->deviceContext->PSSetSamplers(0, 1, this->pDXCore->pointSamplerState.GetAddressOf());
 	
 	this->pDXCore->deviceContext->VSSetShader(this->pResourceManager->GetVertexShader("deferred_lightning_vs").Get(), nullptr, 0);
@@ -520,6 +526,7 @@ void Renderer::LightningPass()
 	this->pDXCore->deviceContext->PSSetShaderResources(1, 1, &nullSRV);
 	this->pDXCore->deviceContext->PSSetShaderResources(2, 1, &nullSRV);
 	this->pDXCore->deviceContext->PSSetShaderResources(3, 1, &nullSRV);
+	//this->pDXCore->deviceContext->PSSetShaderResources(4, 1, &nullSRV);
 }
 
 
@@ -763,7 +770,7 @@ void Renderer::imGUIGraphicBuffers()
 	static bool bGPositionButton = false;
 	static bool bGDiffuseButton = false;
 	static bool bGNormalButton = false;
-
+	static bool bGShadowButton = false;
 
 	if (ImGui::Checkbox("GPosition", &bGPositionButton))
 	{
@@ -788,6 +795,13 @@ void Renderer::imGUIGraphicBuffers()
 		this->imGUI_GBufferData.bPrintGNormalTexture = (bGNormalButton) ? TRUE : FALSE;
 		bFlag = true;
 	}
+
+	if (ImGui::Checkbox("GDepth", &bGShadowButton))
+	{
+		this->imGUI_GBufferData.bPrintGDepthTexture = (bGShadowButton) ? TRUE : FALSE;
+		bFlag = true;
+	}
+
 
 	// UpdateSubresource.
 	if (bFlag)

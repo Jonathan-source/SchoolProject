@@ -5,7 +5,7 @@ ShadowMap::ShadowMap(D3D11Core* pD3D11Core, Window* pWindow, ResourceManager * p
     : pD3D11Core(pD3D11Core)
     , pWindow(pWindow)
     , pResourceManager(pResourceManager)
-    , lightMatrixCS(std::make_unique<ConstantBuffer>(pD3D11Core->device.Get(), sizeof(DirectX::XMFLOAT4X4)))
+    , lightMatrixCS(std::make_unique<ConstantBuffer>(pD3D11Core->device.Get(), sizeof(Shadow)))
 {
     if (!this->CreateShadowMap())
         std::cout << "ERROR::ShadowMap::CreateShadowMap()::Could not create shadow map." << std::endl;
@@ -37,16 +37,19 @@ void ShadowMap::ShadowPass()
 {
     // Set a null render target. This disables color writes. 
     // Graphics cards are optimized for only drawing depth.
-    ID3D11RenderTargetView* nullRTV = nullptr;
-    this->pD3D11Core->deviceContext->OMSetRenderTargets(1, &nullRTV, this->depthMap.depthStencilView.Get());
+    ID3D11RenderTargetView* nullRTV[1] = { 0 };
+    this->pD3D11Core->deviceContext->OMSetRenderTargets(1, nullRTV, this->depthMap.depthStencilView.Get());
     this->pD3D11Core->deviceContext->ClearDepthStencilView(this->depthMap.depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
     
     this->setProjectionMatrix();
 
+    this->pD3D11Core->deviceContext->IASetInputLayout(this->pResourceManager->inputLayoutSM.Get());
+    this->pD3D11Core->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    this->pD3D11Core->deviceContext->PSSetConstantBuffers(0, 1, this->lightMatrixCS->GetAddressOf());
     this->pD3D11Core->deviceContext->VSSetShader(this->pResourceManager->GetVertexShader("shadow_mapping_vs").Get(), nullptr, 0);
     this->pD3D11Core->deviceContext->PSSetShader(this->pResourceManager->GetPixelShader("shadow_mapping_ps").Get(), nullptr, 0);
 
-    this->pD3D11Core->deviceContext->PSSetConstantBuffers(0, 1, this->lightMatrixCS->GetAddressOf());
 }
 
 
@@ -65,13 +68,13 @@ void ShadowMap::setProjectionMatrix()
     this->lightProjectionMatrix = DirectX::XMMatrixOrthographicLH(viewWidth, viewHeight, nearZ, farZ);
 
     // Set view matrix.
-    this->lightViewMatrix = DirectX::XMMatrixLookAtLH({ -2.0f, 4.0f, -1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
+    this->lightViewMatrix = DirectX::XMMatrixLookAtLH({ 0.0f, 0.0f, -4.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
     
     // Set light view projection matrix.
-    DirectX::XMStoreFloat4x4(&this->LightViewProjectionMatrix, this->lightViewMatrix * this->lightProjectionMatrix);
+    DirectX::XMStoreFloat4x4(&this->shadow.LightProjectionMatrix, this->lightViewMatrix * this->lightProjectionMatrix);
 
     // Update
-    this->pD3D11Core->deviceContext->UpdateSubresource(this->lightMatrixCS->Get(), 0, nullptr, &this->LightViewProjectionMatrix, 0, 0);
+    this->pD3D11Core->deviceContext->UpdateSubresource(this->lightMatrixCS->Get(), 0, nullptr, &this->shadow.LightProjectionMatrix, 0, 0);
 }
 
 
@@ -119,7 +122,9 @@ bool ShadowMap::CreateShadowMap()
     depthStencilvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
     depthStencilvDesc.Texture2D.MipSlice = 0;
 
-    this->pD3D11Core->device->CreateDepthStencilView(this->depthMap.texture2D.Get(), &depthStencilvDesc, this->depthMap.depthStencilView.GetAddressOf());
+    hr = this->pD3D11Core->device->CreateDepthStencilView(this->depthMap.texture2D.Get(), &depthStencilvDesc, this->depthMap.depthStencilView.GetAddressOf());
+    if (!FAILED(hr))
+        return false;
 
     D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
     shaderResourceViewDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
@@ -127,5 +132,7 @@ bool ShadowMap::CreateShadowMap()
     shaderResourceViewDesc.Texture2D.MipLevels = textureDesc.MipLevels;
 
     shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
-    this->pD3D11Core->device->CreateShaderResourceView(this->depthMap.texture2D.Get(), &shaderResourceViewDesc, this->depthMap.shaderResourceView.GetAddressOf());
+    hr = this->pD3D11Core->device->CreateShaderResourceView(this->depthMap.texture2D.Get(), &shaderResourceViewDesc, this->depthMap.shaderResourceView.GetAddressOf());
+    
+    return !FAILED(hr);
 }

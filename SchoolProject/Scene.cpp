@@ -4,7 +4,7 @@
 
 //--------------------------------------------------------------------------------------
 Scene::Scene(ID3D11Device* pDevice, std::shared_ptr<ResourceManager> resourceManager, std::shared_ptr<MouseListener> mouseListener, std::shared_ptr<Camera> camera)
-	:resourceManager(resourceManager)
+	: resourceManager(resourceManager)
 	, pDevice(pDevice)
 	, mouseListener(mouseListener)
 	, camera(camera)

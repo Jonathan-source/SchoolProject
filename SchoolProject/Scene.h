@@ -6,6 +6,8 @@
 #include "HeightMap.h"
 #include "Camera.h"
 
+#include "ShadowMap.h"
+
 class Scene
 {
 public:
@@ -20,16 +22,20 @@ public:
 	void addObject(const std::string& name);
 	std::vector<Object*> getObjects() const;
 private:
+	ID3D11Device* pDevice;
+	
 	std::vector<Object*> objects;
 	std::shared_ptr<ResourceManager> resourceManager;
 	std::shared_ptr<MouseListener> mouseListener;
 	std::shared_ptr<Camera> camera;
 
-	//Heightmap values
+
+	// Heightmap values
 	std::vector<std::vector<float>> heightMapValues;
 	int terrainWidth;
 	int terrainHeight;
 
-	ID3D11Device* pDevice;
+	void updateCameraHeight();
+
 };
 
