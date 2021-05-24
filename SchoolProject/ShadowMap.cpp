@@ -9,6 +9,7 @@ ShadowMap::ShadowMap(D3D11Core* pD3D11Core, Window* pWindow, ResourceManager * p
 {
     if (!this->CreateShadowMap())
         std::cout << "ERROR::ShadowMap::CreateShadowMap()::Could not create shadow map." << std::endl;
+
 }
 
 
@@ -62,16 +63,25 @@ void ShadowMap::ShadowPass()
 //--------------------------------------------------------------------------------------
 void ShadowMap::setProjectionMatrix()
 {
+
+    DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixIdentity();
     // Set orthographic projection matrix.
-    float nearZ = 1.0f, farZ = 7.5f;
+    float nearZ = 1.0f, farZ = 10.0f;
     float viewWidth = 10.0f, viewHeight = 10.0f;
     this->lightProjectionMatrix = DirectX::XMMatrixOrthographicLH(viewWidth, viewHeight, nearZ, farZ);
 
+    DirectX::XMVECTOR position = { this->pLight->position.x , this->pLight->position.y , this->pLight->position.z , 1.0f };
+
+    sm::Vector4 lightDir = this->pLight->direction;
+    sm::Vector4 lightPos = this->pLight->position;
+
+    sm::Vector4 lookAtVec = lightDir - lightPos;
+
     // Set view matrix.
-    this->lightViewMatrix = DirectX::XMMatrixLookAtLH({ 0.0f, 0.0f, -4.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
+    this->lightViewMatrix = DirectX::XMMatrixLookAtLH(position, { lookAtVec.x, lookAtVec.y , lookAtVec.z }, { 0.0f, 1.0f, 0.0f });
     
     // Set light view projection matrix.
-    DirectX::XMStoreFloat4x4(&this->shadow.LightProjectionMatrix, this->lightViewMatrix * this->lightProjectionMatrix);
+    DirectX::XMStoreFloat4x4(&this->shadow.LightProjectionMatrix, worldMatrix * this->lightViewMatrix * this->lightProjectionMatrix);
 
     // Update
     this->pD3D11Core->deviceContext->UpdateSubresource(this->lightMatrixCS->Get(), 0, nullptr, &this->shadow.LightProjectionMatrix, 0, 0);
@@ -115,7 +125,7 @@ bool ShadowMap::CreateShadowMap()
         return false;
 
     D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilvDesc;
-    ZeroMemory(&textureDesc, sizeof(D3D11_TEXTURE2D_DESC));
+    ZeroMemory(&depthStencilvDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
 
     depthStencilvDesc.Flags = 0;
     depthStencilvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -130,8 +140,8 @@ bool ShadowMap::CreateShadowMap()
     shaderResourceViewDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
     shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     shaderResourceViewDesc.Texture2D.MipLevels = textureDesc.MipLevels;
-
     shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+
     hr = this->pD3D11Core->device->CreateShaderResourceView(this->depthMap.texture2D.Get(), &shaderResourceViewDesc, this->depthMap.shaderResourceView.GetAddressOf());
     
     return !FAILED(hr);

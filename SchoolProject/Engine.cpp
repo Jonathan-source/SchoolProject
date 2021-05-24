@@ -82,7 +82,13 @@ void Engine::Update()
 			//Camera update
 			this->camera->update(deltaTime);
 
+
+
 			// Draw.
+			this->renderer->applyShadowPass();
+
+			this->scene->draw(this->d3d11Core->deviceContext.Get());
+
 			this->renderer->BeginFrame();
 
 			this->scene->draw(this->d3d11Core->deviceContext.Get());

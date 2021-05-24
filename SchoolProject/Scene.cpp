@@ -36,7 +36,7 @@ void Scene::initObjects()
 
 	Object* obj2 = new Object(pDevice);
 	obj2->SetModel(this->resourceManager->GetModel("Heightmap.png").get());
-	obj2->SetPosition(0.f, 0.f, 0.f);
+	obj2->SetPosition(0.f, -30.f, 0.f);
 	this->objects.push_back(obj2);
 
 

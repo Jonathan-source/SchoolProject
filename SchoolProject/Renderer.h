@@ -22,6 +22,7 @@ public:
 	Renderer& operator=(Renderer&& other) = delete;
 	virtual ~Renderer() = default;
 
+	void applyShadowPass();
 	void ClearFrame();
 	void BeginFrame();
 	void PostProcessEffects();
