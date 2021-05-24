@@ -19,6 +19,7 @@ public:
 	void draw(ID3D11DeviceContext* pDeviceContext);
 	void update(float _deltaTime);
 
+	void updateCameraHeight();
 	void addObject(const std::string& name);
 	std::vector<Object*> getObjects() const;
 private:
