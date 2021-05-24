@@ -9,7 +9,6 @@ ShadowMap::ShadowMap(D3D11Core* pD3D11Core, Window* pWindow, ResourceManager * p
 {
     if (!this->CreateShadowMap())
         std::cout << "ERROR::ShadowMap::CreateShadowMap()::Could not create shadow map." << std::endl;
-    std::cout << "ha" << std::endl;
 }
 
 
