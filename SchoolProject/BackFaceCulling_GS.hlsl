@@ -2,10 +2,10 @@ struct GSOutput
 {
     float4 positionCS   : SV_POSITION;   // 16 bytes
     float2 texCoord     : TEXCOORD;      // 8 bytes
-    float3 normalWS     : NORMALWS;      // 12 bytes
-    float3 positionWS   : POSITIONWS;    // 12 bytes
-    float3 tangentWS    : TANGENTWS;     // 12 bytes
-    float3 bitangentWS  : BITANGENTWS;   // 12 bytes
+    float4 normalWS     : NORMALWS;      // 12 bytes
+    float4 positionWS   : POSITIONWS;    // 12 bytes
+    float4 tangentWS    : TANGENTWS;     // 12 bytes
+    float4 bitangentWS  : BITANGENTWS;   // 12 bytes
 };
 
 //--------------------------------------------------------------------------------------
@@ -20,10 +20,10 @@ cbuffer MouseParams : register(b0)
 void main(
 	triangle float4 positionCS[3] : SV_POSITION,
     triangle float2 texCoord[3] : TEXCOORD,
-    triangle float3 normalWS[3] : NORMALWS,
-    triangle float3 positionWS[3] : POSITIONWS,
-    triangle float3 tangentWS[3] : TANGENTWS,
-    triangle float3 bitangentWS[3] : BITANGENTWS,
+    triangle float4 normalWS[3] : NORMALWS,
+    triangle float4 positionWS[3] : POSITIONWS,
+    triangle float4 tangentWS[3] : TANGENTWS,
+    triangle float4 bitangentWS[3] : BITANGENTWS,
 	inout TriangleStream<GSOutput> output
 )
 {

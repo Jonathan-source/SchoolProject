@@ -526,6 +526,7 @@ void Renderer::LightningPass()
 	this->pDXCore->deviceContext->PSSetSamplers(0, 1, this->pDXCore->pointSamplerState.GetAddressOf());
 	
 	this->pDXCore->deviceContext->VSSetShader(this->pResourceManager->GetVertexShader("deferred_lightning_vs").Get(), nullptr, 0);
+	this->pDXCore->deviceContext->GSSetShader(nullptr, nullptr, 0);
 	this->pDXCore->deviceContext->PSSetShader(this->pResourceManager->GetPixelShader("deferred_lightning_ps").Get(), nullptr, 0);
 
 	
