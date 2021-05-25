@@ -2,10 +2,10 @@ struct GSOutput
 {
     float4 positionCS   : SV_POSITION;   // 16 bytes
     float2 texCoord     : TEXCOORD;      // 8 bytes
-    float4 normalWS     : NORMALWS;      // 12 bytes
-    float4 positionWS   : POSITIONWS;    // 12 bytes
-    float4 tangentWS    : TANGENTWS;     // 12 bytes
-    float4 bitangentWS  : BITANGENTWS;   // 12 bytes
+    float4 normalWS     : NORMALWS;      // 16 bytes
+    float4 positionWS   : POSITIONWS;    // 16 bytes
+    float4 tangentWS    : TANGENTWS;     // 16 bytes
+    float4 bitangentWS  : BITANGENTWS;   // 16 bytes
 };
 
 //--------------------------------------------------------------------------------------

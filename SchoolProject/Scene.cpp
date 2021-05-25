@@ -65,7 +65,11 @@ void Scene::initObjects()
 			tempVec[j][i] = (heightVal.at(i + (j * terrainHeight)));
 		}
 	}
+
+
 	heightMapValues = tempVec;
+	delete heightMapData;
+
 	//----------------- END -----------------
 }
 
@@ -168,6 +172,7 @@ void Scene::addObject(const std::string& name)
 		DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f),
 		DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f),
 		DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f)));
+
 	this->objects.push_back(obj);
 }
 
