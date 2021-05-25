@@ -17,6 +17,7 @@ public:
 
 
 	void draw(ID3D11DeviceContext* pDeviceContext);
+	void drawShadowMap(ID3D11DeviceContext* pDeviceContext);
 	void update(float _deltaTime);
 
 	void updateCameraHeight();

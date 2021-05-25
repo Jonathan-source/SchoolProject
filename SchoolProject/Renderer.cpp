@@ -111,9 +111,19 @@ void Renderer::Present()
 
 
 //--------------------------------------------------------------------------------------
-void Renderer::applyShadowPass()
+void Renderer::BeginShadowPass()
 {
 	this->shadowMap->ShadowPass();
+}
+
+
+
+
+
+
+//--------------------------------------------------------------------------------------
+void Renderer::EndShadowPass()
+{
 }
 
 
@@ -538,7 +548,7 @@ void Renderer::LightningPass()
 	this->pDXCore->deviceContext->PSSetShaderResources(1, 1, &nullSRV);
 	this->pDXCore->deviceContext->PSSetShaderResources(2, 1, &nullSRV);
 	this->pDXCore->deviceContext->PSSetShaderResources(3, 1, &nullSRV);
-	//this->pDXCore->deviceContext->PSSetShaderResources(4, 1, &nullSRV);
+	this->pDXCore->deviceContext->PSSetShaderResources(4, 1, &nullSRV);
 }
 
 
@@ -807,6 +817,9 @@ void Renderer::imGUIGraphicBuffers()
 		this->imGUI_GBufferData.bPrintGNormalTexture = (bGNormalButton) ? TRUE : FALSE;
 		bFlag = true;
 	}
+
+	ImGui::Spacing();
+	ImGui::Spacing();
 
 	if (ImGui::Checkbox("GDepth", &bGShadowButton))
 	{

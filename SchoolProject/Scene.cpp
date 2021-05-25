@@ -94,26 +94,38 @@ Scene::~Scene()
 //--------------------------------------------------------------------------------------
 void Scene::draw(ID3D11DeviceContext* pDeviceContext)
 {
-	ImGui::Begin("Scene Statistic");
-	std::string numberOfObjects = "Amount of objects: " + std::to_string(this->objects.size());
-	ImGui::Text(numberOfObjects.c_str());
-
-	if (ImGui::Button("Add monkey", ImVec2(100.f, 25.f)))
-	{
-		for(int i = 0; i < 1; i++)
-			addObject("Monkey.obj");
-	}
-
-	ImGui::End();
-
 	for (auto& obj : this->objects)
 	{
 		obj->Draw(pDeviceContext);
 	}
 }
 
+
+//--------------------------------------------------------------------------------------
+void Scene::drawShadowMap(ID3D11DeviceContext* pDeviceContext)
+{
+	for (auto& obj : this->objects)
+	{
+		obj->DrawShadow(pDeviceContext);
+	}
+}
+
+
+
 void Scene::update(float _deltaTime)
 {
+	// Update ImGui
+	ImGui::Begin("Scene Statistic");
+	std::string numberOfObjects = "Amount of objects: " + std::to_string(this->objects.size());
+	ImGui::Text(numberOfObjects.c_str());
+
+	if (ImGui::Button("Add monkey", ImVec2(100.f, 25.f)))
+	{
+		for (int i = 0; i < 1; i++)
+			addObject("Monkey.obj");
+	}
+	ImGui::End();
+
 
 	//Check collision with mouse & object
 	for (auto& obj : this->objects)

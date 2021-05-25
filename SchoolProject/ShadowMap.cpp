@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "ShadowMap.h"
 
 //--------------------------------------------------------------------------------------
@@ -5,7 +6,7 @@ ShadowMap::ShadowMap(D3D11Core* pD3D11Core, Window* pWindow, ResourceManager * p
     : pD3D11Core(pD3D11Core)
     , pWindow(pWindow)
     , pResourceManager(pResourceManager)
-    , lightMatrixCS(std::make_unique<ConstantBuffer>(pD3D11Core->device.Get(), sizeof(Shadow)))
+    , lightMatrixCS(std::make_unique<ConstantBuffer>(pD3D11Core->device.Get(), sizeof(DepthMatrixBuffer)))
 {
     if (!this->CreateShadowMap())
         std::cout << "ERROR::ShadowMap::CreateShadowMap()::Could not create shadow map." << std::endl;
@@ -47,7 +48,7 @@ void ShadowMap::ShadowPass()
     this->pD3D11Core->deviceContext->IASetInputLayout(this->pResourceManager->inputLayoutSM.Get());
     this->pD3D11Core->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    this->pD3D11Core->deviceContext->PSSetConstantBuffers(0, 1, this->lightMatrixCS->GetAddressOf());
+    this->pD3D11Core->deviceContext->VSSetConstantBuffers(0, 1, this->lightMatrixCS->GetAddressOf());
     this->pD3D11Core->deviceContext->VSSetShader(this->pResourceManager->GetVertexShader("shadow_mapping_vs").Get(), nullptr, 0);
     this->pD3D11Core->deviceContext->PSSetShader(this->pResourceManager->GetPixelShader("shadow_mapping_ps").Get(), nullptr, 0);
 
@@ -65,6 +66,7 @@ void ShadowMap::setProjectionMatrix()
 {
 
     DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixIdentity();
+
     // Set orthographic projection matrix.
     float nearZ = 1.0f, farZ = 10.0f;
     float viewWidth = 10.0f, viewHeight = 10.0f;
@@ -74,17 +76,16 @@ void ShadowMap::setProjectionMatrix()
 
     sm::Vector4 lightDir = this->pLight->direction;
     sm::Vector4 lightPos = this->pLight->position;
-
-    sm::Vector4 lookAtVec = lightDir - lightPos;
+    sm::Vector4 target = lightPos + lightDir;
 
     // Set view matrix.
-    this->lightViewMatrix = DirectX::XMMatrixLookAtLH(position, { lookAtVec.x, lookAtVec.y , lookAtVec.z }, { 0.0f, 1.0f, 0.0f });
+    this->lightViewMatrix = DirectX::XMMatrixLookAtLH(position, target, { 0.0f, 1.0f, 0.0f });
     
     // Set light view projection matrix.
-    DirectX::XMStoreFloat4x4(&this->shadow.LightProjectionMatrix, worldMatrix * this->lightViewMatrix * this->lightProjectionMatrix);
+    DirectX::XMStoreFloat4x4(&this->depthMatrixBuffer.LightProjectionMatrix, worldMatrix * this->lightViewMatrix * this->lightProjectionMatrix);
 
     // Update
-    this->pD3D11Core->deviceContext->UpdateSubresource(this->lightMatrixCS->Get(), 0, nullptr, &this->shadow.LightProjectionMatrix, 0, 0);
+    this->pD3D11Core->deviceContext->UpdateSubresource(this->lightMatrixCS->Get(), 0, nullptr, &this->depthMatrixBuffer.LightProjectionMatrix, 0, 0);
 }
 
 

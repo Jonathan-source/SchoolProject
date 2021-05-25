@@ -32,7 +32,7 @@ private:
 	Window* pWindow;
 	ResourceManager* pResourceManager;
 
-	Shadow shadow;
+	DepthMatrixBuffer depthMatrixBuffer;
 	std::unique_ptr<ConstantBuffer> lightMatrixCS;
 
 	Light* pLight;

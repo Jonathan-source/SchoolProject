@@ -35,6 +35,7 @@ public:
 
 	// Call this once every frame to render the object.
 	void Draw(ID3D11DeviceContext* pDeviceContext);
+	void DrawShadow(ID3D11DeviceContext* pDeviceContext);
 private:
 	Model * model;
 

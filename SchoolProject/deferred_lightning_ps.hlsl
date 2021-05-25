@@ -4,7 +4,6 @@ Texture2D GPositionTexture          : register(t0);
 Texture2D GNormalTexture            : register(t1);
 Texture2D GDiffuseTexture           : register(t2);
 StructuredBuffer<Light> SceneLights : register(t3);
-
 Texture2D GDepthTexture              : register(t4);
 
 SamplerState PointSampler           : register(s0);

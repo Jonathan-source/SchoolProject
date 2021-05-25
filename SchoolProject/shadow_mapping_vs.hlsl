@@ -1,15 +1,20 @@
-
-
-
 //--------------------------------------------------------------------------------------
 // 
 //--------------------------------------------------------------------------------------
-cbuffer Light : register(b0)
+cbuffer DepthMatrixBuffer : register(b0)
 {
     row_major matrix LightViewProjectionMatrix;                                       
 };                                            
 
 
+//--------------------------------------------------------------------------------------
+// 
+//--------------------------------------------------------------------------------------
+cbuffer PerObject : register(b1)
+{
+    row_major matrix WorldInvTransposeMatrix;   
+    row_major matrix WorldMatrix;               
+};
 
 
 //--------------------------------------------------------------------------------------
@@ -17,6 +22,7 @@ cbuffer Light : register(b0)
 //--------------------------------------------------------------------------------------
 float4 main(float4 position : POSITION) : SV_POSITION
 {
-    position = mul(position, LightViewProjectionMatrix);
-    return position;
+    // Convert position and normal to world space.
+    position = mul(position, WorldMatrix);
+    return mul(position, LightViewProjectionMatrix);
 }

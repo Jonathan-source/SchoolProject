@@ -79,20 +79,16 @@ void Engine::Update()
 
 			this->scene->update(deltaTime);
 
-			//Camera update
+			// Camera update
 			this->camera->update(deltaTime);
 
-
-
-			// Draw.
-			this->renderer->applyShadowPass();
-
+			// Shadow Map Pass.
+			this->renderer->BeginShadowPass();
 			this->scene->draw(this->d3d11Core->deviceContext.Get());
 
+			// Deferred Rendering Pass.
 			this->renderer->BeginFrame();
-
 			this->scene->draw(this->d3d11Core->deviceContext.Get());
-			
 			this->renderer->EndFrame();
 
 #ifdef _DEBUG
