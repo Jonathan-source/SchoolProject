@@ -68,8 +68,8 @@ void ShadowMap::setProjectionMatrix()
     DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixIdentity();
 
     // Set orthographic projection matrix.
-    float nearZ = 1.0f, farZ = 10.0f;
-    float viewWidth = 10.0f, viewHeight = 10.0f;
+    float nearZ = 1.0f, farZ = 7.5;
+    float viewWidth = 100.0f, viewHeight = 100.0f;
     this->lightProjectionMatrix = DirectX::XMMatrixOrthographicLH(viewWidth, viewHeight, nearZ, farZ);
 
     DirectX::XMVECTOR position = { this->pLight->position.x , this->pLight->position.y , this->pLight->position.z , 1.0f };
