@@ -96,22 +96,22 @@ float4 main(PixelInputType input) : SV_TARGET
     outputColor = ambient * surfaceColor;
 	
     // FOR EACH LIGHT:
-    for (int i = 0; i < NumLights; i++)
-    {
+    //for (int i = 0; i < NumLights; i++)
+    //{
         // Get current light.
-        const Light currentLight = SceneLights[i];
+        const Light currentLight = SceneLights[0];
         
         // Ignore non-enabled lights.
-        if (currentLight.enabled == 0) 
-            continue;
+        //if (currentLight.enabled == 0) 
+            //continue;
 
         // Calculate point to light vector. 
         const float3 pointToLight = (currentLight.type == DIRECTIONAL_LIGHT) ? -normalize(currentLight.direction.xyz) : (currentLight.position.xyz - surfacePosition);
  	
         // Skip point and spot lights that are out of range of the point being shaded.
         const float dist = length(pointToLight);
-        if (currentLight.type != DIRECTIONAL_LIGHT &&
-            dist > currentLight.range) continue;
+        //if (currentLight.type != DIRECTIONAL_LIGHT &&
+        //    dist > currentLight.range) continue;
 
         // Calculate point to camera vector.
         const float3 pointToCamera = normalize(CameraPosition.xyz - surfacePosition.xyz);
@@ -122,14 +122,13 @@ float4 main(PixelInputType input) : SV_TARGET
             outputColor += PointLight(currentLight, pointToLight, pointToCamera, surfaceNormal, surfaceColor);
 		break;
 		case DIRECTIONAL_LIGHT:  
-            /*
             // Shadow calculations.
             float4 positionL = mul(float4(surfacePosition, 1.0f), LightProjectionMatrix);
             positionL.xy /= positionL.w;
             float2 smTex = float2(0.5f * positionL.x + 0.5f, -0.5f * positionL.y + 0.5f);
             float depth = positionL.z / positionL.w;
             float bias = 0.01f;
-            float dx = 1.0f / 1024;
+            float dx = 1.0f / 2048;
             float s0 = (GDepthTexture.Sample(PointSampler, smTex).r + bias < depth) ? 0.0f : 1.0f;
             float s1 = (GDepthTexture.Sample(PointSampler, smTex + float2(dx, 0.0f)).r + bias < depth) ? 0.0f : 1.0f;
             float s2 = (GDepthTexture.Sample(PointSampler, smTex + float2(0.0f, dx)).r + bias < depth) ? 0.0f : 1.0f;
@@ -139,8 +138,8 @@ float4 main(PixelInputType input) : SV_TARGET
             float2 lerps = frac(texelPos);
 
             float shadowCoeff = lerp(lerp(s0, s1, lerps.x), lerp(s2, s3, lerps.x), lerps.y);
-            */
-            outputColor += DirectionalLight(currentLight, pointToLight, pointToCamera, surfaceNormal, surfaceColor);// *shadowCoeff;
+            
+            outputColor += DirectionalLight(currentLight, pointToLight, pointToCamera, surfaceNormal, surfaceColor) * shadowCoeff;
        	break;
 		case SPOT_LIGHT:
 			// TODO?
@@ -148,7 +147,7 @@ float4 main(PixelInputType input) : SV_TARGET
 		default:
 			break;
         }
-    }
+   // }
 		
 	return outputColor;
 }

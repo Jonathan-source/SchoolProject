@@ -323,9 +323,9 @@ void Renderer::InitializeLights()
 {
 	//	Create lights here:
 	Light light;
-	light.position = { 0.0f, 5.0f, -5.0f, 1.0f };
+	light.position = { 15.0f, 10.0f, 0.0f, 1.0f };
 	light.color = { 0.5f, 0.5f, 0.5f, 1.0f };
-	light.direction = { 0.0f, -1.0f, 0.0f, 0.0f };
+	light.direction = { -1.0f, -1.0f, 0.0f, 0.0f };
 	light.specularPower = 1.0f;
 	light.shininess = 32.0f;
 	light.intensity = 1.f;
@@ -440,7 +440,7 @@ void Renderer::setPerFrameBuffer()
 		DirectX::XMStoreFloat4(&this->perFrameData.CameraPosition, pCamera->getPosition());
 		DirectX::XMStoreFloat4x4(&this->perFrameData.ViewMatrix, pCamera->getView());
 		DirectX::XMStoreFloat4x4(&this->perFrameData.ProjectionMatrix, pCamera->getProjectionMatrix());
-		this->perFrameData.GlobalAmbient = DirectX::XMFLOAT4(0.1f, 0.1f, 0.15f, 1.0f);
+		this->perFrameData.GlobalAmbient = DirectX::XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
 		this->perFrameData.NumLights = this->sceneLights.size();
 
 		this->pDXCore->deviceContext->UpdateSubresource(this->perFrameBuffer->Get(), 0, nullptr, &this->perFrameData, 0, 0);

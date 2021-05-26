@@ -50,9 +50,9 @@ void ShadowMap::ShadowPass(Light* pLight)
 void ShadowMap::setProjectionMatrix(Light* pLight)
 {
     // Set orthographic projection matrix.
-    float nearZ = 1.0f, farZ = 7.5;
-    float viewWidth = 100.0f, viewHeight = 100.0f;
-    this->lightProjectionMatrix = DirectX::XMMatrixOrthographicLH(viewWidth, viewHeight, nearZ, farZ);
+    float nearZ = 1.0f, farZ = 100.f;
+    float viewWidth = 30.0f, viewHeight = 30.0f;
+    this->lightProjectionMatrix = DirectX::XMMatrixOrthographicOffCenterLH(-viewHeight, viewHeight, -viewHeight, viewHeight, nearZ, farZ);//DirectX::XMMatrixOrthographicLH(viewWidth, viewHeight, nearZ, farZ);
 
     DirectX::XMVECTOR position = { pLight->position.x , pLight->position.y , pLight->position.z , 1.0f };
 
@@ -85,8 +85,8 @@ bool ShadowMap::CreateShadowMap()
     ZeroMemory(&textureDesc, sizeof(D3D11_TEXTURE2D_DESC));
 
     // Set up the description of the depth buffer.
-    textureDesc.Width = this->SHADOW_MAP_WIDTH;
-    textureDesc.Height = this->SHADOW_MAP_HEIGHT;
+    textureDesc.Width = 1920;
+    textureDesc.Height = 1080;
 
     // Use typeless format because the DSV is going to interpret
     // the bits as DXGI_FORMAT_D24_UNORM_S8_UINT, whereas the SRV is going

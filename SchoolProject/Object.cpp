@@ -241,7 +241,7 @@ void Object::DrawShadow(ID3D11DeviceContext* pDeviceContext)
 {
 	if (this->model != nullptr)
 	{
-		static UINT stride = sizeof(DirectX::XMFLOAT4);
+		static UINT stride = sizeof(SimpleVertex);
 		static UINT offset = 0;
 
 		pDeviceContext->IASetVertexBuffers(0, 1, this->model->mesh->vb.GetAddressOf(), &stride, &offset);
@@ -250,8 +250,8 @@ void Object::DrawShadow(ID3D11DeviceContext* pDeviceContext)
 		PerObject objectData = {};
 		objectData.WorldMatrix = GetMatrix();
 
-		// Note: we use the invers of the translation matrix to undo its effect on the normals,
-		// which we store as an matrix in "WorldInvTransposeMatrix".
+		//Note: we use the invers of the translation matrix to undo its effect on the normals,
+		//which we store as an matrix in "WorldInvTransposeMatrix".
 		sm::Matrix worldMatrix = DirectX::XMLoadFloat4x4(&objectData.WorldMatrix);
 
 		const sm::Matrix matTranslateInverse = worldMatrix.Invert();
