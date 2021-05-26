@@ -128,7 +128,7 @@ float4 main(PixelInputType input) : SV_TARGET
             float2 smTex = float2(0.5f * positionL.x + 0.5f, -0.5f * positionL.y + 0.5f);
             float depth = positionL.z / positionL.w;
             float bias = 0.01f;
-            float dx = 1.0f / 2048;
+            float dx = 1.0f / 1080;
             float s0 = (GDepthTexture.Sample(PointSampler, smTex).r + bias < depth) ? 0.0f : 1.0f;
             float s1 = (GDepthTexture.Sample(PointSampler, smTex + float2(dx, 0.0f)).r + bias < depth) ? 0.0f : 1.0f;
             float s2 = (GDepthTexture.Sample(PointSampler, smTex + float2(0.0f, dx)).r + bias < depth) ? 0.0f : 1.0f;
