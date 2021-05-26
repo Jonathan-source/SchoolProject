@@ -13,6 +13,7 @@ class Scene
 public:
 	Scene(ID3D11Device* pDevice, std::shared_ptr<ResourceManager> resourceManager, std::shared_ptr<MouseListener> mouseListener, std::shared_ptr<Camera> camera);
 	void initObjects();
+	void initHeightMap();
 	virtual ~Scene();
 
 

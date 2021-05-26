@@ -24,7 +24,7 @@ void Scene::initObjects()
 {
 	Object* obj = new Object(pDevice);
 	obj->SetModel(this->resourceManager->GetModel("Cube.obj").get());
-	obj->SetPosition(0.f, 0.f, 0.f);
+	obj->SetPosition(0.f, 3.f, 0.f);
 	obj->setBoundingBox(std::make_shared<BoundingBox>(DirectX::XMVectorSet(obj->GetPosition().x, obj->GetPosition().y, obj->GetPosition().z, 0.0f),
 		DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f),
 		DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f),
@@ -32,8 +32,15 @@ void Scene::initObjects()
 		DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f)));
 	this->objects.push_back(obj);
 
+	obj = new Object(pDevice);
+	obj->SetModel(this->resourceManager->GetModel("Plane.obj").get());
+	obj->SetPosition(0.f, 0.f, 0.f);
+	this->objects.push_back(obj);
+	//initHeightMap();
+}
 
-
+void Scene::initHeightMap()
+{
 	Object* obj2 = new Object(pDevice);
 	obj2->SetModel(this->resourceManager->GetModel("Heightmap.png").get());
 	obj2->SetPosition(0.f, -30.f, 0.f);
@@ -141,7 +148,7 @@ void Scene::update(float _deltaTime)
 	}
 
 	//Adjust camera height on heightmap
-	this->updateCameraHeight();
+	//this->updateCameraHeight();
 
 }
 
