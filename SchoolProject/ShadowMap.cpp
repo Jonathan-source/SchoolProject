@@ -32,8 +32,8 @@ void ShadowMap::ShadowPass(Light* pLight)
     this->pD3D11Core->deviceContext->IASetInputLayout(this->pResourceManager->inputLayoutSM.Get());
     this->pD3D11Core->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    this->pD3D11Core->deviceContext->VSSetConstantBuffers(0, 1, this->lightMatrixCS->GetAddressOf());
     this->setProjectionMatrix(pLight);
+    this->pD3D11Core->deviceContext->VSSetConstantBuffers(0, 1, this->lightMatrixCS->GetAddressOf());
     
     this->pD3D11Core->deviceContext->VSSetShader(this->pResourceManager->GetVertexShader("shadow_mapping_vs").Get(), nullptr, 0);
     this->pD3D11Core->deviceContext->PSSetShader(this->pResourceManager->GetPixelShader("shadow_mapping_ps").Get(), nullptr, 0);
@@ -49,9 +49,6 @@ void ShadowMap::ShadowPass(Light* pLight)
 //--------------------------------------------------------------------------------------
 void ShadowMap::setProjectionMatrix(Light* pLight)
 {
-
-    DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixIdentity();
-
     // Set orthographic projection matrix.
     float nearZ = 1.0f, farZ = 7.5;
     float viewWidth = 100.0f, viewHeight = 100.0f;
@@ -67,10 +64,10 @@ void ShadowMap::setProjectionMatrix(Light* pLight)
     this->lightViewMatrix = DirectX::XMMatrixLookAtLH(position, target, { 0.0f, 1.0f, 0.0f });
         
     // Set light world view projection matrix.
-    DirectX::XMStoreFloat4x4(&this->depthMatrixBuffer.LightWorldViewProjectionMatrix, (worldMatrix * this->lightViewMatrix * this->lightProjectionMatrix));
+    DirectX::XMStoreFloat4x4(&this->depthMatrixBuffer.LightViewProjectionMatrix, (this->lightViewMatrix * this->lightProjectionMatrix));
 
     // Update
-    this->pD3D11Core->deviceContext->UpdateSubresource(this->lightMatrixCS->Get(), 0, nullptr, &this->depthMatrixBuffer.LightWorldViewProjectionMatrix, 0, 0);
+    this->pD3D11Core->deviceContext->UpdateSubresource(this->lightMatrixCS->Get(), 0, nullptr, &this->depthMatrixBuffer.LightViewProjectionMatrix, 0, 0);
 }
 
 

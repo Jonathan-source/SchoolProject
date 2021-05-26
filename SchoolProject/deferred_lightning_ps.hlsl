@@ -122,9 +122,9 @@ float4 main(PixelInputType input) : SV_TARGET
             outputColor += PointLight(currentLight, pointToLight, pointToCamera, surfaceNormal, surfaceColor);
 		break;
 		case DIRECTIONAL_LIGHT:  
-        /*
+            /*
             // Shadow calculations.
-            float4 positionL = mul(surfacePosition, LightProjectionMatrix);
+            float4 positionL = mul(float4(surfacePosition, 1.0f), LightProjectionMatrix);
             positionL.xy /= positionL.w;
             float2 smTex = float2(0.5f * positionL.x + 0.5f, -0.5f * positionL.y + 0.5f);
             float depth = positionL.z / positionL.w;
@@ -139,8 +139,8 @@ float4 main(PixelInputType input) : SV_TARGET
             float2 lerps = frac(texelPos);
 
             float shadowCoeff = lerp(lerp(s0, s1, lerps.x), lerp(s2, s3, lerps.x), lerps.y);
-        */
-            outputColor += DirectionalLight(currentLight, pointToLight, pointToCamera, surfaceNormal, surfaceColor); //* shadowCoeff;
+            */
+            outputColor += DirectionalLight(currentLight, pointToLight, pointToCamera, surfaceNormal, surfaceColor);// *shadowCoeff;
        	break;
 		case SPOT_LIGHT:
 			// TODO?

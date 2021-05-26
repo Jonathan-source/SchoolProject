@@ -84,7 +84,7 @@ void Engine::Update()
 
 			// Shadow Map Pass.
 			this->renderer->BeginShadowPass();
-			this->scene->draw(this->d3d11Core->deviceContext.Get());
+			this->scene->drawShadowMap(this->d3d11Core->deviceContext.Get());
 
 			// Deferred Rendering Pass.
 			this->renderer->BeginFrame();

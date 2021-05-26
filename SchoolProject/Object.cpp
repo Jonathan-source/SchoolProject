@@ -241,7 +241,7 @@ void Object::DrawShadow(ID3D11DeviceContext* pDeviceContext)
 {
 	if (this->model != nullptr)
 	{
-		static UINT stride = sizeof(SimpleVertex);
+		static UINT stride = sizeof(DirectX::XMFLOAT4);
 		static UINT offset = 0;
 
 		pDeviceContext->IASetVertexBuffers(0, 1, this->model->mesh->vb.GetAddressOf(), &stride, &offset);
@@ -257,9 +257,9 @@ void Object::DrawShadow(ID3D11DeviceContext* pDeviceContext)
 		const sm::Matrix matTranslateInverse = worldMatrix.Invert();
 		DirectX::XMStoreFloat4x4(&objectData.WorldInvTransposeMatrix, matTranslateInverse.Transpose());
 
-		pDeviceContext->UpdateSubresource(this->perObjectConstantBuffer->Get(), 1, nullptr, &objectData, 0, 0);
-
+		pDeviceContext->UpdateSubresource(this->perObjectConstantBuffer->Get(), 0, nullptr, &objectData, 0, 0);
 		pDeviceContext->VSSetConstantBuffers(1, 1, this->perObjectConstantBuffer->GetAddressOf());
+
 
 		pDeviceContext->DrawIndexed(this->model->mesh->ib.getIndexCount(), 0, 0);
 	}

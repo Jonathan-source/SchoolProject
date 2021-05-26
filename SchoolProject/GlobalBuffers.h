@@ -36,7 +36,7 @@ struct PerFrame
 //--------------------------------------------------------------------------------------
 struct DepthMatrixBuffer
 {    
-	DirectX::XMFLOAT4X4 LightWorldViewProjectionMatrix;
+	DirectX::XMFLOAT4X4 LightViewProjectionMatrix;
 };
 
 
