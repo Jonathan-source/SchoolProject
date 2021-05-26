@@ -53,7 +53,7 @@ void ShadowMap::setProjectionMatrix(Light* pLight)
     DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixIdentity();
 
     // Set orthographic projection matrix.
-    float nearZ = 1.0f, farZ = 100.0f;
+    float nearZ = 1.0f, farZ = 10.0f;
     float viewWidth = 10.0f, viewHeight = 10.0f;
     this->lightProjectionMatrix = DirectX::XMMatrixOrthographicLH(viewWidth, viewHeight, nearZ, farZ);
 
@@ -66,7 +66,7 @@ void ShadowMap::setProjectionMatrix(Light* pLight)
     // Set view matrix.
     this->lightViewMatrix = DirectX::XMMatrixLookAtLH(position, target, { 0.0f, 1.0f, 0.0f });
         
-    // Set light view projection matrix.
+    // Set light world view projection matrix.
     DirectX::XMStoreFloat4x4(&this->depthMatrixBuffer.LightWorldViewProjectionMatrix, (worldMatrix * this->lightViewMatrix * this->lightProjectionMatrix));
 
     // Update

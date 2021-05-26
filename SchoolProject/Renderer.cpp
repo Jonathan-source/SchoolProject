@@ -323,7 +323,7 @@ void Renderer::InitializeLights()
 {
 	//	Create lights here:
 	Light light;
-	light.position = { 0.0f, 2.0f, 0.0f, 1.0f };
+	light.position = { 0.0f, 5.0f, -5.0f, 1.0f };
 	light.color = { 0.5f, 0.5f, 0.5f, 1.0f };
 	light.direction = { 0.0f, -1.0f, 0.0f, 0.0f };
 	light.specularPower = 1.0f;

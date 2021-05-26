@@ -60,6 +60,8 @@ struct PixelInputType
 
 
 
+
+
 //--------------------------------------------------------------------------------------
 // MAIN
 //--------------------------------------------------------------------------------------
@@ -119,11 +121,27 @@ float4 main(PixelInputType input) : SV_TARGET
 		case POINT_LIGHT:
             outputColor += PointLight(currentLight, pointToLight, pointToCamera, surfaceNormal, surfaceColor);
 		break;
-		case DIRECTIONAL_LIGHT:
+		case DIRECTIONAL_LIGHT:  
+        /*
+            // Shadow calculations.
             float4 positionL = mul(surfacePosition, LightProjectionMatrix);
-            if(length(positionL) > surfaceDepth)
-                outputColor += DirectionalLight(currentLight, pointToLight, pointToCamera, surfaceNormal, surfaceColor);
-		break;
+            positionL.xy /= positionL.w;
+            float2 smTex = float2(0.5f * positionL.x + 0.5f, -0.5f * positionL.y + 0.5f);
+            float depth = positionL.z / positionL.w;
+            float bias = 0.01f;
+            float dx = 1.0f / 1024;
+            float s0 = (GDepthTexture.Sample(PointSampler, smTex).r + bias < depth) ? 0.0f : 1.0f;
+            float s1 = (GDepthTexture.Sample(PointSampler, smTex + float2(dx, 0.0f)).r + bias < depth) ? 0.0f : 1.0f;
+            float s2 = (GDepthTexture.Sample(PointSampler, smTex + float2(0.0f, dx)).r + bias < depth) ? 0.0f : 1.0f;
+            float s3 = (GDepthTexture.Sample(PointSampler, smTex + float2(dx, dx)).r + bias < depth) ? 0.0f : 1.0f;
+
+            float2 texelPos = smTex * 1024;
+            float2 lerps = frac(texelPos);
+
+            float shadowCoeff = lerp(lerp(s0, s1, lerps.x), lerp(s2, s3, lerps.x), lerps.y);
+        */
+            outputColor += DirectionalLight(currentLight, pointToLight, pointToCamera, surfaceNormal, surfaceColor); //* shadowCoeff;
+       	break;
 		case SPOT_LIGHT:
 			// TODO?
 		break;

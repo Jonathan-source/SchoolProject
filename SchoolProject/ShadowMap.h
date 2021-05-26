@@ -18,7 +18,6 @@ public:
 	struct DepthMap
 	{
 		ComPtr<ID3D11Texture2D> texture2D;
-		ComPtr<ID3D11RenderTargetView> renderTargetView;
 		ComPtr<ID3D11ShaderResourceView> shaderResourceView;
 		ComPtr <ID3D11DepthStencilView>	depthStencilView;
 	};
