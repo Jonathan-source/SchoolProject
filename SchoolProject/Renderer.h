@@ -23,7 +23,6 @@ public:
 	virtual ~Renderer() = default;
 
 	void BeginShadowPass();
-	void EndShadowPass();
 	void ClearFrame();
 	void BeginFrame();
 	void PostProcessEffects();

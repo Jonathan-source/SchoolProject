@@ -10,7 +10,6 @@ ShadowMap::ShadowMap(D3D11Core* pD3D11Core, Window* pWindow, ResourceManager * p
 {
     if (!this->CreateShadowMap())
         std::cout << "ERROR::ShadowMap::CreateShadowMap()::Could not create shadow map." << std::endl;
-
 }
 
 
@@ -20,22 +19,9 @@ ShadowMap::ShadowMap(D3D11Core* pD3D11Core, Window* pWindow, ResourceManager * p
 
 
 
-//--------------------------------------------------------------------------------------
-void ShadowMap::SetLight(Light* pLight)
-{
-    if (pLight->type == 1) // Directional light.
-        this->pLight = pLight;
-}
-
-
-
-
-
-
-
 
 //--------------------------------------------------------------------------------------
-void ShadowMap::ShadowPass()
+void ShadowMap::ShadowPass(Light* pLight)
 {
     // Set a null render target. This disables color writes. 
     // Graphics cards are optimized for only drawing depth.
@@ -43,15 +29,14 @@ void ShadowMap::ShadowPass()
     this->pD3D11Core->deviceContext->OMSetRenderTargets(1, nullRTV, this->depthMap.depthStencilView.Get());
     this->pD3D11Core->deviceContext->ClearDepthStencilView(this->depthMap.depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
     
-    this->setProjectionMatrix();
-
     this->pD3D11Core->deviceContext->IASetInputLayout(this->pResourceManager->inputLayoutSM.Get());
     this->pD3D11Core->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     this->pD3D11Core->deviceContext->VSSetConstantBuffers(0, 1, this->lightMatrixCS->GetAddressOf());
+    this->setProjectionMatrix(pLight);
+    
     this->pD3D11Core->deviceContext->VSSetShader(this->pResourceManager->GetVertexShader("shadow_mapping_vs").Get(), nullptr, 0);
     this->pD3D11Core->deviceContext->PSSetShader(this->pResourceManager->GetPixelShader("shadow_mapping_ps").Get(), nullptr, 0);
-
 }
 
 
@@ -62,30 +47,30 @@ void ShadowMap::ShadowPass()
 
 
 //--------------------------------------------------------------------------------------
-void ShadowMap::setProjectionMatrix()
+void ShadowMap::setProjectionMatrix(Light* pLight)
 {
 
     DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixIdentity();
 
     // Set orthographic projection matrix.
-    float nearZ = 1.0f, farZ = 10.0f;
+    float nearZ = 1.0f, farZ = 100.0f;
     float viewWidth = 10.0f, viewHeight = 10.0f;
     this->lightProjectionMatrix = DirectX::XMMatrixOrthographicLH(viewWidth, viewHeight, nearZ, farZ);
 
-    DirectX::XMVECTOR position = { this->pLight->position.x , this->pLight->position.y , this->pLight->position.z , 1.0f };
+    DirectX::XMVECTOR position = { pLight->position.x , pLight->position.y , pLight->position.z , 1.0f };
 
-    sm::Vector4 lightDir = this->pLight->direction;
-    sm::Vector4 lightPos = this->pLight->position;
+    sm::Vector4 lightDir = pLight->direction;
+    sm::Vector4 lightPos = pLight->position;
     sm::Vector4 target = lightPos + lightDir;
 
     // Set view matrix.
     this->lightViewMatrix = DirectX::XMMatrixLookAtLH(position, target, { 0.0f, 1.0f, 0.0f });
-    
+        
     // Set light view projection matrix.
-    DirectX::XMStoreFloat4x4(&this->depthMatrixBuffer.LightProjectionMatrix, worldMatrix * this->lightViewMatrix * this->lightProjectionMatrix);
+    DirectX::XMStoreFloat4x4(&this->depthMatrixBuffer.LightWorldViewProjectionMatrix, (worldMatrix * this->lightViewMatrix * this->lightProjectionMatrix));
 
     // Update
-    this->pD3D11Core->deviceContext->UpdateSubresource(this->lightMatrixCS->Get(), 0, nullptr, &this->depthMatrixBuffer.LightProjectionMatrix, 0, 0);
+    this->pD3D11Core->deviceContext->UpdateSubresource(this->lightMatrixCS->Get(), 0, nullptr, &this->depthMatrixBuffer.LightWorldViewProjectionMatrix, 0, 0);
 }
 
 
@@ -103,8 +88,8 @@ bool ShadowMap::CreateShadowMap()
     ZeroMemory(&textureDesc, sizeof(D3D11_TEXTURE2D_DESC));
 
     // Set up the description of the depth buffer.
-    textureDesc.Width = this->pWindow->getWidth();
-    textureDesc.Height = this->pWindow->getHeight();
+    textureDesc.Width = this->SHADOW_MAP_WIDTH;
+    textureDesc.Height = this->SHADOW_MAP_HEIGHT;
 
     // Use typeless format because the DSV is going to interpret
     // the bits as DXGI_FORMAT_D24_UNORM_S8_UINT, whereas the SRV is going

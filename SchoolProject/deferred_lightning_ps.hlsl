@@ -16,6 +16,15 @@ SamplerState PointSampler           : register(s0);
 //--------------------------------------------------------------------------------------
 // 
 //--------------------------------------------------------------------------------------
+cbuffer DepthMatrixBuffer : register(b0)
+{
+    row_major matrix LightProjectionMatrix;
+};
+
+
+//--------------------------------------------------------------------------------------
+// 
+//--------------------------------------------------------------------------------------
 cbuffer PerFrame : register(b1)
 {
     row_major matrix ProjectionMatrix;
@@ -54,7 +63,6 @@ struct PixelInputType
 //--------------------------------------------------------------------------------------
 // MAIN
 //--------------------------------------------------------------------------------------
-[earlydepthstencil]
 float4 main(PixelInputType input) : SV_TARGET
 {
     // Initialize output.
@@ -64,7 +72,7 @@ float4 main(PixelInputType input) : SV_TARGET
     const float3 surfacePosition    = GPositionTexture.Sample(PointSampler, input.texCoord.xy).xyz; 
 	const float4 surfaceColor       = GDiffuseTexture.Sample(PointSampler, input.texCoord.xy);
     float3 surfaceNormal            = GNormalTexture.Sample(PointSampler, input.texCoord.xy).xyz;
-    const float surfaceDepth        = GDepthTexture.Sample(PointSampler, input.texCoord.xy);
+    const float surfaceDepth        = GDepthTexture.Sample(PointSampler, input.texCoord.xy).r;
 
     // ImGuiDebug
     if (bPrintGPositionTexture)
@@ -112,7 +120,9 @@ float4 main(PixelInputType input) : SV_TARGET
             outputColor += PointLight(currentLight, pointToLight, pointToCamera, surfaceNormal, surfaceColor);
 		break;
 		case DIRECTIONAL_LIGHT:
-            outputColor += DirectionalLight(currentLight, pointToLight, pointToCamera, surfaceNormal, surfaceColor);
+            float4 positionL = mul(surfacePosition, LightProjectionMatrix);
+            if(length(positionL) > surfaceDepth)
+                outputColor += DirectionalLight(currentLight, pointToLight, pointToCamera, surfaceNormal, surfaceColor);
 		break;
 		case SPOT_LIGHT:
 			// TODO?

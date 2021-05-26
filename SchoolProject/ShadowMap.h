@@ -12,11 +12,8 @@ public:
 	ShadowMap(D3D11Core* pD3D11Core, Window* pWindow, ResourceManager* pResourceManager);
 	virtual ~ShadowMap() = default;
 
-	// Currently only for (one) directional light.
-	void SetLight(Light * pLight);
-
 	// Render the scene depth from the viewpoint of the light into the shadow map. Per-Frame use.
-	void ShadowPass();
+	void ShadowPass(Light* pLight);
 
 	struct DepthMap
 	{
@@ -27,20 +24,22 @@ public:
 	};
 	DepthMap depthMap;
 
+	std::unique_ptr<ConstantBuffer> lightMatrixCS;
 private:
 	D3D11Core* pD3D11Core;
 	Window* pWindow;
 	ResourceManager* pResourceManager;
 
-	DepthMatrixBuffer depthMatrixBuffer;
-	std::unique_ptr<ConstantBuffer> lightMatrixCS;
+	const UINT SHADOW_MAP_WIDTH = 1024;
+	const UINT SHADOW_MAP_HEIGHT = 1024;
 
-	Light* pLight;
-	DirectX::XMMATRIX lightProjectionMatrix;
+	DepthMatrixBuffer depthMatrixBuffer;
+
 	DirectX::XMMATRIX lightViewMatrix;
+	DirectX::XMMATRIX lightProjectionMatrix;
 
 	// ORTHOGRAPHIC PROJECTION
-	void setProjectionMatrix();
+	void setProjectionMatrix(Light* pLight);
 	
 	bool CreateShadowMap();
 };

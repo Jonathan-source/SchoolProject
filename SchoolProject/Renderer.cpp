@@ -31,9 +31,6 @@ Renderer::Renderer(D3D11Core* pDXCore,Window* pWindow, Camera* pCamera, Resource
 	this->InitializeLights();
 	if (!this->createStructuredBufferLights())
 		std::cout << "ERROR::RenderSystem::createStructuredBufferLights()::Could not create StructuredBuffer!" << std::endl;
-
-	this->shadowMap->SetLight(&this->sceneLights.at(0));
-
 }
 
 
@@ -113,18 +110,9 @@ void Renderer::Present()
 //--------------------------------------------------------------------------------------
 void Renderer::BeginShadowPass()
 {
-	this->shadowMap->ShadowPass();
+	this->shadowMap->ShadowPass(&this->sceneLights.at(0));
 }
 
-
-
-
-
-
-//--------------------------------------------------------------------------------------
-void Renderer::EndShadowPass()
-{
-}
 
 
 
@@ -530,6 +518,7 @@ void Renderer::LightningPass()
 	this->pDXCore->deviceContext->PSSetShaderResources(3, 1, this->lightBufferSRV.GetAddressOf());								// StructuredBuffer
 	this->pDXCore->deviceContext->PSSetShaderResources(4, 1, this->shadowMap->depthMap.shaderResourceView.GetAddressOf());		// ShadowMap
 
+	this->pDXCore->deviceContext->PSSetConstantBuffers(0, 1, this->shadowMap->lightMatrixCS->GetAddressOf());
 	this->pDXCore->deviceContext->PSSetConstantBuffers(1, 1, this->perFrameBuffer->GetAddressOf());
 	this->pDXCore->deviceContext->PSSetConstantBuffers(2, 1, this->imGuiCB->GetAddressOf());									// ImGUI.
 
@@ -693,7 +682,7 @@ void Renderer::imGUILightWin()
 	static const char* items[]{ "Point Light", "Directional Light", "Spot Light" };
 	
 	int selectedItem = this->sceneLights[currentItem].type;
-	if (ImGui::ListBox("Light types", &selectedItem, items, IM_ARRAYSIZE(items)))
+	if (ImGui::ListBox("Light types", &selectedItem, items, IM_ARRAYSIZE(items)) && currentItem != 0)
 	{
 		this->sceneLights[currentItem].type = selectedItem;
 		bFlag = true;
