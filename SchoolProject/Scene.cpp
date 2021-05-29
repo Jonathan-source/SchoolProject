@@ -36,6 +36,17 @@ void Scene::initObjects()
 	obj->SetModel(this->resourceManager->GetModel("Plane.obj").get());
 	obj->SetPosition(-35.f, 30.f, 0.f);
 	this->objects.push_back(obj);
+
+	obj = new Object(pDevice);
+	obj->SetModel(this->resourceManager->GetModel("Dragon.obj").get());
+	obj->SetScale(50.f, 50.f, 50.f);
+	obj->SetRotation(0.f, -90.f, 0.f);
+	obj->SetPosition(123.f, 60.f, 137.f);
+	this->objects.push_back(obj);
+
+
+
+	
 	initHeightMap();
 }
 
@@ -138,10 +149,10 @@ void Scene::update(float _deltaTime)
 
 		if (obj->getBoundingBox() && obj->getBoundingBox()->intersection(mouseListener->getRay(), t))
 		{
-			obj->SetScale(DirectX::XMFLOAT3(1.5f, 1.5f, 1.5f));
+			obj->SetResize(1.5f);
 		}
 		else
-			obj->SetScale(DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f));
+			obj->SetResize(1.f);
 	}
 
 	//Adjust camera height on heightmap

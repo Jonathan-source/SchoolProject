@@ -18,10 +18,11 @@ public:
 	void SetPosition(float x, float y, float z);
 	void SetRotation(float x, float y, float z);
 	void SetScale(float x, float y, float z);
-		 
+	
 	void SetPosition(const sm::Vector3 &pos);
 	void SetRotation(const sm::Vector3 &rot);
 	void SetScale(const sm::Vector3 &scale);
+	void SetResize(float resize);
 	void setBoundingBox(std::shared_ptr<BoundingBox> _boundingBox);
 	void Translate(const sm::Vector3& translation);
 	
@@ -44,6 +45,7 @@ private:
 	sm::Vector3 position;
 	sm::Vector3 rotation;
 	sm::Vector3 scale;
+	float resize;
 
 	std::unique_ptr<ConstantBuffer> perObjectConstantBuffer;
 	std::unique_ptr<ConstantBuffer> materialConstantBuffer;

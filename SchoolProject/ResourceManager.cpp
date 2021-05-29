@@ -14,7 +14,7 @@ ResourceManager::ResourceManager(D3D11Core* pD3D11Core)
 
 	// Naming convention:
 	// Monkey.obj, Monkey.mtl, Monkey_nt.png, Monkey_dt.png, Monkey_st.png"
-	std::vector<std::string> meshFileNames{ "Cube.obj", "Monkey.obj", "test.obj", "Plane.obj" };
+	std::vector<std::string> meshFileNames{ "Cube.obj", "Monkey.obj", "test.obj", "Plane.obj", "Dragon.obj" };
 	this->LoadModels(meshFileNames);
 	this->LoadHeightMap("Heightmap.png");
 }

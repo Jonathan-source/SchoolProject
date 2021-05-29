@@ -7,6 +7,7 @@ Object::Object(ID3D11Device* pDevice)
 	, materialConstantBuffer(std::make_unique<ConstantBuffer>(pDevice, sizeof(Material)))
 	, position(sm::Vector3{0.f,0.f,5.f})
 	, scale(sm::Vector3{ 1.f,1.f,1.f })
+	, resize(1.f)
 	, rotation(sm::Vector3{ 0.f,0.f,0.f })
 	, boundingBox(nullptr)
 {
@@ -120,6 +121,21 @@ void Object::SetScale(const sm::Vector3& scale)
 	this->scale = scale;
 }
 
+
+
+
+
+//--------------------------------------------------------------------------------------
+void Object::SetResize(float resize)
+{
+	this->resize = resize;
+}
+
+
+
+
+
+//--------------------------------------------------------------------------------------
 void Object::setBoundingBox(std::shared_ptr<BoundingBox> _boundingBox)
 {
 	this->boundingBox = _boundingBox;
@@ -170,10 +186,6 @@ const sm::Vector3& Object::GetScale() const
 }
 
 
-
-
-
-
 //--------------------------------------------------------------------------------------
 BoundingBox* Object::getBoundingBox() const
 {
@@ -190,7 +202,7 @@ const DirectX::XMFLOAT4X4& Object::GetMatrix()
 {
 	DirectX::XMMATRIX matrix = DirectX::XMMatrixIdentity();
 	matrix *= DirectX::XMMatrixRotationRollPitchYawFromVector(GetRotation());
-	matrix *= DirectX::XMMatrixScalingFromVector(GetScale());
+	matrix *= DirectX::XMMatrixScalingFromVector(GetScale() * this->resize);
 	matrix *= DirectX::XMMatrixTranslationFromVector(GetPosition());
 	DirectX::XMStoreFloat4x4(&this->worldMatrix, matrix);
 
