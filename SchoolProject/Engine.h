@@ -53,7 +53,7 @@ private:
 
 	// Timer
 	Timer timer;
-	double deltaTime;
+	float deltaTime;
 	double fpsUpdateTimer;
 
 	// UI

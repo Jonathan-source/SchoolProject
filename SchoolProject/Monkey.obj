@@ -1,5 +1,6 @@
 # Blender v2.83.4 OBJ File: ''
 # www.blender.org
+mtllib Monkey.mtl
 o Suzanne
 v 0.437500 0.164062 0.765625
 v -0.437500 0.164062 0.765625

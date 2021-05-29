@@ -66,7 +66,7 @@ void Engine::Update()
 	
 			// Timer
 			this->timer.stop();
-			this->deltaTime = this->timer.getElapsedTime();
+			this->deltaTime = static_cast<float>(this->timer.getElapsedTime());
 			this->timer.start();
 
 

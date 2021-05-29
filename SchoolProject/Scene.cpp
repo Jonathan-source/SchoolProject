@@ -9,7 +9,7 @@ Scene::Scene(ID3D11Device* pDevice, std::shared_ptr<ResourceManager> resourceMan
 	, mouseListener(mouseListener)
 	, camera(camera)
 {
-	std::srand(std::time(nullptr));
+	std::srand(static_cast<unsigned int>(std::time(nullptr)));
 	this->initObjects();
 	std::shared_ptr<HeightMap> karlskrona = std::make_shared<HeightMap>("Heightmap.png");
 }
@@ -24,7 +24,7 @@ void Scene::initObjects()
 {
 	auto* obj = new Object(pDevice);
 	obj->SetModel(this->resourceManager->GetModel("Cube.obj").get());
-	obj->SetPosition(0.f, 3.f, 0.f);
+	obj->SetPosition(-35.f, 33.f, 0.f);
 	obj->setBoundingBox(std::make_shared<BoundingBox>(DirectX::XMVectorSet(obj->GetPosition().x, obj->GetPosition().y, obj->GetPosition().z, 0.0f),
 		DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f),
 		DirectX::XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f),
@@ -34,7 +34,7 @@ void Scene::initObjects()
 
 	obj = new Object(pDevice);
 	obj->SetModel(this->resourceManager->GetModel("Plane.obj").get());
-	obj->SetPosition(0.f, 0.f, 0.f);
+	obj->SetPosition(-35.f, 30.f, 0.f);
 	this->objects.push_back(obj);
 	initHeightMap();
 }
@@ -43,13 +43,13 @@ void Scene::initHeightMap()
 {
 	auto* obj2 = new Object(pDevice);
 	obj2->SetModel(this->resourceManager->GetModel("Heightmap.png").get());
-	obj2->SetPosition(0.f, -30.f, 0.f);
+	obj2->SetPosition(0.f, 0.f, 0.f);
+	
 	this->objects.push_back(obj2);
 
 
 	//----------------- Init Heightmap values -----------------
 	int channels;
-	int index;
 	const auto heightMapData = stbi_load("Heightmap.png", &terrainWidth, &terrainHeight, &channels, STBI_grey);
 
 	std::vector<float> heightVal;
@@ -164,9 +164,9 @@ void Scene::addObject(const std::string& name)
 	auto* obj = new Object(pDevice);
 	obj->SetModel(this->resourceManager->GetModel(name).get());
 
-	auto randomPositionX = (rand() % 20);
-	auto randomPositionY = (rand() % 20);
-	auto randomPositionZ = (rand() % 20);
+	float randomPositionX = static_cast<float>(rand() % 20);
+	float randomPositionY = static_cast<float>(rand() % 20);
+	float randomPositionZ = static_cast<float>(rand() % 20);
 
 	if (randomPositionX > 9)
 		randomPositionX = 9 - randomPositionX;
@@ -175,8 +175,8 @@ void Scene::addObject(const std::string& name)
 	if (randomPositionZ > 9)
 		randomPositionZ = 9 - randomPositionZ;
 
-	const auto randomRotation = (rand() % 180);
-	obj->SetPosition(sm::Vector3(randomPositionX, randomPositionY, randomPositionZ));
+	const float randomRotation = static_cast<float>(rand() % 180);
+	obj->SetPosition(sm::Vector3(randomPositionX - 35.f, randomPositionY + 40.f, randomPositionZ));
 	obj->SetRotation(sm::Vector3(randomRotation, randomRotation, randomRotation));
 
 	obj->setBoundingBox(std::make_shared<BoundingBox>(DirectX::XMVectorSet(obj->GetPosition().x, obj->GetPosition().y, obj->GetPosition().z, 0.0f),

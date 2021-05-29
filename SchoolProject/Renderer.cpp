@@ -321,11 +321,11 @@ bool Renderer::createShaderResourceViews(D3D11_TEXTURE2D_DESC& textureDesc)
 //--------------------------------------------------------------------------------------
 void Renderer::InitializeLights()
 {
-	//	Create lights here:
+	//This is the main light
 	Light light;
-	light.position = { 15.0f, 15.0f, 0.0f, 1.0f };
+	light.position = { -35.0f, 72.0f, 0.0f, 1.0f };
 	light.color = { 0.5f, 0.5f, 0.5f, 1.0f };
-	light.direction = { -1.0f, -1.0f, 0.0f, 0.0f };
+	light.direction = { 0.0f, -0.99995f, 0.009999f, 0.0f };
 	light.specularPower = 1.0f;
 	light.shininess = 32.0f;
 	light.intensity = 1.f;
@@ -441,7 +441,7 @@ void Renderer::setPerFrameBuffer()
 		DirectX::XMStoreFloat4x4(&this->perFrameData.ViewMatrix, pCamera->getView());
 		DirectX::XMStoreFloat4x4(&this->perFrameData.ProjectionMatrix, pCamera->getProjectionMatrix());
 		this->perFrameData.GlobalAmbient = DirectX::XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
-		this->perFrameData.NumLights = this->sceneLights.size();
+		this->perFrameData.NumLights = static_cast<UINT>(this->sceneLights.size());
 
 		this->pDXCore->deviceContext->UpdateSubresource(this->perFrameBuffer->Get(), 0, nullptr, &this->perFrameData, 0, 0);
 	}
@@ -560,8 +560,8 @@ void Renderer::ApplyGaussianFilter()
 	// (Frame Buffer width rounded up to the next multiple of Thread Group width) / Thread Group Width, 
 	// (Frame Buffer height rounded up to the next multiple of Thread Group height) / Thread Group Height, 1)
 	const UINT threadGroupWidth = 8, threadGroupHeight = 8;
-	const UINT threadGroupCountWidth = this->pDXCore->viewport.Width / threadGroupWidth;
-	const UINT threadGroupCountHeight = this->pDXCore->viewport.Height / threadGroupHeight;
+	const UINT threadGroupCountWidth = static_cast<UINT>(this->pDXCore->viewport.Width / threadGroupWidth);
+	const UINT threadGroupCountHeight = static_cast<UINT>(this->pDXCore->viewport.Height / threadGroupHeight);
 
 	// How many groups do we need to dispatch to cover a column of pixels.
 	this->pDXCore->deviceContext->Dispatch(threadGroupCountWidth, threadGroupCountHeight, 1);
@@ -594,8 +594,8 @@ void Renderer::ApplyBilateralFilter()
 	// (Frame Buffer width rounded up to the next multiple of Thread Group width) / Thread Group Width, 
 	// (Frame Buffer height rounded up to the next multiple of Thread Group height) / Thread Group Height, 1)
 	const UINT threadGroupWidth = 8, threadGroupHeight = 8;
-	const UINT threadGroupCountWidth = this->pDXCore->viewport.Width / threadGroupWidth;
-	const UINT threadGroupCountHeight = this->pDXCore->viewport.Height / threadGroupHeight;
+	const UINT threadGroupCountWidth = static_cast<UINT>(this->pDXCore->viewport.Width / threadGroupWidth);
+	const UINT threadGroupCountHeight = static_cast<UINT>(this->pDXCore->viewport.Height / threadGroupHeight);
 
 	// How many groups do we need to dispatch to cover a column of pixels.
 	this->pDXCore->deviceContext->Dispatch(threadGroupCountWidth, threadGroupCountHeight, 1);
@@ -619,7 +619,18 @@ void Renderer::imGUILightWin()
 {	
 	// Flag for checking if UpdateSubresource is required.
 	bool bFlag = false;
+	
+	DirectX::XMFLOAT4 directionVector;
 
+	DirectX::XMStoreFloat4(&directionVector, pCamera->getDirection());
+
+	std::cout << directionVector.x << ": " << directionVector.y << ": " << directionVector.z << std::endl;
+
+	
+	ImGui::Text(R"(Light Entitys)");
+
+
+	
 	// Light window
 	ImGui::Begin("Lights");
 	static int currentItem = 0;
@@ -630,7 +641,6 @@ void Renderer::imGUILightWin()
 	};
 	static float color[3] = { 0.5f, 0.5f, 0.5f };
 
-		
 	// Fuck C. 
 	const char* listsOfLights[10] = {};
 	std::vector<char*> writables;
@@ -649,7 +659,7 @@ void Renderer::imGUILightWin()
 	
 	ImGui::Text(R"(Light Entitys)");
 	
-	ImGui::ListBox("", &currentItem, listsOfLights, this->sceneLights.size());
+	ImGui::ListBox("", &currentItem, listsOfLights, static_cast<int>(this->sceneLights.size()));
 
 	// Change lights position
 	if(ImGui::InputFloat3("Light Position", pos))

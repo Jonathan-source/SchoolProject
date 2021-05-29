@@ -4,7 +4,7 @@
 Camera::Camera(std::shared_ptr<KeyboardListener> _keyboardListener, std::shared_ptr<MouseListener> _mouseListener, float screenHeight, float screenWidth)
 	: keyboardListener(_keyboardListener)
 	, mouseListener(_mouseListener)
-	, position(sm::Vector3(0.0f, 0.0f, -5.0f))
+	, position(sm::Vector3(-41.0f, 33.0f, -10.0f))
 	, focusPoint(DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f))
 	, forward(DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f))
 	, defaultForward(sm::Vector3(0.f, 0.f, 1.f))

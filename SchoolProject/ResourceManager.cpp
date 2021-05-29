@@ -46,7 +46,7 @@ void ResourceManager::LoadHeightMap(const std::string& name)
 		//
 		// Load Material from MTL.
 		//
-		std::shared_ptr<MaterialData> materialData = std::make_shared<MaterialData>(this->LoadMaterialFromFile("default.mtl"));
+		std::shared_ptr<MaterialData> materialData = std::make_shared<MaterialData>(this->LoadMaterialFromFile("Heightmap.mtl"));
 
 		// Insert.
 		this->materialDataMap.insert(std::pair<std::string, std::shared_ptr<MaterialData>>(name, materialData));
@@ -827,7 +827,7 @@ SubMesh ResourceManager::CreateSubMesh(const MeshData& meshData)
 	subMesh.indexData.resize(static_cast<UINT>(meshData.faces.size()));
 	subMesh.vertexData.resize(meshData.faces.size());
 
-	for (size_t i = 0; i < meshData.faces.size(); i++)
+	for (UINT i = 0; i < meshData.faces.size(); i++)
 	{
 		uint32_t vIndex = meshData.faces[i].x;	// also used for tangent.
 		uint32_t vtIndex = meshData.faces[i].y;

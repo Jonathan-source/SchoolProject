@@ -3,7 +3,9 @@
 #include "stb_image.h"
 
 HeightMap::HeightMap(char const* filename)
-    :numFaces(0)
+    : terrainWidth(0)
+    , terrainHeight(0)
+    , numFaces(0)
     , numVertices(0)
     , heightMapMesh(std::make_shared<MeshData>())
 {
@@ -13,7 +15,6 @@ HeightMap::HeightMap(char const* filename)
 void HeightMap::initImageData(const char* filename)
 {
     int channels;
-    int index;
     unsigned char* heightMapData = stbi_load(filename, &terrainWidth, &terrainHeight, &channels, STBI_grey);
 
     std::vector<float> heightVal;
@@ -27,7 +28,7 @@ void HeightMap::initImageData(const char* filename)
     {
         for (int i = 0; i < terrainWidth; i++)
         {
-            DirectX::XMFLOAT3 vertexPos = DirectX::XMFLOAT3((float)i, heightVal[i + (j * terrainHeight)] / 4.0f, (float)j);
+            DirectX::XMFLOAT3 vertexPos = DirectX::XMFLOAT3(static_cast<float>(i), heightVal[i + (j * terrainHeight)] / 4.0f, static_cast<float>(j));
 
             verticesPosition.emplace_back(vertexPos);
             normals.emplace_back(0.0f, 1.0f, 0.0f);
@@ -52,20 +53,19 @@ void HeightMap::initImageData(const char* filename)
         std::cout << "HeightMap::initImageData::computeNormals() failed to compute normals..." << std::endl;
 
     // Initialize the index to the vertex buffer.
-    index = 0;
-    float texV, texU;
+    int index = 0;
     // Load the vertex and index array with the terrain data.
     for (int j = 0; j < (terrainHeight - 1); j++)
     {
         for (int i = 0; i < (terrainWidth - 1); i++)
         {
-            int index1 = (terrainHeight * j) + i;          // Bottom left.
-            int index2 = (terrainHeight * j) + (i + 1);      // Bottom right.
-            int index3 = (terrainHeight * (j + 1)) + i;      // Upper left.
-            int index4 = (terrainHeight * (j + 1)) + (i + 1);  // Upper right.
+	        const int index1 = (terrainHeight * j) + i;          // Bottom left.
+	        const int index2 = (terrainHeight * j) + (i + 1);      // Bottom right.
+	        const int index3 = (terrainHeight * (j + 1)) + i;      // Upper left.
+	        const int index4 = (terrainHeight * (j + 1)) + (i + 1);  // Upper right.
 
             //Upper left
-            texV = this->texCoords[index3].y;
+            float texV = this->texCoords[index3].y;
             //modify texture coord to cover top edge
             if (texV == 1.0f)
                 texV = 0.0f;
@@ -78,7 +78,7 @@ void HeightMap::initImageData(const char* filename)
 
 
             // Upper right.
-            texU = this->texCoords[index4].x;
+            float texU = this->texCoords[index4].x;
             texV = this->texCoords[index4].y;
             //Modify texture coord to cover top and right edge
             if (texU == 0.0f)
@@ -148,16 +148,11 @@ void HeightMap::initImageData(const char* filename)
     delete heightMapData;
 }
 
-bool HeightMap::computeNormalsTangents()
+bool HeightMap::computeNormalsTangents() const
 {
     //////////////////////Compute Normals///////////////////////////
     //Now we will compute the normals for each vertex using normal averaging
     std::vector<DirectX::XMFLOAT3> tempNormal;
-    //normalized and unnormalized normals
-    DirectX::XMFLOAT3 unnormalized = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-    //Used to get vectors (sides) from the position of the verts
-    float vecX, vecY, vecZ;
-
 
     // Struct to help us store data for calculating tangents and normals.
     struct WeightedSum
@@ -189,22 +184,25 @@ bool HeightMap::computeNormalsTangents()
     DirectX::XMVECTOR edge2 = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
 
 
-
-    // Some useful variables.
-    DirectX::XMFLOAT3 v0, v1, v2;
-    DirectX::XMFLOAT2 vUV0, vUV1, vUV2;
-    DirectX::XMFLOAT2 deltaUV1, deltaUV2;
-    DirectX::XMFLOAT3 E1, E2;
-    DirectX::XMFLOAT3 tangent;
-    DirectX::XMFLOAT3 normal;
-
+    DirectX::XMFLOAT3 v0{};
+    DirectX::XMFLOAT3 v1{};
+    DirectX::XMFLOAT3 v2{};
+    DirectX::XMFLOAT2 vUV0{};
+    DirectX::XMFLOAT2 vUV1{};
+    DirectX::XMFLOAT2 vUV2{};
+    DirectX::XMFLOAT2 deltaUV1{};
+    DirectX::XMFLOAT2 deltaUV2{};
+    DirectX::XMFLOAT3 E1{};
+    DirectX::XMFLOAT3 E2{};
+    DirectX::XMFLOAT3 tangent{};
+    DirectX::XMFLOAT3 normal{};
     //	Loop through all our faces and calculate the tangent for each face of a triangle.
-    for (size_t i = 0; i < heightMapMesh->faces.size(); i += 3)
+    for (uint32_t i = 0; i < heightMapMesh->faces.size(); i += 3)
     {
         // Get the indices for three vertices in the triangle.
         uint32_t i0 = i;				// Vertex 1
-        uint32_t i1 = i + (size_t)1;	// Vertex 2
-        uint32_t i2 = i + (size_t)2;	// Vertex 3
+        uint32_t i1 = i + static_cast<uint32_t>(1);	// Vertex 2
+        uint32_t i2 = i + static_cast<uint32_t>(2);	// Vertex 3
 
         v0 = heightMapMesh->vertices[i0];
         v1 = heightMapMesh->vertices[i1];
@@ -233,8 +231,8 @@ bool HeightMap::computeNormalsTangents()
 
         // Get the indices for the three vertices's textureCoords.
         uint32_t t0 = heightMapMesh->faces[i].y;				// texCoord 1
-        uint32_t t1 = heightMapMesh->faces[i + (size_t)1].y;	// texCoord 2
-        uint32_t t2 = heightMapMesh->faces[i + (size_t)2].y;	// texCoord 3
+        uint32_t t1 = heightMapMesh->faces[i + static_cast<size_t>(1)].y;	// texCoord 2
+        uint32_t t2 = heightMapMesh->faces[i + static_cast<size_t>(2)].y;	// texCoord 3
 
         vUV0 = heightMapMesh->texCoords[t0];
         vUV1 = heightMapMesh->texCoords[t1];
@@ -311,58 +309,53 @@ bool HeightMap::computeNormalsTangents()
     return true;
 }
 
-
 bool HeightMap::computeTexCoords()
 {
-    indices = std::vector<DWORD>(this->numFaces * 3);
+    indices = std::vector<UINT>(this->numFaces * 3);
 
     int k = 0;
     int texUIndex = 0;
     int texVIndex = 0;
-    for (DWORD i = 0; i < terrainHeight - 1; i++)
+    for (int i = 0; i < terrainHeight - 1; i++)
     {
-        for (DWORD j = 0; j < terrainWidth - 1; j++)
+        for (int j = 0; j < terrainWidth - 1; j++)
         {
-            indices[k] = i * terrainWidth + j;        // Bottom left of quad
+            indices[k] = static_cast<UINT>(i * terrainWidth + j);        // Bottom left of quad
 
-            indices[k + 1] = i * terrainWidth + j + 1;        // Bottom right of quad
+            indices[k + 1] = static_cast<UINT>(i * terrainWidth + j + 1);        // Bottom right of quad
 
-            indices[k + 2] = (i + 1) * terrainWidth + j;    // Top left of quad
+            indices[k + 2] = static_cast<UINT>((i + 1) * terrainWidth + j);    // Top left of quad
 
 
 
-            indices[k + 3] = (i + 1) * terrainWidth + j;    // Top left of quad
+            indices[k + 3] = static_cast<UINT>((i + 1) * terrainWidth + j);    // Top left of quad
 
-            indices[k + 4] = i * terrainWidth + j + 1;        // Bottom right of quad
+            indices[k + 4] = static_cast<UINT>(i * terrainWidth + j + 1);        // Bottom right of quad
 
-            indices[k + 5] = (i + 1) * terrainWidth + j + 1;    // Top right of quad
+            indices[k + 5] = static_cast<UINT>((i + 1) * terrainWidth + j + 1);    // Top right of quad
 
             k += 6; // next quad
         }
     }
 
 
-
-
-    int incrementCount, i, j, texUCount, texVCount;
-    float incrementValue, texUCoord, texVCoord;
     this->texCoords = std::vector<DirectX::XMFLOAT2>(numVertices);
     //Calculate how much to increment texture coord by;
-    incrementValue = (float)TEXTURE_REPEAT / (float)terrainWidth;
+    const float incrementValue = static_cast<float>(TEXTURE_REPEAT) / static_cast<float>(terrainWidth);
 
     //Calculate how many times to repate texture
-    incrementCount = (float)terrainWidth / (float)TEXTURE_REPEAT;
+    const int incrementCount = static_cast<int>(static_cast<float>(terrainWidth) / static_cast<float>(TEXTURE_REPEAT));
 
     //initialize the tu and tv coord values
-    texUCoord = 0.0f;
-    texVCoord = 1.0f;
+    float texUCoord = 0.0f;
+    float texVCoord = 1.0f;
 
-    texUCount = 0;
-    texVCount = 0;
+    int texUCount = 0;
+    int texVCount = 0;
 
-    for (j = 0; j < terrainHeight; j++)
+    for (int j = 0; j < terrainHeight; j++)
     {
-        for (i = 0; i < terrainWidth; i++)
+        for (int i = 0; i < terrainWidth; i++)
         {
             //store texture coord in height map;
             this->texCoords[(terrainHeight * j) + i].x = texUCoord;
@@ -403,7 +396,7 @@ MeshData* HeightMap::getMesh() const
 float HeightMap::getHeightOnPos(float x, float z)
 {
     if (x > 0.0f && z > 0.0f)
-        return this->verticesPosition.at((int)x + (int)z * terrainHeight).y;
+        return this->verticesPosition.at(static_cast<int>(x) + static_cast<int>(z) * terrainHeight).y;
     else
         return 0.0f;
 }

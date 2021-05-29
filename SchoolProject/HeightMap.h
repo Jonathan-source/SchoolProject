@@ -27,7 +27,7 @@ public:
 	float getHeightOnPos(float x, float z);
 
 private:
-	bool computeNormalsTangents();
+	bool computeNormalsTangents() const;
 	bool computeTangents();
 	bool computeTexCoords();
 	std::shared_ptr<MeshData> heightMapMesh;
@@ -36,5 +36,5 @@ private:
 	std::vector<DirectX::XMFLOAT3> normals;
 	std::vector<DirectX::XMFLOAT3> verticesPosition;
 	std::vector<DirectX::XMFLOAT2> texCoords;
-	std::vector<DWORD> indices;
+	std::vector<UINT> indices;
 };
