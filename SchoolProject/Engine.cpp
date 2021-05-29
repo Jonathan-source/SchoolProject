@@ -91,6 +91,7 @@ void Engine::Update()
 			this->scene->draw(this->d3d11Core->deviceContext.Get());
 			this->renderer->EndFrame();
 
+			
 #ifdef _DEBUG
 			// Draw imgui window
 			drawImGUI();
@@ -99,8 +100,8 @@ void Engine::Update()
 			// Render draw data
 			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 #endif // DEBUG
+			this->renderer->PostProcessEffects();
 
-			//this->renderer->PostProcessEffects();
 
 			this->renderer->Present();
 		}

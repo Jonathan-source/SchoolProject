@@ -22,7 +22,7 @@ Scene::Scene(ID3D11Device* pDevice, std::shared_ptr<ResourceManager> resourceMan
 //--------------------------------------------------------------------------------------
 void Scene::initObjects()
 {
-	Object* obj = new Object(pDevice);
+	auto* obj = new Object(pDevice);
 	obj->SetModel(this->resourceManager->GetModel("Cube.obj").get());
 	obj->SetPosition(0.f, 3.f, 0.f);
 	obj->setBoundingBox(std::make_shared<BoundingBox>(DirectX::XMVectorSet(obj->GetPosition().x, obj->GetPosition().y, obj->GetPosition().z, 0.0f),
@@ -36,12 +36,12 @@ void Scene::initObjects()
 	obj->SetModel(this->resourceManager->GetModel("Plane.obj").get());
 	obj->SetPosition(0.f, 0.f, 0.f);
 	this->objects.push_back(obj);
-	//initHeightMap();
+	initHeightMap();
 }
 
 void Scene::initHeightMap()
 {
-	Object* obj2 = new Object(pDevice);
+	auto* obj2 = new Object(pDevice);
 	obj2->SetModel(this->resourceManager->GetModel("Heightmap.png").get());
 	obj2->SetPosition(0.f, -30.f, 0.f);
 	this->objects.push_back(obj2);
@@ -50,7 +50,7 @@ void Scene::initHeightMap()
 	//----------------- Init Heightmap values -----------------
 	int channels;
 	int index;
-	unsigned char* heightMapData = stbi_load("Heightmap.png", &terrainWidth, &terrainHeight, &channels, STBI_grey);
+	const auto heightMapData = stbi_load("Heightmap.png", &terrainWidth, &terrainHeight, &channels, STBI_grey);
 
 	std::vector<float> heightVal;
 	for (int i = 0; i < terrainHeight * terrainWidth; i++)
@@ -60,16 +60,13 @@ void Scene::initHeightMap()
 
 	//loading in vertices Coords into vector from imagedata
 	std::vector<std::vector<float>> tempVec(terrainHeight);
-	//heightMapValues.reserve(terrainHeight);
+
 	for (int j = 0; j < terrainHeight; j++)
 	{
 		tempVec[j] = std::vector<float>(terrainHeight);
 		for (int i = 0; i < terrainWidth; i++)
 		{
-			//float height = heightVal.at(i + (j * terrainHeight));
-			//heightVal = DirectX::XMFLOAT3((float)i, heightVal[i + (j * terrainHeight)] / 4.0f, (float)j);
-
-			tempVec[j][i] = (heightVal.at(i + (j * terrainHeight)));
+			tempVec[j][i] = (heightVal.at(j * terrainHeight + i));
 		}
 	}
 
@@ -123,8 +120,8 @@ void Scene::update(float _deltaTime)
 {
 	// Update ImGui
 	ImGui::Begin("Scene Statistic");
-	std::string numberOfObjects = "Amount of objects: " + std::to_string(this->objects.size());
-	ImGui::Text(numberOfObjects.c_str());
+	const std::string numberOfObjects = "Amount of objects: " + std::to_string(this->objects.size());
+	ImGui::Text("%s", numberOfObjects.c_str());
 
 	if (ImGui::Button("Add monkey", ImVec2(100.f, 25.f)))
 	{
@@ -148,15 +145,15 @@ void Scene::update(float _deltaTime)
 	}
 
 	//Adjust camera height on heightmap
-	//this->updateCameraHeight();
+	this->updateCameraHeight();
 
 }
 
 void Scene::updateCameraHeight()
 {
 	//Camera adjustment in height if inside heightmap
-	int x = round(this->camera->getPosition().x);
-	int z = round(this->camera->getPosition().z);
+	const auto x = static_cast<int>(round(this->camera->getPosition().x));
+	const auto z = static_cast<int>(round(this->camera->getPosition().z));
 	if (x >= 0 && x < terrainHeight && z >= 0 && z < terrainHeight)
 		this->camera->setPositionY((heightMapValues[z][x] / 4.0f) + 4.0f);
 }
@@ -164,16 +161,12 @@ void Scene::updateCameraHeight()
 // Silly stuff
 void Scene::addObject(const std::string& name)
 {
-
-	Object* obj = new Object(pDevice);
+	auto* obj = new Object(pDevice);
 	obj->SetModel(this->resourceManager->GetModel(name).get());
 
-	//Object* obj = new Object(pDevice);
-	//obj->SetModel(resourceManager->GetModel("Monkey.obj").get());
-
-	float randomPositionX = (float)(rand() % 20);
-	float randomPositionY = (float)(rand() % 20);
-	float randomPositionZ = (float)(rand() % 20);
+	auto randomPositionX = (rand() % 20);
+	auto randomPositionY = (rand() % 20);
+	auto randomPositionZ = (rand() % 20);
 
 	if (randomPositionX > 9)
 		randomPositionX = 9 - randomPositionX;
@@ -182,7 +175,7 @@ void Scene::addObject(const std::string& name)
 	if (randomPositionZ > 9)
 		randomPositionZ = 9 - randomPositionZ;
 
-	float randomRotation = (float)(rand() % 180);
+	const auto randomRotation = (rand() % 180);
 	obj->SetPosition(sm::Vector3(randomPositionX, randomPositionY, randomPositionZ));
 	obj->SetRotation(sm::Vector3(randomRotation, randomRotation, randomRotation));
 
