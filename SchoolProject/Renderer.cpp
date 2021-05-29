@@ -620,17 +620,6 @@ void Renderer::imGUILightWin()
 	// Flag for checking if UpdateSubresource is required.
 	bool bFlag = false;
 	
-	DirectX::XMFLOAT4 directionVector;
-
-	DirectX::XMStoreFloat4(&directionVector, pCamera->getDirection());
-
-	std::cout << directionVector.x << ": " << directionVector.y << ": " << directionVector.z << std::endl;
-
-	
-	ImGui::Text(R"(Light Entitys)");
-
-
-	
 	// Light window
 	ImGui::Begin("Lights");
 	static int currentItem = 0;
