@@ -549,18 +549,22 @@ void Renderer::LightningPass()
 //--------------------------------------------------------------------------------------
 void Renderer::ApplyGaussianFilter()
 {
-	//ID3D11RenderTargetView* nullRTV = nullptr;
-	//this->pDXCore->deviceContext->OMSetRenderTargets(1, &nullRTV, nullptr);
+	ID3D11RenderTargetView* nullRTV = nullptr;
+	this->pDXCore->deviceContext->OMSetRenderTargets(1, &nullRTV, nullptr);
 
 	// Set compute shader.
 	this->pDXCore->deviceContext->CSSetShader(this->pResourceManager->GetComputeShader("gaussian_filter_cs").Get(), nullptr, 0);
 
 	this->pDXCore->deviceContext->CSSetUnorderedAccessViews(0, 1, this->pDXCore->backBufferUAV.GetAddressOf(), nullptr);
-
+	
 	// (Frame Buffer width rounded up to the next multiple of Thread Group width) / Thread Group Width, 
 	// (Frame Buffer height rounded up to the next multiple of Thread Group height) / Thread Group Height, 1)
+	const UINT threadGroupWidth = 8, threadGroupHeight = 8;
+	const UINT threadGroupCountWidth = this->pDXCore->viewport.Width / threadGroupWidth;
+	const UINT threadGroupCountHeight = this->pDXCore->viewport.Height / threadGroupHeight;
+
 	// How many groups do we need to dispatch to cover a column of pixels.
-	this->pDXCore->deviceContext->Dispatch(240, 135, 1);
+	this->pDXCore->deviceContext->Dispatch(threadGroupCountWidth, threadGroupCountHeight, 1);
 
 	// Unbind output from compute shader.
 	ID3D11UnorderedAccessView* nullUAV = nullptr;
@@ -579,8 +583,8 @@ void Renderer::ApplyGaussianFilter()
 //--------------------------------------------------------------------------------------
 void Renderer::ApplyBilateralFilter()
 {
-	//ID3D11RenderTargetView* nullRTV = nullptr;
-	//this->pDXCore->deviceContext->OMSetRenderTargets(1, &this->pDXCore->renderTargetView, nullptr);
+	ID3D11RenderTargetView* nullRTV = nullptr;
+	this->pDXCore->deviceContext->OMSetRenderTargets(1, &nullRTV, nullptr);
 
 	// Set compute shader.
 	this->pDXCore->deviceContext->CSSetShader(this->pResourceManager->GetComputeShader("bilateral_filter_cs").Get(), nullptr, 0);
@@ -589,8 +593,12 @@ void Renderer::ApplyBilateralFilter()
 
 	// (Frame Buffer width rounded up to the next multiple of Thread Group width) / Thread Group Width, 
 	// (Frame Buffer height rounded up to the next multiple of Thread Group height) / Thread Group Height, 1)
+	const UINT threadGroupWidth = 8, threadGroupHeight = 8;
+	const UINT threadGroupCountWidth = this->pDXCore->viewport.Width / threadGroupWidth;
+	const UINT threadGroupCountHeight = this->pDXCore->viewport.Height / threadGroupHeight;
+
 	// How many groups do we need to dispatch to cover a column of pixels.
-	this->pDXCore->deviceContext->Dispatch(240, 135, 1);
+	this->pDXCore->deviceContext->Dispatch(threadGroupCountWidth, threadGroupCountHeight, 1);
 
 	// Unbind output from compute shader.
 	ID3D11UnorderedAccessView* nullUAV = nullptr;
