@@ -91,7 +91,6 @@ void Engine::Update()
 			this->scene->draw(this->d3d11Core->deviceContext.Get());
 			this->renderer->EndFrame();
 
-			
 #ifdef _DEBUG
 			// Draw imgui window
 			drawImGUI();

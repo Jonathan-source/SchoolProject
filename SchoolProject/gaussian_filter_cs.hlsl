@@ -43,18 +43,14 @@ static const float kernal_coefficients[KERNAL_SIZE][KERNAL_SIZE] =
 void main(uint3 DispatchThreadID : SV_DispatchThreadID)
 {
     // Offset the texture location to the first sample location.
-    int3 textureCoords = DispatchThreadID - int3(3, 3, 0);
+    uint3 textureCoords = DispatchThreadID - int3(3, 3, 0);
 
     float4 outputColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
     for (int x = 0; x < KERNAL_SIZE; x++)
-    {
         for (int y = 0; y < KERNAL_SIZE; y++)
-        {
             outputColor += backBuffer.Load(textureCoords + int3(x, y, 0)) * kernal_coefficients[x][y];
-        }
-    }
-
+      
     // Output to chosen UAV.
     backBuffer[DispatchThreadID.xy] = outputColor;
 }
