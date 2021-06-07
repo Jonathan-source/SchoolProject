@@ -97,7 +97,7 @@ bool D3D11Core::createDeviceAndSwapChain()
 
     // Set to a duo back buffer.
     swapChainDesc.BufferCount = 2;
-
+    
     // Set the refresh rate of the back buffer.
     swapChainDesc.BufferDesc.RefreshRate.Numerator = 0;
     swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
@@ -111,7 +111,7 @@ bool D3D11Core::createDeviceAndSwapChain()
     swapChainDesc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 
     // Set the usage of the back buffer.
-    swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_UNORDERED_ACCESS;
+    swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_UNORDERED_ACCESS | DXGI_USAGE_SHADER_INPUT;
 
     // Turn multisampling off.
     swapChainDesc.SampleDesc.Count = 1;
@@ -153,13 +153,12 @@ bool D3D11Core::createRenderTargetView()
     // Get the pointer to the back buffer.
     if (FAILED(swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&pBackBuffer))))
         return false;
-
+	
     // Create the render target View with the back buffer pointer.
     HRESULT hr = device->CreateRenderTargetView(pBackBuffer, nullptr, this->renderTargetView.GetAddressOf());
-
+	
     // Release pointer to the back buffer.
     pBackBuffer->Release();
-    pBackBuffer = 0;
 
     return !FAILED(hr);
 }
@@ -293,12 +292,6 @@ bool D3D11Core::createRasterizerStates()
     // Create the rasterizer state from the description we just filled out.
     HRESULT hr = this->device->CreateRasterizerState(&rasterizerDesc, this->rasterizerState.GetAddressOf());
 
-    if (SUCCEEDED(hr))
-    {
-        // Set default rasterizer state.
-        this->deviceContext->RSSetState(this->rasterizerState.Get());
-    }
-
     // Setup a raster description with no back face culling.
     rasterizerDesc.CullMode = D3D11_CULL_NONE;
 
@@ -314,6 +307,9 @@ bool D3D11Core::createRasterizerStates()
     // Create the wire frame rasterizer state.
     hr = this->device->CreateRasterizerState(&rasterizerDesc, this->rasterStateWireframe.GetAddressOf());
 
+    // Set default rasterizer state.
+    this->deviceContext->RSSetState(this->rasterStateNoCulling.Get());
+	
     return !FAILED(hr);
 }
 

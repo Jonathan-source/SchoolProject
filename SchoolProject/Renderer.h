@@ -44,6 +44,9 @@ private:
 	enum GBUFFER { POSITION, NORMAL, DIFFUSE, BUFFER_COUNT };
 	std::array<TextureResource, BUFFER_COUNT> graphicsBuffer;
 
+	// FrameBufferObject for Post-Processing-Effects.
+	TextureResource frameBufferObject;
+
 	struct FullScreenQuad
 	{
 		std::array<Quad, 4> vertexData;
@@ -67,7 +70,9 @@ private:
 	bool createRenderTargetTextures(D3D11_TEXTURE2D_DESC& textureDesc);
 	bool createRenderTargetView(D3D11_TEXTURE2D_DESC& textureDesc);
 	bool createShaderResourceViews(D3D11_TEXTURE2D_DESC& textureDesc);
+	bool createFrameBufferObject();
 
+	
 	void InitializeLights();
 	bool createStructuredBufferLights();
 	

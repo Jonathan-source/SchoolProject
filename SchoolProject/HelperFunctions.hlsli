@@ -43,16 +43,6 @@ float4 ComputeSpecular(Light light, float3 toEye, float3 toLight, float3 N)
     return light.color * specularFactor * light.specularPower;
 }
 
-float4 ComputeBrightnessColor(float4 fragmentColor)
-{
-    float4 brightnessColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
-    const float brightness = dot(fragmentColor.rgb, float3(0.2126, 0.7152, 0.0722));
-    [flatten]
-    if (brightness > 0.5)
-        brightnessColor = float4(fragmentColor.rgb, 1.0);
-    return brightnessColor;
-}
-
 
 
 

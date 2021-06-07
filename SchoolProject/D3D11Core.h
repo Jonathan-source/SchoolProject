@@ -1,4 +1,5 @@
 #pragma once
+#include "GlobalBuffers.h"
 #include "pch.h"
 
 #include "Window.h"
@@ -37,8 +38,9 @@ public:
 	ComPtr<ID3D11DeviceContext>			deviceContext;
 	ComPtr<IDXGISwapChain>				swapChain;
 	DXGI_FORMAT							swapChainFormat;
-	
+
 	ComPtr<ID3D11RenderTargetView>		renderTargetView;
+	
 	ComPtr<ID3D11Texture2D>				depthStencilTexture;
 	ComPtr<ID3D11DepthStencilView>		depthStencilView;
 	ComPtr<ID3D11DepthStencilState>		depthStencilState;

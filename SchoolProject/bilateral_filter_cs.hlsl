@@ -1,6 +1,7 @@
 // The output UAV used by the CS, in this case the backbuffer. 
 // Float4 is specified in swap chain description.
 RWTexture2D<unorm float4> backBuffer : register(u0); 
+Texture2D frameBufferObject : register(t0);
 
 // Group size may not exceed 1024.
 #define SIZE_X 8
@@ -40,11 +41,11 @@ RWTexture2D<unorm float4> backBuffer : register(u0);
 static const float kernal_coefficients[KERNAL_SIZE][KERNAL_SIZE] =
 {
     0.007982, 0.012243, 0.015826, 0.017239, 0.015826, 0.012243, 0.007982,
-    0.012243, 0.01878, 0.024275, 0.026443, 0.024275, 0.01878, 0.012243,
+    0.012243, 0.01878,  0.024275, 0.026443, 0.024275, 0.01878,  0.012243,
     0.015826, 0.024275, 0.031379, 0.034181, 0.031379, 0.024275, 0.015826,
     0.017239, 0.026443, 0.034181, 0.037234, 0.034181, 0.026443, 0.017239,
     0.015826, 0.024275, 0.031379, 0.034181, 0.031379, 0.024275, 0.015826,
-    0.012243, 0.01878, 0.024275, 0.026443, 0.024275, 0.01878, 0.012243,
+    0.012243, 0.01878,  0.024275, 0.026443, 0.024275, 0.01878,  0.012243,
     0.007982, 0.012243, 0.015826, 0.017239, 0.015826, 0.012243, 0.007982
 };
 
@@ -69,9 +70,8 @@ void main(int3 GroupID             : SV_GroupID,               // To which group
 
     const float rsigma = 0.051f;
 
-    // Range sigma value const float rsigma = 0.051f;
-    float4 outputColor = 0.0f;
-    float4 weight = 0.0f;
+    float4 outputColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
+    float4 weight = float4(0.0f, 0.0f, 0.0f, 1.0f);
 
 
     for (int x = 0; x < KERNAL_SIZE; x++)

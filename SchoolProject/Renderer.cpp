@@ -151,13 +151,20 @@ void Renderer::InitializeDeferred()
 	// Create the render target views.
 	if (!this->createRenderTargetView(textureDesc))
 	{
-		std::cout << "ERROR::RenderSystem::InitializeDeferred()::createRenderTargetView()::Could not create the render target views." << std::endl;
+		std::cout << "ERROR::RenderSystem::InitializeDeferred()::createFrameBufferObject()::Could not create the render target views." << std::endl;
 	}
 
 	// Create the shader resource views.
 	if (!this->createShaderResourceViews(textureDesc))
 	{
 		std::cout << "ERROR::RenderSystem::InitializeDeferred()::createShaderResourceViews()::Could not create the shader resource views." << std::endl;
+	}
+
+
+	// Create the frame buffer object.
+	if (!this->createFrameBufferObject())
+	{
+		std::cout << "ERROR::RenderSystem::InitializeDeferred()::createFrameBufferObject()::Could not create the frame buffer object." << std::endl;
 	}
 }
 
@@ -308,6 +315,50 @@ bool Renderer::createShaderResourceViews(D3D11_TEXTURE2D_DESC& textureDesc)
 			return false;
 		}
 	}
+
+	return !FAILED(hr);
+}
+
+
+
+
+
+
+
+//--------------------------------------------------------------------------------------
+bool Renderer::createFrameBufferObject()
+{
+	D3D11_TEXTURE2D_DESC textureDesc;
+	ZeroMemory(&textureDesc, sizeof(D3D11_TEXTURE2D_DESC));
+
+	textureDesc.Width = this->pWindow->getWidth();
+	textureDesc.Height = this->pWindow->getHeight();
+	textureDesc.MipLevels = 1;
+	textureDesc.ArraySize = 1;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.MiscFlags = 0;
+	textureDesc.Format = DXGI_FORMAT::DXGI_FORMAT_R32G32B32A32_FLOAT;
+	textureDesc.Usage = D3D11_USAGE::D3D11_USAGE_DEFAULT;
+	textureDesc.BindFlags = D3D11_BIND_FLAG::D3D11_BIND_RENDER_TARGET | D3D11_BIND_FLAG::D3D11_BIND_SHADER_RESOURCE;
+
+	HRESULT hr = this->pDXCore->device->CreateTexture2D(&textureDesc, nullptr, &this->frameBufferObject.texture);
+
+	D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
+	ZeroMemory(&renderTargetViewDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
+	renderTargetViewDesc.Format = textureDesc.Format;
+	renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION::D3D11_RTV_DIMENSION_TEXTURE2D;
+	
+	hr = this->pDXCore->device->CreateRenderTargetView(this->frameBufferObject.texture.Get(), &renderTargetViewDesc, this->frameBufferObject.renderTargetView.GetAddressOf());
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
+	ZeroMemory(&shaderResourceViewDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
+	shaderResourceViewDesc.Format = textureDesc.Format;
+	shaderResourceViewDesc.ViewDimension = D3D_SRV_DIMENSION::D3D11_SRV_DIMENSION_TEXTURE2D;
+	shaderResourceViewDesc.Texture2D.MipLevels = 1;
+
+	hr = this->pDXCore->device->CreateShaderResourceView(this->frameBufferObject.texture.Get(), &shaderResourceViewDesc, this->frameBufferObject.shaderResourceView.GetAddressOf());
 
 	return !FAILED(hr);
 }
@@ -503,9 +554,14 @@ void Renderer::LightningPass()
 	this->pDXCore->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	this->pDXCore->deviceContext->IASetVertexBuffers(0, 1, this->fullScreenQuad.vb.GetAddressOf(), &stride, &offset);
 	this->pDXCore->deviceContext->IASetIndexBuffer(this->fullScreenQuad.ib.Get(), DXGI_FORMAT_R32_UINT, 0);
-	
-	this->pDXCore->deviceContext->OMSetRenderTargets(1, this->pDXCore->renderTargetView.GetAddressOf(), nullptr);
-	this->pDXCore->deviceContext->RSSetState(this->pDXCore->rasterizerState.Get());
+
+	ComPtr<ID3D11RenderTargetView> renderTargets[] =
+	{
+		this->pDXCore->renderTargetView.Get(),
+		this->frameBufferObject.renderTargetView.Get(),
+	};
+	this->pDXCore->deviceContext->OMSetRenderTargets(2, renderTargets->GetAddressOf(), nullptr);
+
 
 	// Set the shader views.
 	ComPtr<ID3D11ShaderResourceView> renderShaderResourceView[] =
@@ -531,13 +587,14 @@ void Renderer::LightningPass()
 	
 	// Render FullScreenQuad.
 	this->pDXCore->deviceContext->DrawIndexed(6, 0, 0);
-	
-	ID3D11ShaderResourceView* nullSRV = nullptr;
-	this->pDXCore->deviceContext->PSSetShaderResources(0, 1, &nullSRV);
-	this->pDXCore->deviceContext->PSSetShaderResources(1, 1, &nullSRV);
-	this->pDXCore->deviceContext->PSSetShaderResources(2, 1, &nullSRV);
-	this->pDXCore->deviceContext->PSSetShaderResources(3, 1, &nullSRV);
-	this->pDXCore->deviceContext->PSSetShaderResources(4, 1, &nullSRV);
+
+
+	ID3D11ShaderResourceView* const nullSRV[] = { nullptr };
+	this->pDXCore->deviceContext->PSSetShaderResources(0, 1, nullSRV);
+	this->pDXCore->deviceContext->PSSetShaderResources(1, 1, nullSRV);
+	this->pDXCore->deviceContext->PSSetShaderResources(2, 1, nullSRV);
+	this->pDXCore->deviceContext->PSSetShaderResources(3, 1, nullSRV);
+	this->pDXCore->deviceContext->PSSetShaderResources(4, 1, nullSRV);
 }
 
 
@@ -549,14 +606,15 @@ void Renderer::LightningPass()
 //--------------------------------------------------------------------------------------
 void Renderer::ApplyGaussianFilter()
 {
-	ID3D11RenderTargetView* nullRTV = nullptr;
-	this->pDXCore->deviceContext->OMSetRenderTargets(1, &nullRTV, nullptr);
+	ID3D11RenderTargetView* const nullRTV[] = { nullptr };
+	this->pDXCore->deviceContext->OMSetRenderTargets(1, nullRTV, nullptr);
 
 	// Set compute shader.
 	this->pDXCore->deviceContext->CSSetShader(this->pResourceManager->GetComputeShader("gaussian_filter_cs").Get(), nullptr, 0);
-
-	this->pDXCore->deviceContext->CSSetUnorderedAccessViews(0, 1, this->pDXCore->backBufferUAV.GetAddressOf(), nullptr);
 	
+	this->pDXCore->deviceContext->CSSetUnorderedAccessViews(0, 1, this->pDXCore->backBufferUAV.GetAddressOf(), nullptr);
+	this->pDXCore->deviceContext->CSSetShaderResources(0, 1, this->frameBufferObject.shaderResourceView.GetAddressOf());
+
 	// (Frame Buffer width rounded up to the next multiple of Thread Group width) / Thread Group Width, 
 	// (Frame Buffer height rounded up to the next multiple of Thread Group height) / Thread Group Height, 1)
 	const UINT threadGroupWidth = 8, threadGroupHeight = 8;
@@ -567,9 +625,12 @@ void Renderer::ApplyGaussianFilter()
 	this->pDXCore->deviceContext->Dispatch(threadGroupCountWidth, threadGroupCountHeight, 1);
 
 	// Unbind output from compute shader.
-	ID3D11UnorderedAccessView* nullUAV = nullptr;
-	this->pDXCore->deviceContext->CSSetUnorderedAccessViews(0, 1, &nullUAV, nullptr);
+	ID3D11UnorderedAccessView* const nullUAV[] = { nullptr };
+	this->pDXCore->deviceContext->CSSetUnorderedAccessViews(0, 1, nullUAV, nullptr);
 
+	ID3D11ShaderResourceView* const nullSRV[] = { nullptr };
+	this->pDXCore->deviceContext->CSSetShaderResources(0, 1, nullSRV);
+	
 	// Disable compute shader.
 	this->pDXCore->deviceContext->CSSetShader(nullptr, nullptr, 0);
 }
@@ -583,13 +644,14 @@ void Renderer::ApplyGaussianFilter()
 //--------------------------------------------------------------------------------------
 void Renderer::ApplyBilateralFilter()
 {
-	ID3D11RenderTargetView* nullRTV = nullptr;
-	this->pDXCore->deviceContext->OMSetRenderTargets(1, &nullRTV, nullptr);
+	ID3D11RenderTargetView* const nullRTV[] = { nullptr };
+	this->pDXCore->deviceContext->OMSetRenderTargets(1, nullRTV, nullptr);
 
 	// Set compute shader.
 	this->pDXCore->deviceContext->CSSetShader(this->pResourceManager->GetComputeShader("bilateral_filter_cs").Get(), nullptr, 0);
 
 	this->pDXCore->deviceContext->CSSetUnorderedAccessViews(0, 1, this->pDXCore->backBufferUAV.GetAddressOf(), nullptr);
+	this->pDXCore->deviceContext->CSSetShaderResources(0, 1, this->frameBufferObject.shaderResourceView.GetAddressOf());
 
 	// (Frame Buffer width rounded up to the next multiple of Thread Group width) / Thread Group Width, 
 	// (Frame Buffer height rounded up to the next multiple of Thread Group height) / Thread Group Height, 1)
@@ -601,9 +663,12 @@ void Renderer::ApplyBilateralFilter()
 	this->pDXCore->deviceContext->Dispatch(threadGroupCountWidth, threadGroupCountHeight, 1);
 
 	// Unbind output from compute shader.
-	ID3D11UnorderedAccessView* nullUAV = nullptr;
-	this->pDXCore->deviceContext->CSSetUnorderedAccessViews(0, 1, &nullUAV, nullptr);
+	ID3D11UnorderedAccessView* const nullUAV[] = { nullptr };
+	this->pDXCore->deviceContext->CSSetUnorderedAccessViews(0, 1, nullUAV, nullptr);
 
+	ID3D11ShaderResourceView* const nullSRV[] = { nullptr };
+	this->pDXCore->deviceContext->CSSetShaderResources(0, 1, nullSRV);
+	
 	// Disable compute shader.
 	this->pDXCore->deviceContext->CSSetShader(nullptr, nullptr, 0);
 }

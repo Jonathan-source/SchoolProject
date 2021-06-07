@@ -25,7 +25,7 @@ void ShadowMap::ShadowPass(Light* pLight)
 {
     // Set a null render target. This disables color writes. 
     // Graphics cards are optimized for only drawing depth.
-    ID3D11RenderTargetView* nullRTV[1] = { 0 };
+    ID3D11RenderTargetView* nullRTV[] = { nullptr };
     this->pD3D11Core->deviceContext->OMSetRenderTargets(1, nullRTV, this->depthMap.depthStencilView.Get());
     this->pD3D11Core->deviceContext->ClearDepthStencilView(this->depthMap.depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
     
@@ -36,7 +36,7 @@ void ShadowMap::ShadowPass(Light* pLight)
     this->pD3D11Core->deviceContext->VSSetConstantBuffers(0, 1, this->lightMatrixCS->GetAddressOf());
     
     this->pD3D11Core->deviceContext->VSSetShader(this->pResourceManager->GetVertexShader("shadow_mapping_vs").Get(), nullptr, 0);
-    this->pD3D11Core->deviceContext->PSSetShader(this->pResourceManager->GetPixelShader("shadow_mapping_ps").Get(), nullptr, 0);
+    this->pD3D11Core->deviceContext->PSSetShader(nullptr, nullptr, 0);
 }
 
 
@@ -85,8 +85,8 @@ bool ShadowMap::CreateShadowMap()
     ZeroMemory(&textureDesc, sizeof(D3D11_TEXTURE2D_DESC));
 
     // Set up the description of the depth buffer.
-    textureDesc.Width = 1920;
-    textureDesc.Height = 1080;
+    textureDesc.Width = this->SHADOW_MAP_WIDTH;
+    textureDesc.Height = this->SHADOW_MAP_HEIGHT;
 
     // Use typeless format because the DSV is going to interpret
     // the bits as DXGI_FORMAT_D24_UNORM_S8_UINT, whereas the SRV is going

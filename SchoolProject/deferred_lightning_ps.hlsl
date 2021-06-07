@@ -59,15 +59,23 @@ struct PixelInputType
 };
 
 
-
+//--------------------------------------------------------------------------------------
+// 
+//--------------------------------------------------------------------------------------
+struct PixelShaderOutput
+{
+    float4 color    : SV_TARGET;
+    float4 color2   : SV_Target1;
+};
 
 
 //--------------------------------------------------------------------------------------
 // MAIN
 //--------------------------------------------------------------------------------------
-float4 main(PixelInputType input) : SV_TARGET
+PixelShaderOutput main(PixelInputType input)
 {
     // Initialize output.
+    PixelShaderOutput output;
     float4 outputColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 
 	// Sample the color / normal / position (in world space) from respective render texture.
@@ -78,13 +86,29 @@ float4 main(PixelInputType input) : SV_TARGET
 
     // ImGuiDebug
     if (bPrintGPositionTexture)
-        return float4(surfacePosition, 1.0f);
-    if (bPrintGDiffuseTexture)
-        return surfaceColor;
-    if (bPrintGNormalTexture)
-        return float4(surfaceNormal, 1.0f);
-    if(bPrintGDepthTexture)
-        return float4(surfaceDepth, surfaceDepth, surfaceDepth, 1.0f);
+    {
+        output.color = float4(surfacePosition, 1.0f);
+        output.color2 = float4(surfacePosition, 1.0f);
+        return output;
+    }
+    if (bPrintGDiffuseTexture) 
+    {
+        output.color = surfaceColor;
+        output.color2 = surfaceColor;
+        return output;
+    }
+    if (bPrintGNormalTexture) 
+    {
+        output.color = float4(surfaceNormal, 1.0f);
+        output.color2 = float4(surfaceNormal, 1.0f);
+        return output;
+    }
+    if (bPrintGDepthTexture)
+    {
+        output.color = float4(surfaceDepth, surfaceDepth, surfaceDepth, 1.0f);
+        output.color2 = float4(surfaceDepth, surfaceDepth, surfaceDepth, 1.0f);
+        return output;
+    }
 
 
     // The vertex's normal vector is being interpolated across the primitive
@@ -128,17 +152,22 @@ float4 main(PixelInputType input) : SV_TARGET
                 {
                     // Shadow calculations.
                     float4 positionL = mul(float4(surfacePosition, 1.0f), LightProjectionMatrix);
-                    positionL.xy /= positionL.w;
-                    float2 smTex = float2(0.5f * positionL.x + 0.5f, -0.5f * positionL.y + 0.5f);
-                    float depth = positionL.z / positionL.w;
-                    float bias = 0.01f;
-                    float dx = 1.0f / 1080;
-                    float s0 = (GDepthTexture.Sample(PointSampler, smTex).r + bias < depth) ? 0.0f : 1.0f;
-                    float s1 = (GDepthTexture.Sample(PointSampler, smTex + float2(dx, 0.0f)).r + bias < depth) ? 0.0f : 1.0f;
-                    float s2 = (GDepthTexture.Sample(PointSampler, smTex + float2(0.0f, dx)).r + bias < depth) ? 0.0f : 1.0f;
-                    float s3 = (GDepthTexture.Sample(PointSampler, smTex + float2(dx, dx)).r + bias < depth) ? 0.0f : 1.0f;
+                    positionL.xy /= positionL.w;    // NDC
+                    float2 smTex = float2(0.5f * positionL.x + 0.5f, -0.5f * positionL.y + 0.5f); // [0, 1]
+                    float depth = positionL.z / positionL.w; 
+                    float bias = 0.001f;
+                	
+                    float dx = 1.0f / 1920;
+                    float dy = 1.0f / 1080;
+                	
+                	// to prevent pixelation.
+                    float s0 = (GDepthTexture.Sample(PointSampler, smTex + float2(0.0f, 0.0f)).r + bias < depth) ? 0.0f : 1.0f;
+                    float s1 = (GDepthTexture.Sample(PointSampler, smTex + float2(dx, 0.0f)).r   + bias < depth) ? 0.0f : 1.0f;
+                    float s2 = (GDepthTexture.Sample(PointSampler, smTex + float2(0.0f, dy)).r   + bias < depth) ? 0.0f : 1.0f;
+                    float s3 = (GDepthTexture.Sample(PointSampler, smTex + float2(dx, dy)).r     + bias < depth) ? 0.0f : 1.0f;
 
-                    float2 texelPos = smTex * 1024;
+                    float2 texelPos = float2(smTex.x * dx, smTex.y * dy);
+                	
                     float2 lerps = frac(texelPos);
 
                     float shadowCoeff = lerp(lerp(s0, s1, lerps.x), lerp(s2, s3, lerps.x), lerps.y);
@@ -157,6 +186,9 @@ float4 main(PixelInputType input) : SV_TARGET
 			break;
         }
     }
-		
-	return outputColor;
+
+    output.color = outputColor;
+    output.color2 = outputColor;
+
+	return output;
 }

@@ -313,32 +313,6 @@ bool HeightMap::computeTexCoords()
 {
     indices = std::vector<UINT>(this->numFaces * 3);
 
-    int k = 0;
-    int texUIndex = 0;
-    int texVIndex = 0;
-    for (int i = 0; i < terrainHeight - 1; i++)
-    {
-        for (int j = 0; j < terrainWidth - 1; j++)
-        {
-            indices[k] = static_cast<UINT>(i * terrainWidth + j);        // Bottom left of quad
-
-            indices[k + 1] = static_cast<UINT>(i * terrainWidth + j + 1);        // Bottom right of quad
-
-            indices[k + 2] = static_cast<UINT>((i + 1) * terrainWidth + j);    // Top left of quad
-
-
-
-            indices[k + 3] = static_cast<UINT>((i + 1) * terrainWidth + j);    // Top left of quad
-
-            indices[k + 4] = static_cast<UINT>(i * terrainWidth + j + 1);        // Bottom right of quad
-
-            indices[k + 5] = static_cast<UINT>((i + 1) * terrainWidth + j + 1);    // Top right of quad
-
-            k += 6; // next quad
-        }
-    }
-
-
     this->texCoords = std::vector<DirectX::XMFLOAT2>(numVertices);
     //Calculate how much to increment texture coord by;
     const float incrementValue = static_cast<float>(TEXTURE_REPEAT) / static_cast<float>(terrainWidth);

@@ -1,6 +1,7 @@
 // The output UAV used by the CS, in this case the backbuffer. 
 // Float4 is specified in swap chain description.
-RWTexture2D<unorm float4> backBuffer : register(u0); 
+RWTexture2D<unorm float4> backBufferUAV : register(u0);
+Texture2D frameBufferObject : register(t0);
 
 // Group size may not exceed 1024.
 #define SIZE_X 8
@@ -49,8 +50,8 @@ void main(uint3 DispatchThreadID : SV_DispatchThreadID)
 
     for (int x = 0; x < KERNAL_SIZE; x++)
         for (int y = 0; y < KERNAL_SIZE; y++)
-            outputColor += backBuffer.Load(textureCoords + int3(x, y, 0)) * kernal_coefficients[x][y];
+            outputColor += frameBufferObject.Load(textureCoords + int3(x, y, 0)) * kernal_coefficients[x][y];
       
     // Output to chosen UAV.
-    backBuffer[DispatchThreadID.xy] = outputColor;
+    backBufferUAV[DispatchThreadID.xy] = outputColor;
 }

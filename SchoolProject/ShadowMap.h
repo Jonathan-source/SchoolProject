@@ -29,8 +29,8 @@ private:
 	Window* pWindow;
 	ResourceManager* pResourceManager;
 
-	const UINT SHADOW_MAP_WIDTH = 2048;
-	const UINT SHADOW_MAP_HEIGHT = 2048;
+	const UINT SHADOW_MAP_WIDTH = 1920;
+	const UINT SHADOW_MAP_HEIGHT = 1080;
 
 	DepthMatrixBuffer depthMatrixBuffer;
 

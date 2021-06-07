@@ -59,7 +59,4 @@ void main(
             output.Append(element);
         }
     }
-
-    
-
 }
