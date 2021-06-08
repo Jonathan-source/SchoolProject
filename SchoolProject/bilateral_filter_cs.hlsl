@@ -66,7 +66,7 @@ void main(int3 GroupID             : SV_GroupID,               // To which group
     int3 textureCoords = DispatchThreadID - int3(3, 3, 0);
 
     // Each thread will load its own depth/occlusion values
-    float4 centerColor = backBuffer.Load(DispatchThreadID);
+    float4 centerColor = frameBufferObject.Load(DispatchThreadID);
 
     const float rsigma = 0.051f;
 
@@ -79,7 +79,7 @@ void main(int3 GroupID             : SV_GroupID,               // To which group
         for (int y = 0; y < KERNAL_SIZE; y++)
         {
             // Get the current sample 
-            float4 sampleColor = backBuffer.Load(textureCoords + int3(x, y, 0));
+            float4 sampleColor = frameBufferObject.Load(textureCoords + int3(x, y, 0));
             float4 delta = centerColor - sampleColor;
             float4 range = exp((-1.0f * delta * delta) / (2.0f * rsigma * rsigma));
 
